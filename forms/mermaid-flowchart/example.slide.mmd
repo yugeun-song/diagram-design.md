@@ -1,5 +1,5 @@
 flowchart LR
     %% id: read-path
-    read["read()"]:::code --> hit{"cached?"}
-    hit -- yes --> copy[copy_to_user]:::info
-    hit -- no --> bio[submit_bio]:::warn
+    read["read()"] --> hit{"cached?"}
+    hit -- yes --> copy[copy_to_user]:::accent
+    hit -- no --> bio[submit_bio]

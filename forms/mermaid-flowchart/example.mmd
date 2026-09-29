@@ -1,13 +1,13 @@
 flowchart TD
     %% id: read-path
     subgraph user[user space]
-        read["read()"]:::code
+        read["read()"]
     end
     read --> ksys[ksys_read]
     ksys --> vfs[vfs_read]
     vfs --> hit{"page cache hit?"}
-    hit -- yes --> copy[copy_to_user]:::info
-    hit -- no --> bio[submit_bio]:::warn
+    hit -- yes --> copy[copy_to_user]
+    hit -- no --> bio[submit_bio]
     bio --> irq[completion IRQ]:::muted
     irq --> copy
     bio -- error --> eio["-EIO"]:::danger

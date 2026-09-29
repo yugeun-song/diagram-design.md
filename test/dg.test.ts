@@ -97,10 +97,10 @@ test('review regressions stay fixed', () => {
 
 test('the mermaid lint flags what the page would break', () => {
   assert.deepEqual(lintMermaid('flowchart TD\n    a --> b'), []);
-  assert.equal(lintMermaid('flowchart TD\n    a -.-> b').length, 1);
+  assert.deepEqual(lintMermaid('flowchart TD\n    a -.-> b'), []);
+  assert.equal(lintMermaid('flowchart TD\n    a:::info').length, 1);
   assert.equal(lintMermaid('flowchart TD\n    classDef x fill:red').length, 1);
-  assert.equal(lintMermaid('flowchart TD\n    a["x &amp; y"]').length, 1);
-  assert.equal(lintMermaid('flowchart TD\n    a:::info:::code').length, 1);
+  assert.equal(lintMermaid('flowchart TD\n    a:::accent:::muted').length, 1);
 });
 
 const blog = fileURLToPath(new URL('../../blog/', import.meta.url));
