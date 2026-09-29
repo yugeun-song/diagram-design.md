@@ -30,7 +30,7 @@ test('the memory table examples render the reference svg, and a raw table gives 
 });
 
 test('static svgs use presentation attributes only', () => {
-  const scenes = ['blog', 'slide'].flatMap((profile) => [
+  const scenes = (['blog', 'slide'] as const).flatMap((profile) => [
     memoryLayout.layout(layoutSpec, memoryLayout.PROFILES[profile]),
     ...tableSpecs.map((spec) => memoryTable.layout(memoryTable.grid(spec), spec.label ?? '', memoryTable.PROFILES[profile])),
   ]);

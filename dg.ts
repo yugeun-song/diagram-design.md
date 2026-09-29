@@ -6,7 +6,7 @@ import * as memoryLayout from './src/memory-layout.ts';
 import * as memoryTable from './src/memory-table.ts';
 import { lintMermaid } from './src/mermaid.ts';
 import { compose, mermaidPNGs, staticPNGs } from './src/png.ts';
-import { lintStatic, toStatic, toWeb, type Scene } from './src/scene.ts';
+import { lintStatic, toStatic, toWeb, type ProfileName, type Scene } from './src/scene.ts';
 import { loadTokens, readBlogTokens, TOKENS_FILE, type Tokens } from './src/tokens.ts';
 
 const USAGE = `usage:
@@ -58,7 +58,9 @@ function load(file: string): Item[] {
 
 const isLayout = (spec: Spec): spec is memoryLayout.MemoryLayout => !!spec && typeof spec === 'object' && 'regions' in spec;
 
-function scene(spec: Spec, profile: string): Scene {
+const isProfile = (value: string): value is ProfileName => Object.hasOwn(memoryLayout.PROFILES, value);
+
+function scene(spec: Spec, profile: ProfileName): Scene {
   if (isLayout(spec)) return memoryLayout.layout(spec, memoryLayout.PROFILES[profile]);
   return memoryTable.layout(memoryTable.grid(spec), spec?.label ?? spec?.id ?? '', memoryTable.PROFILES[profile]);
 }
@@ -196,7 +198,7 @@ function render(file: string): void {
   if (flavor !== 'web' && flavor !== 'static') throw new UsageError(`unknown flavor ${flavor}; use web or static`);
   if (flavor === 'web' && (values.profile || values.theme)) throw new UsageError('--profile and --theme apply to --flavor static');
   const profile = values.profile ?? 'blog';
-  if (!Object.hasOwn(memoryLayout.PROFILES, profile)) throw new UsageError(`unknown profile ${profile}; use blog or slide`);
+  if (!isProfile(profile)) throw new UsageError(`unknown profile ${profile}; use blog or slide`);
   const tokens = loadTokens();
   const theme = flavor === 'static' ? themes(tokens, values.theme ?? 'clean-light')[0] : '';
   for (const item of load(file)) {

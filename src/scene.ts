@@ -1,13 +1,16 @@
-import { color, type Tokens } from './tokens.ts';
+import { color, type Paint, type Tokens } from './tokens.ts';
 
 export type Anchor = 'start' | 'middle' | 'end';
 
+export type ProfileName = 'blog' | 'slide';
+
 export type Shape =
-  | { kind: 'rect'; x: number; y: number; w: number; h: number; fill: string }
-  | { kind: 'outline'; x: number; y: number; w: number; h: number; stroke: string }
-  | { kind: 'line'; x1: number; y1: number; x2: number; y2: number; stroke: string }
-  | { kind: 'path'; d: string; fill?: string; stroke?: string }
-  | { kind: 'text'; x: number; y: number; text: string; size: number; bold?: boolean; anchor: Anchor; fill: string };
+  | { kind: 'rect'; x: number; y: number; w: number; h: number; fill: Paint }
+  | { kind: 'outline'; x: number; y: number; w: number; h: number; stroke: Paint }
+  | { kind: 'line'; x1: number; y1: number; x2: number; y2: number; stroke: Paint }
+  | { kind: 'path'; d: string; fill: Paint; stroke?: never }
+  | { kind: 'path'; d: string; stroke: Paint; fill?: never }
+  | { kind: 'text'; x: number; y: number; text: string; size: number; bold?: boolean; anchor: Anchor; fill: Paint };
 
 export interface Scene {
   width: number;
@@ -33,8 +36,8 @@ export function checkText(text: string, where: string): void {
 export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 export const textWidth = (text: string, size: number) => text.length * ADVANCE * size;
 const space = (s: string) => (/ {2}|^ | $/.test(s) ? ' xml:space="preserve"' : '');
-const fill = (name: string) => `style="fill:var(--${name})"`;
-const stroke = (name: string) => `style="stroke:var(--${name});stroke-width:var(--diagram-stroke)"`;
+const fill = (name: Paint) => `style="fill:var(--${name})"`;
+const stroke = (name: Paint) => `style="stroke:var(--${name});stroke-width:var(--diagram-stroke)"`;
 
 export function toWeb(scene: Scene): string {
   const body = scene.shapes.map((s) => {
@@ -42,7 +45,7 @@ export function toWeb(scene: Scene): string {
       case 'rect': return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" ${fill(s.fill)}/>`;
       case 'outline': return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="none" ${stroke(s.stroke)}/>`;
       case 'line': return `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" ${stroke(s.stroke)}/>`;
-      case 'path': return s.fill ? `<path d="${s.d}" ${fill(s.fill)}/>` : `<path d="${s.d}" fill="none" ${stroke(s.stroke ?? '')}/>`;
+      case 'path': return s.fill ? `<path d="${s.d}" ${fill(s.fill)}/>` : `<path d="${s.d}" fill="none" ${stroke(s.stroke)}/>`;
       case 'text': return `<text x="${s.x}" y="${s.y}" font-size="${s.size}"${s.bold ? ' font-weight="700"' : ''} text-anchor="${s.anchor}"${space(s.text)} ${fill(s.fill)}>${esc(s.text)}</text>`;
     }
   });
@@ -52,7 +55,7 @@ export function toWeb(scene: Scene): string {
 export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: StaticOptions = {}): string {
   const scale = options.scale ?? 1;
   const unit = options.unit ?? 'px';
-  const paint = (name: string) => color(tokens, theme, name);
+  const paint = (name: Paint) => color(tokens, theme, name);
   const width = tokens.stroke;
   const family = (name: string) => tokens.fonts[name] ?? name;
   const pad = scene.frame ?? 0;
@@ -71,7 +74,7 @@ export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: S
         out.push(`<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="${paint(s.stroke)}" stroke-width="${width}"/>`);
         break;
       case 'path':
-        out.push(s.fill ? `<path d="${s.d}" fill="${paint(s.fill)}"/>` : `<path d="${s.d}" fill="none" stroke="${paint(s.stroke ?? '')}" stroke-width="${width}"/>`);
+        out.push(s.fill ? `<path d="${s.d}" fill="${paint(s.fill)}"/>` : `<path d="${s.d}" fill="none" stroke="${paint(s.stroke)}" stroke-width="${width}"/>`);
         break;
       case 'text': {
         const runs = s.text.split(HANGUL).filter(Boolean);

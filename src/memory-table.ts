@@ -1,4 +1,5 @@
-import { checkText, textWidth, type Scene, type Shape } from './scene.ts';
+import { checkText, textWidth, type ProfileName, type Scene, type Shape } from './scene.ts';
+import type { Paint } from './tokens.ts';
 
 export type Field = [string, number] | { pad: number } | { other: string; size: number };
 
@@ -35,7 +36,7 @@ export interface Profile {
   frame: number;
 }
 
-export const PROFILES: Record<string, Profile> = {
+export const PROFILES: Record<ProfileName, Profile> = {
   blog: { row: 56, sub: 11, header: 11, word: 14, stack: 11, frame: 24 },
   slide: { row: 60, sub: 12, header: 12, word: 15, stack: 12, frame: 12 },
 };
@@ -133,10 +134,10 @@ export function parseTable(html: string): Grid {
   return { headers, rows: out, end };
 }
 
-interface Placed { lines: Array<{ text: string; size: number; bold: boolean; fill: string; dy: number }>; height: number }
+interface Placed { lines: Array<{ text: string; size: number; bold: boolean; fill: Paint; dy: number }>; height: number }
 
 function place(cell: Cell, w: number, p: Profile): Placed {
-  const stack = (text: string, bold: boolean, fill: string): Placed => {
+  const stack = (text: string, bold: boolean, fill: Paint): Placed => {
     const chars = [...text.replace(/\s+/g, '')];
     const step = p.stack + 2;
     const top = -((chars.length - 1) * step) / 2 + p.stack * 0.35;
@@ -180,7 +181,7 @@ export function layout(g: Grid, label: string, p: Profile = PROFILES.blog): Scen
   });
   const heights = placed.map((cells) => Math.max(p.row, ...cells.map((c) => c.placed.height)));
   const shapes: Shape[] = [];
-  const text = (x: number, y: number, body: string, size: number, bold: boolean, anchor: 'start' | 'middle' | 'end', fill: string) =>
+  const text = (x: number, y: number, body: string, size: number, bold: boolean, anchor: 'start' | 'middle' | 'end', fill: Paint) =>
     shapes.push({ kind: 'text', x, y, text: body, size, bold, anchor, fill });
 
   g.headers.forEach((h, i) => text(round(left + (i + 0.5) * unit), TOP - 12, h, p.header, false, 'middle', 'text-secondary'));

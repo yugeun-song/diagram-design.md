@@ -1,4 +1,5 @@
-import { ADVANCE, checkText, type Scene, type Shape } from './scene.ts';
+import { ADVANCE, checkText, type ProfileName, type Scene, type Shape } from './scene.ts';
+import type { Paint } from './tokens.ts';
 
 export interface Region {
   id?: string;
@@ -28,7 +29,7 @@ export interface Profile {
   frame: number;
 }
 
-export const PROFILES: Record<string, Profile> = {
+export const PROFILES: Record<ProfileName, Profile> = {
   blog: { value: 156, word: 116, gap: 76, wordSize: 14, subSize: 11, frame: 24 },
   slide: { value: 56, word: 48, gap: 32, wordSize: 15, subSize: 12, frame: 12 },
 };
@@ -121,7 +122,7 @@ const round = (n: number) => Math.round(n * 100) / 100;
 export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Scene {
   validate(spec);
   const shapes: Shape[] = [];
-  const text = (x: number, y: number, body: string, size: number, bold: boolean, anchor: 'start' | 'middle' | 'end', fill = 'diagram-ink') =>
+  const text = (x: number, y: number, body: string, size: number, bold: boolean, anchor: 'start' | 'middle' | 'end', fill: Paint = 'diagram-ink') =>
     shapes.push({ kind: 'text', x, y, text: body, size, bold, anchor, fill });
   const line = (x1: number, y1: number, x2: number, y2: number) => shapes.push({ kind: 'line', x1, y1, x2, y2, stroke: 'diagram-ink' });
 

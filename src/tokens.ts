@@ -9,7 +9,8 @@ export interface Tokens {
   themes: Record<string, Theme>;
 }
 
-export const VARS = ['bg-base', 'code-bg', 'code-border', 'diagram-ink', 'diagram-area', 'diagram-gap', 'syntax-keyword', 'text-secondary'];
+export const VARS = ['bg-base', 'code-bg', 'code-border', 'diagram-ink', 'diagram-area', 'diagram-gap', 'syntax-keyword', 'text-secondary'] as const;
+export type Paint = (typeof VARS)[number];
 
 export const TOKENS_FILE = new URL('../tokens.json', import.meta.url);
 
@@ -38,7 +39,7 @@ export function readBlogTokens(blogDir: string): Tokens {
   return { stroke, fonts, themes };
 }
 
-export function color(tokens: Tokens, theme: string, name: string): string {
+export function color(tokens: Tokens, theme: string, name: Paint): string {
   const value = tokens.themes[theme]?.[name];
   if (!value) throw new Error(`unknown theme or token: ${theme} --${name}`);
   return value;
