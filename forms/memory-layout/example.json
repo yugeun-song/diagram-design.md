@@ -1,0 +1,11 @@
+{
+  "id": "frame-chain",
+  "label": "Stack column: the saved frame pointers form a linked list that climbs the stack",
+  "regions": [
+    {"id": "outer", "word": "truncated", "sub": "(caller's caller)", "start": "0xffff800083fcbcd0"},
+    {"gap": true},
+    {"id": "caller", "value": "0xffff800083fcbcd0", "sub": "(caller frame)", "start": "0xffff800083fcbc90", "to": "outer"},
+    {"gap": true},
+    {"id": "current", "value": "0xffff800083fcbc90", "sub": "(current frame)", "start": "0xffff800083fcbc30", "marker": "X29 = sp", "to": "caller"}
+  ]
+}
