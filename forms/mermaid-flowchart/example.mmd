@@ -8,7 +8,8 @@ flowchart TD
     vfs --> hit{"page cache hit?"}
     hit -- yes --> copy[copy_to_user]
     hit -- no --> bio[submit_bio]
-    bio --> irq[completion IRQ]:::muted
-    irq --> copy
+    bio --> wait[wait for I/O]
+    irq[completion IRQ]:::muted -. wakes .-> wait
+    wait --> copy
     bio -- error --> eio["-EIO"]:::danger
     copy --> done[return bytes]:::accent
