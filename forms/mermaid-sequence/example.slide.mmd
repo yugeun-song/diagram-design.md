@@ -1,0 +1,16 @@
+---
+config:
+  sequence:
+    mirrorActors: false
+    width: 130
+    actorMargin: 40
+---
+sequenceDiagram
+    %% id: read-seq
+    participant app
+    participant kernel
+    participant disk
+    app->>kernel: read()
+    kernel->>disk: submit_bio
+    disk-->>kernel: IRQ
+    kernel-->>app: bytes

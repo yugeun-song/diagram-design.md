@@ -1,0 +1,17 @@
+sequenceDiagram
+    %% id: read-seq
+    participant app
+    participant kernel
+    participant cache as page cache
+    participant disk
+    app->>kernel: read(fd, buf, n)
+    kernel->>cache: filemap_get_folio
+    alt hit
+        cache-->>kernel: folio
+    else miss
+        kernel->>cache: filemap_add_folio
+        kernel->>disk: submit_bio
+        disk-->>kernel: completion IRQ
+    end
+    Note over kernel: copy_to_user
+    kernel-->>app: bytes read
