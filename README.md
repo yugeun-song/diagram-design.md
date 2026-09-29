@@ -41,4 +41,4 @@ Node 26 runs `dg.ts` as is. There is nothing to install.
 
 ## Test
 
-`npm test`
+`npm test` runs the tests. `npx tsc -p .` type-checks in strict mode; the blog's `npm run typecheck` also covers `src/`.
