@@ -1,0 +1,104 @@
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+import * as memoryLayout from '../src/memory-layout.ts';
+import * as memoryTable from '../src/memory-table.ts';
+import { lintMermaid } from '../src/mermaid.ts';
+import { lintStatic, toStatic, toWebClass, toWebInline } from '../src/scene.ts';
+import { loadTokens, readBlogTokens } from '../src/tokens.ts';
+
+const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+const layoutSpec: memoryLayout.MemoryLayout = JSON.parse(read('../forms/memory-layout/example.json'));
+const tableSpecs: memoryTable.MemoryTable[] = JSON.parse(read('../forms/memory-table/example.json'));
+const tokens = loadTokens();
+
+test('the memory layout example renders the reference svg', () => {
+  assert.equal(toWebInline(memoryLayout.layout(layoutSpec), 'mem-diagram') + '\n', read('golden/frame-chain.svg'));
+});
+
+test('the memory table examples render the reference html and the svg the blog draws', () => {
+  assert.equal(tableSpecs.map((spec) => memoryTable.html(memoryTable.grid(spec))).join('\n\n') + '\n', read('golden/memory-table.html'));
+  for (const spec of tableSpecs) {
+    const svg = toWebClass(memoryTable.layout(memoryTable.grid(spec), spec.label ?? ''), memoryTable.WEB_STYLE);
+    assert.equal(svg + '\n', read(`golden/${spec.id}.svg`));
+  }
+});
+
+test('static svgs use presentation attributes only', () => {
+  const scenes = ['blog', 'slide'].flatMap((profile) => [
+    memoryLayout.layout(layoutSpec, memoryLayout.PROFILES[profile]),
+    ...tableSpecs.map((spec) => memoryTable.layout(memoryTable.grid(spec), spec.label ?? '', memoryTable.PROFILES[profile])),
+  ]);
+  for (const scene of scenes) {
+    for (const theme of Object.keys(tokens.themes)) assert.deepEqual(lintStatic(toStatic(scene, tokens, theme)), []);
+  }
+});
+
+test('a pointer into a sized region lands in proportion', () => {
+  const scene = memoryLayout.layout({
+    label: 'x',
+    regions: [{ id: 'buf', word: 'buffer', start: '0x1000', size: '0x100' }, { value: '0x1080', start: '0x800', to: 'buf' }],
+  });
+  const paths = scene.shapes.filter((shape) => shape.kind === 'path').map((shape) => shape.d);
+  assert.ok(paths.some((d) => d.endsWith('Q 493 130 481 130 H 464')));
+  assert.ok(paths.includes('M 454 130 L 466 124 L 466 136 Z'));
+});
+
+test('invalid specs name the problem', () => {
+  const spec = (patch: object): memoryLayout.MemoryLayout => ({
+    label: 'x',
+    regions: [{ id: 'a', value: '0x10', start: '0x10' }, { value: '0x10', start: '0x8', to: 'a', ...patch }],
+  });
+  assert.throws(() => memoryLayout.layout(spec({ to: 'b' })), /is not a region id/);
+  assert.throws(() => memoryLayout.layout(spec({ start: '0x20' })), /start: must be lower/);
+  assert.throws(() => memoryLayout.layout(spec({ value: '0x18' })), /give the target a size/);
+  assert.throws(() => memoryLayout.layout(spec({ colour: 'red' })), /unknown field "colour"/);
+  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'w', start: '0x20', h: 20 }, { value: '0x20', start: '0x10', to: 'a', h: 20 }] }), /needs 24; raise h/);
+  assert.throws(() => memoryTable.grid({ unit: 'byte', fields: [['a', 3]] }), /add \{"pad": 5\}/);
+});
+
+test('review regressions stay fixed', () => {
+  const desc = memoryTable.grid({ unit: 'bit', cols: 8, order: 'desc', fields: [['EN', 1], ['MODE', 3], { pad: 4 }] });
+  assert.deepEqual(desc[0].map((c) => c.text), ['7', '6', '5', '4', '3', '2', '1', '0']);
+  assert.deepEqual(desc[1].map((c) => c.text), ['pad', 'MODE', 'EN']);
+  assert.throws(() => memoryTable.grid({ unit: 'bit', order: 'DESC' as 'desc', fields: [['a', 32]] }), /order/);
+  const based = memoryTable.grid({ unit: 'byte', base: '0xffff800083fcbc30', fields: [['a', 8], ['b', 8]] });
+  assert.deepEqual(based.slice(1).map((r) => r[0].text), ['0xffff800083fcbc30', '0xffff800083fcbc38']);
+  assert.throws(() => memoryTable.grid({ unit: 'byte', base: 4096 as unknown as string, fields: [['a', 8]] }), /base/);
+  assert.throws(() => memoryTable.grid({ unit: 'byte', fields: [['map (std::map<int,int>)', 8]] }), /does not escape/);
+  assert.throws(() => memoryTable.grid({ unit: 'byte', cols: 200, fields: [['a', 200]] }), /cols/);
+  assert.throws(() => memoryTable.grid({ unit: 'byte', fields: [null as unknown as memoryTable.Field] }), /expected/);
+
+  const sized = memoryLayout.layout({ label: 'x', regions: [
+    { id: 'hi', word: 'other', start: '0x8000' },
+    { id: 'buf', word: 'buffer', start: '0x1000', size: '0x100' },
+    { value: '0x1080', start: '0x800', to: 'buf' },
+  ] });
+  assert.ok(sized.shapes.some((shape) => shape.kind === 'path' && shape.d === 'M 454 246 L 466 240 L 466 252 Z'));
+  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'a', h: '50' as unknown as number, start: '0x20' }] }), /h: must be a positive number/);
+  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ value: 4096 as unknown as string }] }), /must be a non-empty string/);
+  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a\nb' }] }), /control character/);
+  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [
+    { id: 'r0', word: 'r0', start: '0x60' }, { id: 'r1', word: 'r1', start: '0x50' }, { value: '0x50', start: '0x40', to: 'r1' },
+    { gap: true }, { gap: true }, { value: '0x60', start: '0x10', to: 'r0' },
+  ] }), /runs into the arrow|cross/);
+
+  const table = memoryTable.layout(memoryTable.grid({ unit: 'byte', fields: [['code (u16)', 2], ['jt (u8)', 1], ['jf (u8)', 1], ['k (u32)', 4]], label: 'struct sock_filter' }), 'struct sock_filter');
+  assert.deepEqual(lintStatic(toStatic(table, tokens, 'clean-light')), []);
+  assert.deepEqual(lintStatic('<svg><text fill="#000">filter opacity transform var(x)</text></svg>'), []);
+  assert.equal(lintStatic('<svg><rect style="fill:red"/></svg>').length, 1);
+});
+
+test('the mermaid lint flags what the page would break', () => {
+  assert.deepEqual(lintMermaid('flowchart TD\n    a --> b'), []);
+  assert.equal(lintMermaid('flowchart TD\n    a -.-> b').length, 1);
+  assert.equal(lintMermaid('flowchart TD\n    classDef x fill:red').length, 1);
+  assert.equal(lintMermaid('flowchart TD\n    a["x &amp; y"]').length, 1);
+  assert.equal(lintMermaid('flowchart TD\n    a:::info:::code').length, 1);
+});
+
+const blog = fileURLToPath(new URL('../../blog/', import.meta.url));
+test('tokens.json matches the blog themes', { skip: !existsSync(blog) && 'no blog checkout' }, () => {
+  assert.deepEqual(readBlogTokens(blog), tokens);
+});
