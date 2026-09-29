@@ -2,6 +2,7 @@ import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import { createServer, type Server, type ServerResponse } from 'node:http';
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { dirname, extname, join, normalize, resolve, sep } from 'node:path';
 import { Chrome, killGroup } from './chrome.ts';
 import { onCleanup } from './cleanup.ts';
@@ -115,6 +116,7 @@ export async function buildSite(blogDir: string, sources: string[]): Promise<{ d
       copyFileSync(from, join(engine, file));
     }
     symlinkSync(join(blog, 'node_modules'), join(engine, 'node_modules'));
+    symlinkSync(fileURLToPath(new URL('..', import.meta.url)), join(engine, 'diagrams'));
     const post = join(root, 'content', 'dg');
     mkdirSync(post, { recursive: true });
     writeFileSync(join(post, 'index.md'), sources.map((source, i) => `## d${i}\n\n\`\`\`mermaid\n${source.trim()}\n\`\`\`\n`).join('\n'));
@@ -144,7 +146,7 @@ export async function mermaidPNGs(blogDir: string, sources: string[], themes: st
     server = await serve(site.dist, {});
     chrome = new Chrome();
     const shots: MermaidShot[][] = sources.map(() => []);
-    const css = '.statusline,.site-header{visibility:hidden!important}.diagram-container{display:inline-block!important;width:max-content!important;max-width:none!important;overflow:visible!important}';
+    const css = '.statusline,.site-header{visibility:hidden!important}.site-main{overflow:visible!important}.diagram-container{display:inline-block!important;width:max-content!important;max-width:none!important;overflow:visible!important}';
     for (const theme of themes) {
       const init = `try { localStorage.setItem('blog-theme', ${JSON.stringify(theme)}); } catch (e) {}`;
       const tab = await chrome.open(`${server.url}/posts/dg/`, 1280, init);
