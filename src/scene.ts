@@ -3,10 +3,11 @@ import { color, type Tokens } from './tokens.ts';
 export type Anchor = 'start' | 'middle' | 'end';
 
 export type Shape =
-  | { kind: 'rect'; x: number; y: number; w: number; h: number; fill: string; stroke?: string; cls?: string }
+  | { kind: 'rect'; x: number; y: number; w: number; h: number; fill: string }
+  | { kind: 'outline'; x: number; y: number; w: number; h: number; stroke: string }
   | { kind: 'line'; x1: number; y1: number; x2: number; y2: number; stroke: string }
   | { kind: 'path'; d: string; fill?: string; stroke?: string }
-  | { kind: 'text'; x: number; y: number; text: string; size: number; bold?: boolean; anchor: Anchor; fill: string; cls?: string; central?: boolean; fit?: number };
+  | { kind: 'text'; x: number; y: number; text: string; size: number; bold?: boolean; anchor: Anchor; fill: string };
 
 export interface Scene {
   width: number;
@@ -23,7 +24,6 @@ export interface StaticOptions {
 }
 
 export const ADVANCE = 0.62;
-const CENTRAL = 0.35;
 const HANGUL = /([ᄀ-ᇿ㄰-㆏가-힣]+)/;
 
 export function checkText(text: string, where: string): void {
@@ -31,39 +31,22 @@ export function checkText(text: string, where: string): void {
 }
 
 export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+export const textWidth = (text: string, size: number) => text.length * ADVANCE * size;
 const space = (s: string) => (/ {2}|^ | $/.test(s) ? ' xml:space="preserve"' : '');
 const fill = (name: string) => `style="fill:var(--${name})"`;
 const stroke = (name: string) => `style="stroke:var(--${name});stroke-width:var(--diagram-stroke)"`;
 
-export function fitSize(shape: { text: string; size: number; fit?: number }): number {
-  const natural = shape.text.length * ADVANCE * shape.size;
-  if (!shape.fit || natural <= shape.fit) return shape.size;
-  return Math.round((shape.fit / (shape.text.length * ADVANCE)) * 100) / 100;
-}
-
-export function toWebInline(scene: Scene, svgClass: string): string {
+export function toWeb(scene: Scene): string {
   const body = scene.shapes.map((s) => {
     switch (s.kind) {
       case 'rect': return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" ${fill(s.fill)}/>`;
+      case 'outline': return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="none" ${stroke(s.stroke)}/>`;
       case 'line': return `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" ${stroke(s.stroke)}/>`;
       case 'path': return s.fill ? `<path d="${s.d}" ${fill(s.fill)}/>` : `<path d="${s.d}" fill="none" ${stroke(s.stroke ?? '')}/>`;
       case 'text': return `<text x="${s.x}" y="${s.y}" font-size="${s.size}"${s.bold ? ' font-weight="700"' : ''} text-anchor="${s.anchor}"${space(s.text)} ${fill(s.fill)}>${esc(s.text)}</text>`;
     }
   });
-  return `<svg xmlns="http://www.w3.org/2000/svg" class="${svgClass}" viewBox="0 0 ${scene.width} ${scene.height}" font-family="${scene.font}, monospace" role="img" aria-label="${esc(scene.label)}">\n  ${body.join('\n  ')}\n</svg>`;
-}
-
-export function toWebClass(scene: Scene, style: string): string {
-  const parts = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${scene.width} ${scene.height}"><style>${style}</style>`];
-  for (const s of scene.shapes) {
-    if (s.kind === 'rect') parts.push(`<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" class="${s.cls}"/>`);
-    if (s.kind === 'text') {
-      const squeeze = s.fit ? ` textLength="${s.fit}" lengthAdjust="spacingAndGlyphs"` : '';
-      parts.push(`<text x="${s.x}" y="${s.y}" class="st ${s.cls}" font-size="${s.size}"${squeeze}>${esc(s.text)}</text>`);
-    }
-  }
-  parts.push('</svg>');
-  return parts.join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="0 0 ${scene.width} ${scene.height}" font-family="${scene.font}, monospace" role="img" aria-label="${esc(scene.label)}">\n  ${body.join('\n  ')}\n</svg>`;
 }
 
 export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: StaticOptions = {}): string {
@@ -79,7 +62,10 @@ export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: S
   for (const s of scene.shapes) {
     switch (s.kind) {
       case 'rect':
-        out.push(`<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="${paint(s.fill)}"${s.stroke ? ` stroke="${paint(s.stroke)}" stroke-width="1"` : ''}/>`);
+        out.push(`<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="${paint(s.fill)}"/>`);
+        break;
+      case 'outline':
+        out.push(`<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="none" stroke="${paint(s.stroke)}" stroke-width="${width}"/>`);
         break;
       case 'line':
         out.push(`<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="${paint(s.stroke)}" stroke-width="${width}"/>`);
@@ -88,13 +74,11 @@ export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: S
         out.push(s.fill ? `<path d="${s.d}" fill="${paint(s.fill)}"/>` : `<path d="${s.d}" fill="none" stroke="${paint(s.stroke ?? '')}" stroke-width="${width}"/>`);
         break;
       case 'text': {
-        const size = fitSize(s);
-        const y = s.central ? Math.round((s.y + CENTRAL * size) * 100) / 100 : s.y;
         const runs = s.text.split(HANGUL).filter(Boolean);
-        const body = runs.length > 1 || HANGUL.test(s.text)
+        const body = HANGUL.test(s.text)
           ? runs.map((run) => `<tspan font-family="${family(HANGUL.test(run) ? 'hangul-sans' : scene.font)}">${esc(run)}</tspan>`).join('')
           : esc(s.text);
-        out.push(`<text x="${s.x}" y="${y}" font-family="${family(scene.font)}" font-size="${size}"${s.bold ? ' font-weight="700"' : ''} text-anchor="${s.anchor}" fill="${paint(s.fill)}"${space(s.text)}>${body}</text>`);
+        out.push(`<text x="${s.x}" y="${s.y}" font-family="${family(scene.font)}" font-size="${s.size}"${s.bold ? ' font-weight="700"' : ''} text-anchor="${s.anchor}" fill="${paint(s.fill)}"${space(s.text)}>${body}</text>`);
         break;
       }
     }

@@ -1,1 +1,67 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 112"><style>.st{font-family:"code-mono","Fira Code",monospace;text-anchor:middle;dominant-baseline:central}</style><rect x="0" y="0" width="20" height="22" class="svg-cell-header"/><text x="10" y="11" class="st sh" font-size="10">0</text><rect x="20" y="0" width="20" height="22" class="svg-cell-header"/><text x="30" y="11" class="st sh" font-size="10">1</text><rect x="40" y="0" width="20" height="22" class="svg-cell-header"/><text x="50" y="11" class="st sh" font-size="10">2</text><rect x="60" y="0" width="20" height="22" class="svg-cell-header"/><text x="70" y="11" class="st sh" font-size="10">3</text><rect x="80" y="0" width="20" height="22" class="svg-cell-header"/><text x="90" y="11" class="st sh" font-size="10">4</text><rect x="100" y="0" width="20" height="22" class="svg-cell-header"/><text x="110" y="11" class="st sh" font-size="10">5</text><rect x="120" y="0" width="20" height="22" class="svg-cell-header"/><text x="130" y="11" class="st sh" font-size="10">6</text><rect x="140" y="0" width="20" height="22" class="svg-cell-header"/><text x="150" y="11" class="st sh" font-size="10">7</text><rect x="160" y="0" width="20" height="22" class="svg-cell-header"/><text x="170" y="11" class="st sh" font-size="10">8</text><rect x="180" y="0" width="20" height="22" class="svg-cell-header"/><text x="190" y="11" class="st sh" font-size="10">9</text><rect x="200" y="0" width="20" height="22" class="svg-cell-header"/><text x="210" y="11" class="st sh" font-size="10">10</text><rect x="220" y="0" width="20" height="22" class="svg-cell-header"/><text x="230" y="11" class="st sh" font-size="10">11</text><rect x="240" y="0" width="20" height="22" class="svg-cell-header"/><text x="250" y="11" class="st sh" font-size="10">12</text><rect x="260" y="0" width="20" height="22" class="svg-cell-header"/><text x="270" y="11" class="st sh" font-size="10">13</text><rect x="280" y="0" width="20" height="22" class="svg-cell-header"/><text x="290" y="11" class="st sh" font-size="10">14</text><rect x="300" y="0" width="20" height="22" class="svg-cell-header"/><text x="310" y="11" class="st sh" font-size="10">15</text><rect x="320" y="0" width="20" height="22" class="svg-cell-header"/><text x="330" y="11" class="st sh" font-size="10">16</text><rect x="340" y="0" width="20" height="22" class="svg-cell-header"/><text x="350" y="11" class="st sh" font-size="10">17</text><rect x="360" y="0" width="20" height="22" class="svg-cell-header"/><text x="370" y="11" class="st sh" font-size="10">18</text><rect x="380" y="0" width="20" height="22" class="svg-cell-header"/><text x="390" y="11" class="st sh" font-size="10">19</text><rect x="400" y="0" width="20" height="22" class="svg-cell-header"/><text x="410" y="11" class="st sh" font-size="10">20</text><rect x="420" y="0" width="20" height="22" class="svg-cell-header"/><text x="430" y="11" class="st sh" font-size="10">21</text><rect x="440" y="0" width="20" height="22" class="svg-cell-header"/><text x="450" y="11" class="st sh" font-size="10">22</text><rect x="460" y="0" width="20" height="22" class="svg-cell-header"/><text x="470" y="11" class="st sh" font-size="10">23</text><rect x="480" y="0" width="20" height="22" class="svg-cell-header"/><text x="490" y="11" class="st sh" font-size="10">24</text><rect x="500" y="0" width="20" height="22" class="svg-cell-header"/><text x="510" y="11" class="st sh" font-size="10">25</text><rect x="520" y="0" width="20" height="22" class="svg-cell-header"/><text x="530" y="11" class="st sh" font-size="10">26</text><rect x="540" y="0" width="20" height="22" class="svg-cell-header"/><text x="550" y="11" class="st sh" font-size="10">27</text><rect x="560" y="0" width="20" height="22" class="svg-cell-header"/><text x="570" y="11" class="st sh" font-size="10">28</text><rect x="580" y="0" width="20" height="22" class="svg-cell-header"/><text x="590" y="11" class="st sh" font-size="10">29</text><rect x="600" y="0" width="20" height="22" class="svg-cell-header"/><text x="610" y="11" class="st sh" font-size="10">30</text><rect x="620" y="0" width="20" height="22" class="svg-cell-header"/><text x="630" y="11" class="st sh" font-size="10">31</text><rect x="0" y="22" width="80" height="30" class="svg-cell-field"/><text x="40" y="37" class="st sf" font-size="11">Version</text><rect x="80" y="22" width="80" height="30" class="svg-cell-field"/><text x="120" y="37" class="st sf" font-size="11">IHL</text><rect x="160" y="22" width="120" height="30" class="svg-cell-field"/><text x="220" y="37" class="st sf" font-size="11">DSCP</text><rect x="280" y="22" width="40" height="30" class="svg-cell-field"/><text x="300" y="37" class="st sf" font-size="11">ECN</text><rect x="320" y="22" width="320" height="30" class="svg-cell-field"/><text x="480" y="37" class="st sf" font-size="11">Total Length</text><rect x="0" y="52" width="320" height="30" class="svg-cell-field"/><text x="160" y="67" class="st sf" font-size="11">Identification</text><rect x="320" y="52" width="60" height="30" class="svg-cell-field"/><text x="350" y="67" class="st sf" font-size="11">Flags</text><rect x="380" y="52" width="260" height="30" class="svg-cell-field"/><text x="510" y="67" class="st sf" font-size="11">Fragment Offset</text><rect x="0" y="82" width="160" height="30" class="svg-cell-field"/><text x="80" y="97" class="st sf" font-size="11">Time to Live</text><rect x="160" y="82" width="160" height="30" class="svg-cell-field"/><text x="240" y="97" class="st sf" font-size="11">Protocol</text><rect x="320" y="82" width="320" height="30" class="svg-cell-field"/><text x="480" y="97" class="st sf" font-size="11">Header Checksum</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="0 0 700 224" font-family="code-mono, monospace" role="img" aria-label="The first three words of an IPv4 header">
+  <text x="26.44" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">0</text>
+  <text x="47.31" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">1</text>
+  <text x="68.19" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">2</text>
+  <text x="89.06" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">3</text>
+  <text x="109.94" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">4</text>
+  <text x="130.81" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">5</text>
+  <text x="151.69" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">6</text>
+  <text x="172.56" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">7</text>
+  <text x="193.44" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">8</text>
+  <text x="214.31" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">9</text>
+  <text x="235.19" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">10</text>
+  <text x="256.06" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">11</text>
+  <text x="276.94" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">12</text>
+  <text x="297.81" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">13</text>
+  <text x="318.69" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">14</text>
+  <text x="339.56" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">15</text>
+  <text x="360.44" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">16</text>
+  <text x="381.31" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">17</text>
+  <text x="402.19" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">18</text>
+  <text x="423.06" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">19</text>
+  <text x="443.94" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">20</text>
+  <text x="464.81" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">21</text>
+  <text x="485.69" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">22</text>
+  <text x="506.56" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">23</text>
+  <text x="527.44" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">24</text>
+  <text x="548.31" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">25</text>
+  <text x="569.19" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">26</text>
+  <text x="590.06" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">27</text>
+  <text x="610.94" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">28</text>
+  <text x="631.81" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">29</text>
+  <text x="652.69" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">30</text>
+  <text x="673.56" y="28" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">31</text>
+  <rect x="16" y="40" width="83.5" height="56" style="fill:var(--diagram-area)"/>
+  <rect x="99.5" y="40" width="83.5" height="56" style="fill:var(--diagram-area)"/>
+  <rect x="183" y="40" width="125.25" height="56" style="fill:var(--diagram-area)"/>
+  <rect x="308.25" y="40" width="41.75" height="56" style="fill:var(--diagram-area)"/>
+  <rect x="350" y="40" width="334" height="56" style="fill:var(--diagram-area)"/>
+  <rect x="16" y="96" width="334" height="56" style="fill:var(--diagram-area)"/>
+  <rect x="350" y="96" width="62.63" height="56" style="fill:var(--diagram-area)"/>
+  <rect x="412.63" y="96" width="271.38" height="56" style="fill:var(--diagram-area)"/>
+  <rect x="16" y="152" width="167" height="56" style="fill:var(--diagram-area)"/>
+  <rect x="183" y="152" width="167" height="56" style="fill:var(--diagram-area)"/>
+  <rect x="350" y="152" width="334" height="56" style="fill:var(--diagram-area)"/>
+  <rect x="16" y="40" width="668" height="168" fill="none" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="16" y1="96" x2="684" y2="96" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="16" y1="152" x2="684" y2="152" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="99.5" y1="40" x2="99.5" y2="96" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="183" y1="40" x2="183" y2="96" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="308.25" y1="40" x2="308.25" y2="96" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="350" y1="40" x2="350" y2="96" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="350" y1="96" x2="350" y2="152" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="412.63" y1="96" x2="412.63" y2="152" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="183" y1="152" x2="183" y2="208" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="350" y1="152" x2="350" y2="208" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <text x="57.75" y="73" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">Version</text>
+  <text x="141.25" y="73" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">IHL</text>
+  <text x="245.63" y="73" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">DSCP</text>
+  <text x="329.13" y="73" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">ECN</text>
+  <text x="517" y="73" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">Total Length</text>
+  <text x="183" y="129" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">Identification</text>
+  <text x="381.32" y="129" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">Flags</text>
+  <text x="548.32" y="129" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">Fragment Offset</text>
+  <text x="99.5" y="185" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">Time to Live</text>
+  <text x="266.5" y="185" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">Protocol</text>
+  <text x="517" y="185" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">Header Checksum</text>
+</svg>

@@ -6,11 +6,11 @@ import * as memoryLayout from './src/memory-layout.ts';
 import * as memoryTable from './src/memory-table.ts';
 import { lintMermaid } from './src/mermaid.ts';
 import { compose, mermaidPNGs, staticPNGs } from './src/png.ts';
-import { fitSize, lintStatic, toStatic, toWebClass, toWebInline, type Scene } from './src/scene.ts';
+import { lintStatic, toStatic, toWeb, type Scene } from './src/scene.ts';
 import { loadTokens, readBlogTokens, TOKENS_FILE, type Tokens } from './src/tokens.ts';
 
 const USAGE = `usage:
-  node dg.ts render <spec.json> [--flavor static [--profile blog|slide] [--theme T]] [--svg]
+  node dg.ts render <spec.json> [--flavor static [--profile blog|slide] [--theme T]]
   node dg.ts slide <spec.json|diagram.mmd> [--theme T,T] [--out DIR] [--blog DIR]
   node dg.ts mockup <form-dir> [--blog DIR]
   node dg.ts tokens [--blog DIR] [--check]
@@ -28,7 +28,6 @@ const options = {
   flavor: { type: 'string' },
   profile: { type: 'string' },
   theme: { type: 'string' },
-  svg: { type: 'boolean', default: false },
   out: { type: 'string', default: 'out' },
   blog: { type: 'string', default: process.env.BLOG_DIR ?? fileURLToPath(new URL('../blog', import.meta.url)) },
   check: { type: 'boolean', default: false },
@@ -64,11 +63,6 @@ function scene(spec: Spec, profile: string): Scene {
   return memoryTable.layout(memoryTable.grid(spec), spec?.label ?? spec?.id ?? '', memoryTable.PROFILES[profile]);
 }
 
-function web(spec: Spec): string {
-  if (isLayout(spec)) return toWebInline(scene(spec, 'blog'), 'mem-diagram');
-  return values.svg ? toWebClass(scene(spec, 'blog'), memoryTable.WEB_STYLE) : memoryTable.html(memoryTable.grid(spec));
-}
-
 function themes(tokens: Tokens, list: string): string[] {
   const names = list.split(',');
   for (const name of names) if (!Object.hasOwn(tokens.themes, name)) throw new UsageError(`unknown theme ${name}; use ${Object.keys(tokens.themes).join(', ')}`);
@@ -82,8 +76,8 @@ function fit(s: Scene): { scale: number; problems: string[] } {
   const problems: string[] = [];
   for (const t of s.shapes) {
     if (t.kind !== 'text') continue;
-    const pt = fitSize(t) * scale;
-    const floor = t.size >= 15 && !t.fit ? SLIDE.main : SLIDE.minor;
+    const pt = t.size * scale;
+    const floor = t.size >= 15 ? SLIDE.main : SLIDE.minor;
     if (pt < floor - 0.05) problems.push(`"${t.text}" would be ${pt.toFixed(1)}pt, under ${floor}pt`);
   }
   return { scale, problems };
@@ -207,7 +201,7 @@ function render(file: string): void {
   const theme = flavor === 'static' ? themes(tokens, values.theme ?? 'clean-light')[0] : '';
   for (const item of load(file)) {
     if (!item.spec) throw new UsageError('render takes a .json spec; use slide for Mermaid');
-    process.stdout.write((flavor === 'static' ? toStatic(scene(item.spec, profile), tokens, theme) : web(item.spec)) + '\n');
+    process.stdout.write((flavor === 'static' ? toStatic(scene(item.spec, profile), tokens, theme) : toWeb(scene(item.spec, 'blog'))) + '\n');
   }
 }
 

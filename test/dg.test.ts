@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import * as memoryLayout from '../src/memory-layout.ts';
 import * as memoryTable from '../src/memory-table.ts';
 import { lintMermaid } from '../src/mermaid.ts';
-import { lintStatic, toStatic, toWebClass, toWebInline } from '../src/scene.ts';
+import { lintStatic, toStatic, toWeb } from '../src/scene.ts';
 import { loadTokens, readBlogTokens } from '../src/tokens.ts';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -14,14 +14,18 @@ const tableSpecs: memoryTable.MemoryTable[] = JSON.parse(read('../forms/memory-t
 const tokens = loadTokens();
 
 test('the memory layout example renders the reference svg', () => {
-  assert.equal(toWebInline(memoryLayout.layout(layoutSpec), 'mem-diagram') + '\n', read('golden/frame-chain.svg'));
+  assert.equal(toWeb(memoryLayout.layout(layoutSpec)) + '\n', read('golden/frame-chain.svg'));
 });
 
-test('the memory table examples render the reference html and the svg the blog draws', () => {
-  assert.equal(tableSpecs.map((spec) => memoryTable.html(memoryTable.grid(spec))).join('\n\n') + '\n', read('golden/memory-table.html'));
+test('the memory table examples render the reference svg, and a raw table gives the same grid', () => {
   for (const spec of tableSpecs) {
-    const svg = toWebClass(memoryTable.layout(memoryTable.grid(spec), spec.label ?? ''), memoryTable.WEB_STYLE);
-    assert.equal(svg + '\n', read(`golden/${spec.id}.svg`));
+    const g = memoryTable.grid(spec);
+    assert.equal(toWeb(memoryTable.layout(g, spec.label ?? '')) + '\n', read(`golden/${spec.id}.svg`));
+    const header = (g.rows[0].offset !== undefined ? '<th>Offset</th>' : '') + g.headers.map((h) => `<th>${h}</th>`).join('');
+    const rows = g.rows.map((r) => (r.offset !== undefined ? `<td class="offset">${r.offset}</td>` : '')
+      + r.cells.map((c) => `<td${c.span > 1 ? ` colspan="${c.span}"` : ''} class="${c.kind}">${c.text}</td>`).join(''));
+    const parsed = memoryTable.parseTable(`<table class="mem-layout"><tr>${header}</tr>${rows.map((r) => `<tr>${r}</tr>`).join('')}</table>`);
+    assert.deepEqual(parsed, g);
   }
 });
 
@@ -60,15 +64,16 @@ test('invalid specs name the problem', () => {
 
 test('review regressions stay fixed', () => {
   const desc = memoryTable.grid({ unit: 'bit', cols: 8, order: 'desc', fields: [['EN', 1], ['MODE', 3], { pad: 4 }] });
-  assert.deepEqual(desc[0].map((c) => c.text), ['7', '6', '5', '4', '3', '2', '1', '0']);
-  assert.deepEqual(desc[1].map((c) => c.text), ['pad', 'MODE', 'EN']);
+  assert.deepEqual(desc.headers, ['7', '6', '5', '4', '3', '2', '1', '0']);
+  assert.deepEqual(desc.rows[0].cells.map((c) => c.text), ['pad', 'MODE', 'EN']);
   assert.throws(() => memoryTable.grid({ unit: 'bit', order: 'DESC' as 'desc', fields: [['a', 32]] }), /order/);
   const based = memoryTable.grid({ unit: 'byte', base: '0xffff800083fcbc30', fields: [['a', 8], ['b', 8]] });
-  assert.deepEqual(based.slice(1).map((r) => r[0].text), ['0xffff800083fcbc30', '0xffff800083fcbc38']);
+  assert.deepEqual([...based.rows.map((r) => r.offset), based.end], ['0xffff800083fcbc30', '0xffff800083fcbc38', '0xffff800083fcbc40']);
   assert.throws(() => memoryTable.grid({ unit: 'byte', base: 4096 as unknown as string, fields: [['a', 8]] }), /base/);
-  assert.throws(() => memoryTable.grid({ unit: 'byte', fields: [['map (std::map<int,int>)', 8]] }), /does not escape/);
+  assert.ok(toWeb(memoryTable.layout(memoryTable.grid({ unit: 'byte', fields: [['map (std::map<int,int>)', 8]] }), 'x')).includes('std::map&lt;int,int&gt;'));
   assert.throws(() => memoryTable.grid({ unit: 'byte', cols: 200, fields: [['a', 200]] }), /cols/);
   assert.throws(() => memoryTable.grid({ unit: 'byte', fields: [null as unknown as memoryTable.Field] }), /expected/);
+  assert.throws(() => memoryTable.parseTable('<table class="mem-layout"><tr><th>0</th><th>1</th></tr><tr><td class="field">a</td></tr></table>'), /spans 1 columns/);
 
   const sized = memoryLayout.layout({ label: 'x', regions: [
     { id: 'hi', word: 'other', start: '0x8000' },

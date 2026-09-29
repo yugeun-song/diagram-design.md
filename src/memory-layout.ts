@@ -175,10 +175,7 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   text(AXIS, bottom + 24, 'low', SIZE, true, 'middle');
 
   for (const row of rows) shapes.push({ kind: 'rect', x: LEFT, y: row.top, w: RIGHT - LEFT, h: round(row.bottom - row.top), fill: row.region.gap ? 'diagram-gap' : 'diagram-area' });
-  line(LEFT, TOP, LEFT, bottom);
-  line(RIGHT, TOP, RIGHT, bottom);
-  line(LEFT, TOP, RIGHT, TOP);
-  line(LEFT, bottom, RIGHT, bottom);
+  shapes.push({ kind: 'outline', x: LEFT, y: TOP, w: RIGHT - LEFT, h: round(bottom - TOP), stroke: 'diagram-ink' });
   for (const row of rows.slice(0, -1)) line(LEFT, row.bottom, RIGHT, row.bottom);
 
   for (const row of rows) {
