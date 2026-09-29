@@ -9,12 +9,7 @@ export interface Tokens {
   themes: Record<string, Theme>;
 }
 
-export const VARS = [
-  'bg-base', 'code-bg', 'code-border',
-  'diagram-ink', 'diagram-area', 'diagram-gap', 'syntax-keyword', 'text-secondary',
-  'table-header-bg', 'table-header-text', 'bg-elevated', 'accent-primary',
-  'bg-sunken', 'text-muted', 'bg-surface', 'border-default',
-];
+export const VARS = ['bg-base', 'code-bg', 'code-border', 'diagram-ink', 'diagram-area', 'diagram-gap', 'syntax-keyword', 'text-secondary'];
 
 export const TOKENS_FILE = new URL('../tokens.json', import.meta.url);
 
