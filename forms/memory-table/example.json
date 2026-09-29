@@ -1,0 +1,12 @@
+[
+  {"id": "tagged-value", "label": "A tagged value: char, int, short and double with their padding", "unit": "byte", "fields": [
+    ["tag (char)", 1], {"pad": 3}, ["count (int)", 4],
+    ["kind (short)", 2], {"pad": 6},
+    ["value (double)", 8]
+  ]},
+  {"id": "ipv4-header", "label": "The first three words of an IPv4 header", "unit": "bit", "fields": [
+    ["Version", 4], ["IHL", 4], ["DSCP", 6], ["ECN", 2], ["Total Length", 16],
+    ["Identification", 16], ["Flags", 3], ["Fragment Offset", 13],
+    ["Time to Live", 8], ["Protocol", 8], ["Header Checksum", 16]
+  ]}
+]
