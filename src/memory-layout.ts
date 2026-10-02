@@ -253,7 +253,7 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   text(AXIS, TOP - 18, 'high', SIZE, true, 'middle');
   line(AXIS, bottom, AXIS, TOP + 10);
   shapes.push(triangle(TOP + 2, AXIS, 'up', 'diagram-ink'));
-  text(AXIS, bottom + 24, 'low', SIZE, true, 'middle');
+  text(AXIS, round(bottom + 24), 'low', SIZE, true, 'middle');
 
   for (const row of rows) shapes.push({ kind: 'rect', x: LEFT, y: row.top, w: RIGHT - LEFT, h: round(row.bottom - row.top), fill: row.region.gap ? 'diagram-gap' : 'diagram-area' });
   shapes.push({ kind: 'outline', x: LEFT, y: TOP, w: RIGHT - LEFT, h: round(bottom - TOP), stroke: 'diagram-ink' });

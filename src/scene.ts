@@ -62,9 +62,9 @@ export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: S
   const width = tokens.stroke;
   const family = (name: string) => tokens.fonts[name] ?? name;
   const pad = scene.frame ?? 0;
-  const [vx, vy, vw, vh] = [-pad, -pad, scene.width + 2 * pad, scene.height + 2 * pad];
+  const [vx, vy, vw, vh] = [-pad, -pad, round(scene.width + 2 * pad), round(scene.height + 2 * pad)];
   const out: string[] = [];
-  if (pad) out.push(`<rect x="${vx + 0.5}" y="${vy + 0.5}" width="${vw - 1}" height="${vh - 1}" rx="10" fill="${paint('code-bg')}" stroke="${paint('code-border')}" stroke-width="1"/>`);
+  if (pad) out.push(`<rect x="${vx + 0.5}" y="${vy + 0.5}" width="${round(vw - 1)}" height="${round(vh - 1)}" rx="10" fill="${paint('code-bg')}" stroke="${paint('code-border')}" stroke-width="1"/>`);
   for (const s of scene.shapes) {
     switch (s.kind) {
       case 'rect':
