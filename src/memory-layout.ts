@@ -51,7 +51,7 @@ export const PROFILES: Record<ProfileName, Profile> = {
 };
 
 const WIDTH = 700, TOP = 72, AXIS = 32, LEFT = 245, RIGHT = 455, MID = 350, ADDR = 231;
-const RUN = 26, RADIUS = 12, LANE = 24, HEAD = 12, SIZE = 15;
+const RUN = 26, RADIUS = 12, LANE = 24, HEAD = 12, TIP = 5, SIZE = 15;
 const INSIDE = RIGHT - LEFT - 16, OUTSIDE = ADDR - AXIS - 16;
 const SPAN_X = RIGHT + 20, SPAN_BAR = 10, SPAN_TICK = RIGHT + 6, SPAN_BEND = 6, SPAN_LABEL = 14;
 const TITLE_ROOM = 560, CODE_ROOM = WIDTH - 32, CODE_TOP = 64, CODE_STEP = 28;
@@ -241,7 +241,7 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   const labelX = SPAN_X + Math.max(0, spanLanes.length - 1) * LANE + SPAN_LABEL;
   const reach = (lines: string[]) => 22 + 11 * Math.max(0, lines.length - 1);
   spans.forEach((s, i) => {
-    if (s.span.shape !== 'bracket' && s.bottom - s.top < 2 * HEAD + 8) throw new Error(`spans[${i}]: the regions are too short for the arrowheads; raise h`);
+    if (s.span.shape !== 'bracket' && s.bottom - s.top < 2 * (HEAD + TIP) + 8) throw new Error(`spans[${i}]: the regions are too short for the arrowheads; raise h`);
     const room = WIDTH - 8 - labelX;
     if (width(s.span.label, SIZE) > room) throw new Error(`spans[${i}].label: "${s.span.label}" is too long for its place`);
     for (const note of s.notes) if (width(note, PROFILES.slide.subSize) > room) throw new Error(`spans[${i}].sub: "${note}" is too long for its place; split it into lines`);
@@ -289,9 +289,9 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     } else {
       line(RIGHT, top, x + SPAN_BAR, top);
       line(RIGHT, end, x + SPAN_BAR, end);
-      shapes.push({ kind: 'line', x1: x, y1: round(top + HEAD - 2), x2: x, y2: round(end - HEAD + 2), stroke });
-      shapes.push({ kind: 'path', d: `M ${x} ${top} L ${x - HEAD / 2} ${round(top + HEAD)} L ${x + HEAD / 2} ${round(top + HEAD)} Z`, fill: stroke });
-      shapes.push({ kind: 'path', d: `M ${x} ${end} L ${x - HEAD / 2} ${round(end - HEAD)} L ${x + HEAD / 2} ${round(end - HEAD)} Z`, fill: stroke });
+      shapes.push({ kind: 'line', x1: x, y1: round(top + TIP + HEAD - 2), x2: x, y2: round(end - TIP - HEAD + 2), stroke });
+      shapes.push({ kind: 'path', d: `M ${x} ${round(top + TIP)} L ${x - HEAD / 2} ${round(top + TIP + HEAD)} L ${x + HEAD / 2} ${round(top + TIP + HEAD)} Z`, fill: stroke });
+      shapes.push({ kind: 'path', d: `M ${x} ${round(end - TIP)} L ${x - HEAD / 2} ${round(end - TIP - HEAD)} L ${x + HEAD / 2} ${round(end - TIP - HEAD)} Z`, fill: stroke });
     }
     const center = (s.top + s.bottom) / 2;
     const baseline = round(s.notes.length ? center - 4 - 11 * (s.notes.length - 1) : center + 5);
@@ -301,8 +301,8 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
 
   for (const a of [...arrows].sort((p, q) => q.index - p.index)) {
     const dir = a.head < a.tail ? -1 : 1;
-    shapes.push({ kind: 'path', d: `M ${RIGHT} ${a.tail} H ${a.leg - RADIUS} Q ${a.leg} ${a.tail} ${a.leg} ${round(a.tail + dir * RADIUS)} V ${round(a.head - dir * RADIUS)} Q ${a.leg} ${a.head} ${a.leg - RADIUS} ${a.head} H ${RIGHT + HEAD - 3}`, stroke: 'diagram-ink' });
-    shapes.push({ kind: 'path', d: `M ${RIGHT - 1} ${a.head} L ${RIGHT - 1 + HEAD} ${round(a.head - HEAD / 2)} L ${RIGHT - 1 + HEAD} ${round(a.head + HEAD / 2)} Z`, fill: 'diagram-ink' });
+    shapes.push({ kind: 'path', d: `M ${RIGHT} ${a.tail} H ${a.leg - RADIUS} Q ${a.leg} ${a.tail} ${a.leg} ${round(a.tail + dir * RADIUS)} V ${round(a.head - dir * RADIUS)} Q ${a.leg} ${a.head} ${a.leg - RADIUS} ${a.head} H ${RIGHT + TIP + HEAD - 3}`, stroke: 'diagram-ink' });
+    shapes.push({ kind: 'path', d: `M ${RIGHT + TIP} ${a.head} L ${RIGHT + TIP + HEAD} ${round(a.head - HEAD / 2)} L ${RIGHT + TIP + HEAD} ${round(a.head + HEAD / 2)} Z`, fill: 'diagram-ink' });
     text(a.leg + 8, round((a.tail + a.head) / 2 + 3), a.label, SIZE, true, 'start');
   }
 

@@ -11,7 +11,7 @@ Diagrams as code for [vmfault.dev](https://vmfault.dev) posts and slide decks. E
 
 Each folder holds `prompt.md` (how to write the source, for a person or a model), `example.*` and `mockup.png` (clean-light left, spaceduck right).
 
-All four share the form of the memory-layout figure: ink strokes 2.4 wide, opaque area and gap fills, bold Cascadia Code labels, 12-unit triangle arrowheads, radius-12 bends and the code-block frame. That form, the stroke weights and the layout are the design and stay fixed.
+All four share the form of the memory-layout figure: ink strokes 2.4 wide, opaque area and gap fills, bold Cascadia Code labels, 12-unit triangle arrowheads, radius-12 bends and the code-block frame. In the JSON forms an arrowhead stops 5 units short of the line or box it points at, so it never touches it. The blog's script insets Mermaid arrowheads by 4 units for the same reason. That form, the stroke weights and the layout are the design and stay fixed.
 
 Colors are not part of it. Each comes from a role variable of the active theme, and can be changed freely to suit any theme. The default is clean-light, the left half of each mockup:
 
@@ -22,7 +22,7 @@ Colors are not part of it. Each comes from a role variable of the active theme, 
 | regions, participants, nodes | `--diagram-area` | `#badac8` |
 | gaps, padding, `muted` nodes | `--diagram-gap` | `#dde2e6` |
 | markers, `alt` frames, `danger` nodes | `--syntax-keyword` | `#cf222e` |
-| memory-layout tones (`tone`, `title`, `spans`, `code`) | `--diagram-red`, `--diagram-orange`, `--diagram-blue`, `--diagram-purple` | `#cf222e`, `#e16f24`, `#0550ae`, `#8250df` |
+| tones (memory-layout `tone`, `title`, `spans`, `code`; struct-chain `tones`, `code`) | `--diagram-red`, `--diagram-orange`, `--diagram-blue`, `--diagram-purple` | `#cf222e`, `#e16f24`, `#0550ae`, `#8250df` |
 | headers, padding labels, `⋮` | `--text-secondary` | `#4a4a4a` |
 | Mermaid notes | `--box-warn-bg`, `--box-warn-border` | `#fff7d6`, `#ef8200` |
 
