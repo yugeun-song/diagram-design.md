@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="0 0 700 428" font-family="code-mono, monospace" role="img" aria-label="list_for_each follows only the next pointers of the embedded list members, from the head user_info_list through users[0], users[1] and users[2] back to the head, and container_of subtracts offsetof, 0x100, at each node to reach its struct user_info">
+  <rect x="208.55" y="40" width="92" height="88" style="fill:var(--diagram-area)"/>
+  <rect x="208.55" y="128" width="92" height="36" style="fill:var(--diagram-purple)"/>
+  <rect x="208.55" y="164" width="92" height="36" style="fill:var(--diagram-purple)"/>
+  <line x1="208.55" y1="164" x2="300.55" y2="164" style="stroke:var(--code-bg);stroke-width:var(--diagram-stroke)"/>
+  <rect x="208.55" y="200" width="92" height="48" style="fill:var(--diagram-area)"/>
+  <rect x="208.55" y="248" width="92" height="28" style="fill:var(--diagram-gap)"/>
+  <line x1="208.55" y1="128" x2="300.55" y2="128" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="208.55" y1="200" x2="300.55" y2="200" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="208.55" y1="248" x2="300.55" y2="248" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <rect x="208.55" y="40" width="92" height="236" fill="none" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <text x="254.55" y="28" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-orange)">users[0]</text>
+  <text x="254.55" y="79" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">username</text>
+  <text x="254.55" y="97" font-size="13" text-anchor="middle" style="fill:var(--diagram-ink)">&quot;alice&quot;</text>
+  <text x="254.55" y="150.5" font-size="13" font-weight="700" text-anchor="middle" style="fill:var(--code-bg)">next</text>
+  <text x="254.55" y="186.5" font-size="13" font-weight="700" text-anchor="middle" style="fill:var(--code-bg)">prev</text>
+  <text x="254.55" y="219" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">age</text>
+  <text x="254.55" y="237" font-size="13" text-anchor="middle" style="fill:var(--diagram-ink)">20</text>
+  <text x="254.55" y="266" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">padding</text>
+  <line x1="208.55" y1="40" x2="178.55" y2="40" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="208.55" y1="128" x2="178.55" y2="128" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="188.55" y1="55" x2="188.55" y2="113" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 188.55 45 L 182.55 57 L 194.55 57 Z" style="fill:var(--diagram-blue)"/>
+  <path d="M 188.55 123 L 182.55 111 L 194.55 111 Z" style="fill:var(--diagram-blue)"/>
+  <text x="174.55" y="80" font-size="15" font-weight="700" text-anchor="end" style="fill:var(--diagram-blue)">offsetof</text>
+  <text x="174.55" y="102" font-size="11" text-anchor="end" style="fill:var(--diagram-blue)">= 0x100</text>
+  <rect x="386.55" y="40" width="92" height="88" style="fill:var(--diagram-area)"/>
+  <rect x="386.55" y="128" width="92" height="36" style="fill:var(--diagram-purple)"/>
+  <rect x="386.55" y="164" width="92" height="36" style="fill:var(--diagram-purple)"/>
+  <line x1="386.55" y1="164" x2="478.55" y2="164" style="stroke:var(--code-bg);stroke-width:var(--diagram-stroke)"/>
+  <rect x="386.55" y="200" width="92" height="48" style="fill:var(--diagram-area)"/>
+  <rect x="386.55" y="248" width="92" height="28" style="fill:var(--diagram-gap)"/>
+  <line x1="386.55" y1="128" x2="478.55" y2="128" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="386.55" y1="200" x2="478.55" y2="200" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="386.55" y1="248" x2="478.55" y2="248" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <rect x="386.55" y="40" width="92" height="236" fill="none" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <text x="432.55" y="28" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-orange)">users[1]</text>
+  <text x="432.55" y="79" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">username</text>
+  <text x="432.55" y="97" font-size="13" text-anchor="middle" style="fill:var(--diagram-ink)">&quot;bob&quot;</text>
+  <text x="432.55" y="150.5" font-size="13" font-weight="700" text-anchor="middle" style="fill:var(--code-bg)">next</text>
+  <text x="432.55" y="186.5" font-size="13" font-weight="700" text-anchor="middle" style="fill:var(--code-bg)">prev</text>
+  <text x="432.55" y="219" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">age</text>
+  <text x="432.55" y="237" font-size="13" text-anchor="middle" style="fill:var(--diagram-ink)">30</text>
+  <text x="432.55" y="266" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">padding</text>
+  <line x1="386.55" y1="40" x2="356.55" y2="40" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="386.55" y1="128" x2="356.55" y2="128" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="366.55" y1="55" x2="366.55" y2="113" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 366.55 45 L 360.55 57 L 372.55 57 Z" style="fill:var(--diagram-blue)"/>
+  <path d="M 366.55 123 L 360.55 111 L 372.55 111 Z" style="fill:var(--diagram-blue)"/>
+  <path d="M 300.55 146 H 372.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 381.55 146 L 369.55 140 L 369.55 152 Z" style="fill:var(--diagram-red)"/>
+  <text x="343.55" y="166" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-red)">next</text>
+  <rect x="564.55" y="40" width="92" height="88" style="fill:var(--diagram-area)"/>
+  <rect x="564.55" y="128" width="92" height="36" style="fill:var(--diagram-purple)"/>
+  <rect x="564.55" y="164" width="92" height="36" style="fill:var(--diagram-purple)"/>
+  <line x1="564.55" y1="164" x2="656.55" y2="164" style="stroke:var(--code-bg);stroke-width:var(--diagram-stroke)"/>
+  <rect x="564.55" y="200" width="92" height="48" style="fill:var(--diagram-area)"/>
+  <rect x="564.55" y="248" width="92" height="28" style="fill:var(--diagram-gap)"/>
+  <line x1="564.55" y1="128" x2="656.55" y2="128" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="564.55" y1="200" x2="656.55" y2="200" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="564.55" y1="248" x2="656.55" y2="248" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <rect x="564.55" y="40" width="92" height="236" fill="none" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <text x="610.55" y="28" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-orange)">users[2]</text>
+  <text x="610.55" y="79" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">username</text>
+  <text x="610.55" y="97" font-size="13" text-anchor="middle" style="fill:var(--diagram-ink)">&quot;carol&quot;</text>
+  <text x="610.55" y="150.5" font-size="13" font-weight="700" text-anchor="middle" style="fill:var(--code-bg)">next</text>
+  <text x="610.55" y="186.5" font-size="13" font-weight="700" text-anchor="middle" style="fill:var(--code-bg)">prev</text>
+  <text x="610.55" y="219" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-ink)">age</text>
+  <text x="610.55" y="237" font-size="13" text-anchor="middle" style="fill:var(--diagram-ink)">40</text>
+  <text x="610.55" y="266" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">padding</text>
+  <line x1="564.55" y1="40" x2="534.55" y2="40" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="564.55" y1="128" x2="534.55" y2="128" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <line x1="544.55" y1="55" x2="544.55" y2="113" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 544.55 45 L 538.55 57 L 550.55 57 Z" style="fill:var(--diagram-blue)"/>
+  <path d="M 544.55 123 L 538.55 111 L 550.55 111 Z" style="fill:var(--diagram-blue)"/>
+  <path d="M 478.55 146 H 550.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 559.55 146 L 547.55 140 L 547.55 152 Z" style="fill:var(--diagram-red)"/>
+  <text x="521.55" y="166" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-red)">next</text>
+  <rect x="50.55" y="128" width="72" height="36" style="fill:var(--diagram-purple)"/>
+  <rect x="50.55" y="164" width="72" height="36" style="fill:var(--diagram-purple)"/>
+  <line x1="50.55" y1="164" x2="122.55" y2="164" style="stroke:var(--code-bg);stroke-width:var(--diagram-stroke)"/>
+  <rect x="50.55" y="128" width="72" height="72" fill="none" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <text x="86.55" y="150.5" font-size="13" font-weight="700" text-anchor="middle" style="fill:var(--code-bg)">next</text>
+  <text x="86.55" y="186.5" font-size="13" font-weight="700" text-anchor="middle" style="fill:var(--code-bg)">prev</text>
+  <text x="86.55" y="220" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-purple)">user_info_list</text>
+  <text x="86.55" y="237" font-size="11" text-anchor="middle" style="fill:var(--diagram-purple)">(head)</text>
+  <path d="M 122.55 146 H 194.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 203.55 146 L 191.55 140 L 191.55 152 Z" style="fill:var(--diagram-red)"/>
+  <text x="165.55" y="166" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-red)">next</text>
+  <path d="M 656.55 146 H 674.55 Q 686.55 146 686.55 158 V 296 Q 686.55 308 674.55 308 H 23.45 Q 11.45 308 11.45 296 V 158 Q 11.45 146 23.45 146 H 36.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 45.55 146 L 33.55 140 L 33.55 152 Z" style="fill:var(--diagram-red)"/>
+  <text x="349" y="328" font-size="15" font-weight="700" text-anchor="middle" style="fill:var(--diagram-red)">next</text>
+  <text x="103.55" y="376" font-size="15" font-weight="700" text-anchor="start" xml:space="preserve"><tspan style="fill:var(--diagram-ink)">list_for_each(</tspan><tspan style="fill:var(--diagram-red)">pos</tspan><tspan style="fill:var(--diagram-ink)">, </tspan><tspan style="fill:var(--diagram-purple)">&amp;user_info_list</tspan><tspan style="fill:var(--diagram-ink)">)</tspan></text>
+  <text x="103.55" y="404" font-size="15" font-weight="700" text-anchor="start" xml:space="preserve"><tspan style="fill:var(--diagram-ink)">    </tspan><tspan style="fill:var(--diagram-blue)">user</tspan><tspan style="fill:var(--diagram-ink)"> = container_of(</tspan><tspan style="fill:var(--diagram-red)">pos</tspan><tspan style="fill:var(--diagram-ink)">, </tspan><tspan style="fill:var(--diagram-orange)">struct user_info</tspan><tspan style="fill:var(--diagram-ink)">, </tspan><tspan style="fill:var(--diagram-purple)">list</tspan><tspan style="fill:var(--diagram-ink)">);</tspan></text>
+</svg>

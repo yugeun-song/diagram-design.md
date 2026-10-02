@@ -1,0 +1,17 @@
+{
+  "id": "user-info-list",
+  "label": "list_for_each follows only the next pointers of the embedded list members, from the head user_info_list through users[0], users[1] and users[2] back to the head, and container_of subtracts offsetof, 0x100, at each node to reach its struct user_info",
+  "fields": [["username", 256], ["list", 16], ["age", 1], {"pad": 7}],
+  "link": {"field": "list", "cells": ["next", "prev"]},
+  "head": {"name": "user_info_list", "sub": "(head)"},
+  "nodes": [
+    {"name": "users[0]", "values": {"username": "\"alice\"", "age": "20"}},
+    {"name": "users[1]", "values": {"username": "\"bob\"", "age": "30"}},
+    {"name": "users[2]", "values": {"username": "\"carol\"", "age": "40"}}
+  ],
+  "tones": {"node": "orange", "link": "purple", "walk": "red", "offset": "blue"},
+  "code": [
+    ["list_for_each(", ["pos", "red"], ", ", ["&user_info_list", "purple"], ")"],
+    ["    ", ["user", "blue"], " = container_of(", ["pos", "red"], ", ", ["struct user_info", "orange"], ", ", ["list", "purple"], ");"]
+  ]
+}

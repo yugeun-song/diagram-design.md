@@ -6,12 +6,13 @@ Diagrams as code for [vmfault.dev](https://vmfault.dev) posts and slide decks. E
 |---|---|---|
 | [memory-layout](forms/memory-layout/) | JSON | stack frames, pointer chains, address spaces |
 | [memory-table](forms/memory-table/) | JSON | struct layouts, packet headers, register bitfields |
+| [struct-chain](forms/struct-chain/) | JSON | intrusive lists: structures linked through an embedded member, and `container_of` |
 | [mermaid-flowchart](forms/mermaid-flowchart/) | Mermaid | pipelines, decisions, state machines |
 | [mermaid-sequence](forms/mermaid-sequence/) | Mermaid | syscalls, handshakes, RPC |
 
 Each folder holds `prompt.md` (how to write the source, for a person or a model), `example.*` and `mockup.png` (clean-light left, spaceduck right).
 
-All four share the form of the memory-layout figure: ink strokes 2.4 wide, opaque area and gap fills, bold Cascadia Code labels, 12-unit triangle arrowheads, radius-12 bends and the code-block frame. In the JSON forms an arrowhead stops 5 units short of the line or box it points at, so it never touches it. The blog's script insets Mermaid arrowheads by 4 units for the same reason. That form, the stroke weights and the layout are the design and stay fixed.
+All five share the form of the memory-layout figure: ink strokes 2.4 wide, opaque area and gap fills, bold Cascadia Code labels, 12-unit triangle arrowheads, radius-12 bends and the code-block frame. In the JSON forms an arrowhead stops 5 units short of the line or box it points at, so it never touches it. The blog's script insets Mermaid arrowheads by 4 units for the same reason. That form, the stroke weights and the layout are the design and stay fixed.
 
 Colors are not part of it. Each comes from a role variable of the active theme, and can be changed freely to suit any theme. The default is clean-light, the left half of each mockup:
 
@@ -30,7 +31,7 @@ Colors are not part of it. Each comes from a role variable of the active theme, 
 
 ## Posts
 
-The blog mounts this repository as its `diagrams` submodule. A post writes the source in a fenced block (` ```memory-layout `, ` ```memory-table ` or ` ```mermaid `). The build draws the two memory forms as SVG and fails on an invalid spec, and the page draws Mermaid.
+The blog mounts this repository as its `diagrams` submodule. A post writes the source in a fenced block (` ```memory-layout `, ` ```memory-table `, ` ```struct-chain ` or ` ```mermaid `). The build draws the three JSON forms as SVG and fails on an invalid spec, and the page draws Mermaid.
 
 ## Commands
 

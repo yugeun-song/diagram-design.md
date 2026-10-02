@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import * as memoryLayout from './src/memory-layout.ts';
 import * as memoryTable from './src/memory-table.ts';
+import * as structChain from './src/struct-chain.ts';
 import { lintMermaid } from './src/mermaid.ts';
 import { compose, mermaidPNGs, staticPNGs } from './src/png.ts';
 import { lintStatic, toStatic, toWeb, type ProfileName, type Scene } from './src/scene.ts';
@@ -19,7 +20,7 @@ const USAGE = `usage:
 const SLIDE = { width: 880, height: 460, main: 18, minor: 14, max: 24 };
 const ID = /^[a-z0-9][a-z0-9-]*$/;
 
-type Spec = memoryLayout.MemoryLayout | memoryTable.MemoryTable;
+type Spec = memoryLayout.MemoryLayout | memoryTable.MemoryTable | structChain.StructChain;
 interface Item { id: string; spec?: Spec; mermaid?: string }
 
 class UsageError extends Error {}
@@ -57,12 +58,15 @@ function load(file: string): Item[] {
 }
 
 const isLayout = (spec: Spec): spec is memoryLayout.MemoryLayout => !!spec && typeof spec === 'object' && 'regions' in spec;
+const isChain = (spec: Spec): spec is structChain.StructChain => !!spec && typeof spec === 'object' && 'nodes' in spec;
 
 const isProfile = (value: string): value is ProfileName => Object.hasOwn(memoryLayout.PROFILES, value);
 
 function scene(spec: Spec, profile: ProfileName): Scene {
   if (isLayout(spec)) return memoryLayout.layout(spec, memoryLayout.PROFILES[profile]);
-  return memoryTable.layout(memoryTable.grid(spec), spec?.label ?? spec?.id ?? '', memoryTable.PROFILES[profile]);
+  if (isChain(spec)) return structChain.layout(spec, structChain.PROFILES[profile]);
+  const table = spec as memoryTable.MemoryTable;
+  return memoryTable.layout(memoryTable.grid(table), table?.label ?? table?.id ?? '', memoryTable.PROFILES[profile]);
 }
 
 function themes(tokens: Tokens, list: string): string[] {

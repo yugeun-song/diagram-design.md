@@ -6,11 +6,13 @@ import * as memoryLayout from '../src/memory-layout.ts';
 import * as memoryTable from '../src/memory-table.ts';
 import { lintMermaid } from '../src/mermaid.ts';
 import { lintStatic, toStatic, toWeb } from '../src/scene.ts';
+import * as structChain from '../src/struct-chain.ts';
 import { loadTokens, readBlogTokens } from '../src/tokens.ts';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const layoutSpec: memoryLayout.MemoryLayout = JSON.parse(read('../forms/memory-layout/example.json'));
 const tableSpecs: memoryTable.MemoryTable[] = JSON.parse(read('../forms/memory-table/example.json'));
+const chainSpec: structChain.StructChain = JSON.parse(read('../forms/struct-chain/example.json'));
 const tokens = loadTokens();
 
 test('the memory layout example renders the reference svg', () => {
@@ -46,6 +48,7 @@ test('static svgs use presentation attributes only', () => {
   const scenes = (['blog', 'slide'] as const).flatMap((profile) => [
     memoryLayout.layout(layoutSpec, memoryLayout.PROFILES[profile]),
     ...tableSpecs.map((spec) => memoryTable.layout(memoryTable.grid(spec), spec.label ?? '', memoryTable.PROFILES[profile])),
+    structChain.layout(chainSpec, structChain.PROFILES[profile]),
   ]);
   for (const scene of scenes) {
     for (const theme of Object.keys(tokens.themes)) assert.deepEqual(lintStatic(toStatic(scene, tokens, theme)), []);
@@ -95,6 +98,27 @@ test('tones, spans, a title and code lines take theme roles', () => {
   assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: 'x'.repeat(30) }] }), /split it into lines/);
 });
 
+test('the struct chain example renders the reference svg', () => {
+  assert.equal(toWeb(structChain.layout(chainSpec)) + '\n', read('golden/user-info-list.svg'));
+});
+
+test('a struct chain links only the embedded members, rings back to its head and measures offsetof on each node', () => {
+  const texts = (scene: ReturnType<typeof structChain.layout>) => scene.shapes.flatMap((shape) => (shape.kind === 'text' ? [shape.text] : []));
+  const rings = (scene: ReturnType<typeof structChain.layout>) => scene.shapes.filter((shape) => shape.kind === 'path' && shape.stroke && shape.d.includes(' V ')).length;
+  const ring = structChain.layout(chainSpec);
+  assert.equal(rings(ring), 1);
+  assert.equal(texts(ring).filter((t) => t === 'offsetof').length, 1);
+  assert.equal(texts(ring).filter((t) => t === '= 0x100').length, 1);
+  assert.equal(texts(ring).filter((t) => t === 'padding').length, 3);
+  assert.equal(texts(ring).filter((t) => t === 'next').length, 4 + 4);
+  const line = structChain.layout({ ...chainSpec, head: undefined });
+  assert.equal(rings(line), 0);
+  assert.equal(texts(line).filter((t) => t === 'next').length, 3 + 2);
+  const first = structChain.layout({ ...chainSpec, fields: [['list', 16], ['username', 256], ['age', 1], { pad: 7 }] });
+  assert.ok(!texts(first).includes('offsetof'));
+  assert.match(toWeb(ring), /<rect x="[\d.]+" y="128" width="92" height="36" style="fill:var\(--diagram-purple\)"\/>/);
+});
+
 test('invalid specs name the problem', () => {
   const spec = (patch: object): memoryLayout.MemoryLayout => ({
     label: 'x',
@@ -107,6 +131,16 @@ test('invalid specs name the problem', () => {
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'w', start: '0x20', h: 20 }, { value: '0x20', start: '0x10', to: 'a', h: 20 }] }), /needs 24; raise h/);
   assert.throws(() => memoryTable.grid({ unit: 'byte', fields: [['a', 3]] }), /add \{"pad": 5\}/);
 
+  const chain = (patch: object): structChain.StructChain => ({ ...chainSpec, ...patch });
+  assert.throws(() => structChain.layout(chain({ link: { field: 'node', cells: ['next'] } })), /"node" is not one of the fields/);
+  assert.throws(() => structChain.layout(chain({ link: { field: 'list', cells: [] } })), /one to three pointer names/);
+  assert.throws(() => structChain.layout(chain({ nodes: [{ name: 'a', values: { list: '0x0' } }] })), /"list" is not a field outside the link/);
+  assert.throws(() => structChain.layout(chain({ fields: [['a', 8], ['a', 8], ['list', 16]] })), /"a" is used twice/);
+  assert.throws(() => structChain.layout(chain({ fields: [{ pad: 8 }, ['list', 16]], nodes: [{ name: 'a' }] })), /too short for the offsetof dimension/);
+  assert.throws(() => structChain.layout(chain({ tones: { edge: 'red' } })), /tones: unknown field "edge"/);
+  assert.throws(() => structChain.layout(chain({ tones: { walk: 'green' } })), /unknown tone "green"/);
+  assert.throws(() => structChain.layout(chain({ nodes: [...chainSpec.nodes, { name: 'users[3]' }] })), /4 structures need \d+ units, past 700/);
+  assert.throws(() => structChain.layout(chain({ head: { name: 'h', next: 'x' } })), /head: unknown field "next"/);
 });
 
 test('review regressions stay fixed', () => {
