@@ -4,7 +4,7 @@ A column of memory regions, addresses on its left and pointer arrows on its righ
 
 ## Prompt
 
-Write the layout below as one JSON object. The tool computes every coordinate, color and arrow.
+Write the layout below as one JSON object. The tool computes every coordinate, color and arrow. Colors follow the theme, clean-light by default, and can be changed freely to suit any theme. The shapes, stroke weights and layout stay fixed.
 
 - `label`: one sentence that says what the diagram shows. It becomes the `aria-label`.
 - `id`: a short kebab-case name for exported files.

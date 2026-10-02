@@ -11,7 +11,21 @@ Diagrams as code for [vmfault.dev](https://vmfault.dev) posts and slide decks. E
 
 Each folder holds `prompt.md` (how to write the source, for a person or a model), `example.*` and `mockup.png` (clean-light left, spaceduck right).
 
-All four share the look of the memory-layout form: `--diagram-ink` strokes 2.4 wide, opaque `--diagram-area` and `--diagram-gap` fills, bold Cascadia Code labels, 12-unit triangle arrowheads, radius-12 bends and the code-block frame.
+All four share the form of the memory-layout figure: ink strokes 2.4 wide, opaque area and gap fills, bold Cascadia Code labels, 12-unit triangle arrowheads, radius-12 bends and the code-block frame. That form, the stroke weights and the layout are the design and stay fixed.
+
+Colors are not part of it. Each comes from a role variable of the active theme, and can be changed freely to suit any theme. The default is clean-light, the left half of each mockup:
+
+| Role | Variable | clean-light |
+|---|---|---|
+| frame | `--code-bg`, `--code-border` | `#f6f8fa`, `#d0d7de` |
+| strokes, labels, `accent` nodes | `--diagram-ink` | `#1a1a1a` |
+| regions, participants, nodes | `--diagram-area` | `#badac8` |
+| gaps, padding, `muted` nodes | `--diagram-gap` | `#dde2e6` |
+| markers, `alt` frames, `danger` nodes | `--syntax-keyword` | `#cf222e` |
+| headers, padding labels, `⋮` | `--text-secondary` | `#4a4a4a` |
+| Mermaid notes | `--box-warn-bg`, `--box-warn-border` | `#fff7d6`, `#ef8200` |
+
+`tokens.json` holds the other themes' values, except the note colors, which only the blog's styles define.
 
 ## Posts
 

@@ -11,7 +11,7 @@ Write the interaction below as a Mermaid `sequenceDiagram`.
 - A message label is the function, syscall, value or event (an IRQ, a signal) that crosses, on one line.
 - Branches use `alt` / `else`, repetition `loop` and optional steps `opt`. Name each branch in one or two words.
 - `Note over <participant>` marks work done without a message. Use it sparingly.
-- Add no `%%{init}%%` or styling lines. The page supplies the look.
+- Add no `%%{init}%%` or styling lines. The page supplies the look. Its colors follow the theme, clean-light by default, and can be changed freely to suit any theme. Its shapes, stroke weights and layout stay fixed.
 - Put `%% id: <name>` right after the diagram type to name exported files.
 
 Output only the Mermaid source.

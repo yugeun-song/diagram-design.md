@@ -15,7 +15,7 @@ Write the flow below as a Mermaid `flowchart TD` (or `LR`).
   - `:::danger` an error
 - Quote any label with a character other than letters, digits, spaces and `_`, as in `read["read()"]`.
 - Use one language in all labels.
-- Add no `%%{init}%%`, `classDef` or `style` lines. The page supplies the look.
+- Add no `%%{init}%%`, `classDef` or `style` lines. The page supplies the look. Its colors follow the theme, clean-light by default, and can be changed freely to suit any theme. Its shapes, stroke weights and layout stay fixed.
 - Put `%% id: <name>` right after the diagram type to name exported files.
 
 Output only the Mermaid source.

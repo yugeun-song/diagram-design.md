@@ -4,7 +4,7 @@ A byte or bit layout drawn as a grid in the memory-layout style, with offsets on
 
 ## Prompt
 
-Write the layout below as one JSON object. The tool computes the rows, column spans, offsets and headers.
+Write the layout below as one JSON object. The tool computes the rows, column spans, offsets and headers. Colors follow the theme, clean-light by default, and can be changed freely to suit any theme. The shapes, stroke weights and layout stay fixed.
 
 - `unit`: `"byte"` or `"bit"`.
 - `fields`: in order from the lowest offset.
