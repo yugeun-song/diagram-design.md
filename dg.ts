@@ -77,10 +77,11 @@ function fit(s: Scene): { scale: number; problems: string[] } {
   const scale = Math.min(SLIDE.width / width, SLIDE.height / height, SLIDE.max / 15);
   const problems: string[] = [];
   for (const t of s.shapes) {
-    if (t.kind !== 'text') continue;
+    if (t.kind !== 'text' && t.kind !== 'runs') continue;
+    const text = t.kind === 'text' ? t.text : t.runs.map((r) => r.text).join('');
     const pt = t.size * scale;
     const floor = t.size >= 15 ? SLIDE.main : SLIDE.minor;
-    if (pt < floor - 0.05) problems.push(`"${t.text}" would be ${pt.toFixed(1)}pt, under ${floor}pt`);
+    if (pt < floor - 0.05) problems.push(`"${text}" would be ${pt.toFixed(1)}pt, under ${floor}pt`);
   }
   return { scale, problems };
 }

@@ -9,7 +9,7 @@ export interface Tokens {
   themes: Record<string, Theme>;
 }
 
-export const VARS = ['bg-base', 'code-bg', 'code-border', 'diagram-ink', 'diagram-area', 'diagram-gap', 'syntax-keyword', 'text-secondary'] as const;
+export const VARS = ['bg-base', 'code-bg', 'code-border', 'diagram-ink', 'diagram-area', 'diagram-gap', 'syntax-keyword', 'diagram-red', 'diagram-orange', 'diagram-blue', 'diagram-purple', 'text-secondary'] as const;
 export type Paint = (typeof VARS)[number];
 
 export const TOKENS_FILE = new URL('../tokens.json', import.meta.url);

@@ -1,5 +1,8 @@
 import { ADVANCE, checkText, type ProfileName, type Scene, type Shape } from './scene.ts';
+import { checkTone, paint, pieces as tonePieces, type Piece, type Run, type Tone } from './tone.ts';
 import type { Paint } from './tokens.ts';
+
+export type { Run, Tone } from './tone.ts';
 
 export interface Region {
   id?: string;
@@ -9,15 +12,28 @@ export interface Region {
   sub?: string;
   start?: string;
   marker?: string;
+  tone?: Tone;
   to?: string;
   size?: string;
   h?: number;
 }
 
+export interface Span {
+  from: string;
+  to: string;
+  label: string;
+  sub?: string | string[];
+  tone?: Tone;
+  shape?: 'dimension' | 'bracket';
+}
+
 export interface MemoryLayout {
   id?: string;
   label: string;
+  title?: Run[];
   regions: Region[];
+  spans?: Span[];
+  code?: Run[][];
 }
 
 export interface Profile {
@@ -37,8 +53,11 @@ export const PROFILES: Record<ProfileName, Profile> = {
 const WIDTH = 700, TOP = 72, AXIS = 32, LEFT = 245, RIGHT = 455, MID = 350, ADDR = 231;
 const RUN = 26, RADIUS = 12, LANE = 24, HEAD = 12, SIZE = 15;
 const INSIDE = RIGHT - LEFT - 16, OUTSIDE = ADDR - AXIS - 16;
-const SPEC_KEYS = new Set(['id', 'label', 'regions']);
-const KEYS = new Set(['id', 'value', 'word', 'gap', 'sub', 'start', 'marker', 'to', 'size', 'h']);
+const SPAN_X = RIGHT + 20, SPAN_BAR = 10, SPAN_TICK = RIGHT + 6, SPAN_BEND = 6, SPAN_LABEL = 14;
+const TITLE_ROOM = 560, CODE_ROOM = WIDTH - 32, CODE_TOP = 64, CODE_STEP = 28;
+const SPEC_KEYS = new Set(['id', 'label', 'title', 'regions', 'spans', 'code']);
+const KEYS = new Set(['id', 'value', 'word', 'gap', 'sub', 'start', 'marker', 'tone', 'to', 'size', 'h']);
+const SPAN_KEYS = new Set(['from', 'to', 'label', 'sub', 'tone', 'shape']);
 const STRINGS = ['id', 'value', 'word', 'sub', 'start', 'marker', 'to', 'size'] as const;
 const HEX = /^0x[0-9a-f]+$/i;
 
@@ -47,6 +66,8 @@ type Kind = 'value' | 'word' | 'gap';
 const width = (text: string, size: number) => text.length * ADVANCE * size;
 const name = (region: Region, i: number) => `regions[${i}]${region.id ? ` (${region.id})` : ''}`;
 const kind = (region: Region): Kind => (region.gap ? 'gap' : region.value !== undefined ? 'value' : 'word');
+const pieces = (value: unknown, where: string, room: number): Piece[] => tonePieces(value, where, room, SIZE);
+const notes = (span: Span): string[] => (span.sub === undefined ? [] : Array.isArray(span.sub) ? span.sub : [span.sub]);
 
 function upper(spec: MemoryLayout, t: number): bigint | null {
   const target = spec.regions[t];
@@ -95,6 +116,8 @@ export function validate(spec: MemoryLayout): void {
       previous = start;
     }
     if (region.marker !== undefined && region.start === undefined) throw new Error(`${where}.marker: needs start`);
+    checkTone(region.tone, `${where}.tone`);
+    if (region.tone !== undefined && region.marker === undefined) throw new Error(`${where}.tone: colors the marker; add one`);
     if (region.size !== undefined && region.start === undefined) throw new Error(`${where}.size: needs start`);
     if (region.to !== undefined && !HEX.test(region.value ?? '')) throw new Error(`${where}.value: a pointer needs a hex value`);
   });
@@ -113,6 +136,33 @@ export function validate(spec: MemoryLayout): void {
     if (end === null) throw new Error(`${where}.value: lies above the start of "${region.to}"; give the target a size or the region above it a start`);
     if (value < start || value >= end) throw new Error(`${where}.value: ${region.value} is outside ${target.start}..0x${end.toString(16)}`);
   });
+  if (spec.title !== undefined) pieces(spec.title, 'title', TITLE_ROOM);
+  if (spec.code !== undefined) {
+    if (!Array.isArray(spec.code) || !spec.code.length) throw new Error('code: must be a non-empty list of lines');
+    spec.code.forEach((line, i) => pieces(line, `code[${i}]`, CODE_ROOM));
+  }
+  if (spec.spans === undefined) return;
+  if (!Array.isArray(spec.spans) || !spec.spans.length) throw new Error('spans: must be a non-empty list');
+  spec.spans.forEach((span, i) => {
+    const where = `spans[${i}]`;
+    if (!span || typeof span !== 'object' || Array.isArray(span)) throw new Error(`${where}: must be an object`);
+    for (const key of Object.keys(span)) if (!SPAN_KEYS.has(key)) throw new Error(`${where}: unknown field "${key}"`);
+    for (const key of ['from', 'to', 'label'] as const) {
+      if (typeof span[key] !== 'string' || !span[key].trim()) throw new Error(`${where}.${key}: required`);
+    }
+    if (span.sub !== undefined) {
+      const lines = notes(span);
+      if (!lines.length || lines.some((line) => typeof line !== 'string' || !line.trim())) throw new Error(`${where}.sub: must be a non-empty string or a list of them`);
+      lines.forEach((line) => checkText(line, `${where}.sub`));
+    }
+    checkText(span.label, `${where}.label`);
+    checkTone(span.tone, `${where}.tone`);
+    if (span.shape !== undefined && span.shape !== 'dimension' && span.shape !== 'bracket') throw new Error(`${where}.shape: must be "dimension" or "bracket"`);
+    const f = spec.regions.findIndex((r) => r.id === span.from), t = spec.regions.findIndex((r) => r.id === span.to);
+    if (f === -1) throw new Error(`${where}.from: "${span.from}" is not a region id`);
+    if (t === -1) throw new Error(`${where}.to: "${span.to}" is not a region id`);
+    if (f > t) throw new Error(`${where}: from must be at or above to`);
+  });
 }
 
 interface Arrow { index: number; name: string; tail: number; head: number; top: number; bottom: number; leg: number; label: string }
@@ -125,6 +175,8 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   const text = (x: number, y: number, body: string, size: number, bold: boolean, anchor: 'start' | 'middle' | 'end', fill: Paint = 'diagram-ink') =>
     shapes.push({ kind: 'text', x, y, text: body, size, bold, anchor, fill });
   const line = (x1: number, y1: number, x2: number, y2: number) => shapes.push({ kind: 'line', x1, y1, x2, y2, stroke: 'diagram-ink' });
+  const runs = (x: number, y: number, list: Piece[]) =>
+    shapes.push({ kind: 'runs', x, y, size: SIZE, bold: true, anchor: 'middle', runs: list.map((p) => ({ text: p.text, fill: paint(p.tone, 'diagram-ink') })) });
 
   let y = TOP;
   const rows = spec.regions.map((region) => {
@@ -170,6 +222,36 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     }
   }
 
+  // A span on the right names a run of regions: a dimension line measures it, a bracket groups it.
+  // Nested spans take outer lanes.
+  const spans = (spec.spans ?? []).map((span) => {
+    const f = spec.regions.findIndex((r) => r.id === span.from), t = spec.regions.findIndex((r) => r.id === span.to);
+    return { span, top: rows[f].top, bottom: rows[t].bottom, lane: 0, notes: notes(span) };
+  });
+  for (const s of spans) {
+    for (const a of arrows) if (s.top < a.bottom && a.top < s.bottom) throw new Error(`spans: "${s.span.label}" shares rows with the arrow from ${a.name}; split the diagram`);
+  }
+  const spanLanes: Array<Array<[number, number]>> = [];
+  for (const s of [...spans].sort((a, b) => a.bottom - a.top - (b.bottom - b.top))) {
+    let lane = spanLanes.findIndex((used) => used.every(([top, end]) => s.bottom <= top || s.top >= end));
+    if (lane === -1) lane = spanLanes.push([]) - 1;
+    spanLanes[lane].push([s.top, s.bottom]);
+    s.lane = lane;
+  }
+  const labelX = SPAN_X + Math.max(0, spanLanes.length - 1) * LANE + SPAN_LABEL;
+  const reach = (lines: string[]) => 22 + 11 * Math.max(0, lines.length - 1);
+  spans.forEach((s, i) => {
+    if (s.span.shape !== 'bracket' && s.bottom - s.top < 2 * HEAD + 8) throw new Error(`spans[${i}]: the regions are too short for the arrowheads; raise h`);
+    const room = WIDTH - 8 - labelX;
+    if (width(s.span.label, SIZE) > room) throw new Error(`spans[${i}].label: "${s.span.label}" is too long for its place`);
+    for (const note of s.notes) if (width(note, PROFILES.slide.subSize) > room) throw new Error(`spans[${i}].sub: "${note}" is too long for its place; split it into lines`);
+    for (const b of spans.slice(i + 1)) {
+      if (Math.abs((s.top + s.bottom) / 2 - (b.top + b.bottom) / 2) < reach(s.notes) + reach(b.notes)) throw new Error(`spans: the labels "${s.span.label}" and "${b.span.label}" overlap; split the diagram`);
+    }
+  });
+
+  if (spec.title !== undefined) runs(MID, TOP - 24, pieces(spec.title, 'title', TITLE_ROOM));
+
   text(AXIS, TOP - 18, 'high', SIZE, true, 'middle');
   line(AXIS, bottom, AXIS, TOP + 10);
   shapes.push({ kind: 'path', d: `M ${AXIS} ${TOP + 2} L ${AXIS - 6} ${TOP + 14} L ${AXIS + 6} ${TOP + 14} Z`, fill: 'diagram-ink' });
@@ -183,7 +265,7 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     const { start, marker } = row.region;
     if (start === undefined) continue;
     line(ADDR + 2, row.bottom, LEFT, row.bottom);
-    if (marker !== undefined) text(ADDR, round(row.bottom - 12), marker, SIZE, true, 'end', 'syntax-keyword');
+    if (marker !== undefined) text(ADDR, round(row.bottom - 12), marker, SIZE, true, 'end', paint(row.region.tone, 'syntax-keyword'));
     text(ADDR, round(row.bottom + (marker !== undefined ? 6 : 4)), start, SIZE, true, 'end');
   }
 
@@ -199,6 +281,24 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     if (region.sub !== undefined) text(MID, round(baseline + (isValue ? 24 : 22)), region.sub, profile.subSize, false, 'middle');
   }
 
+  for (const s of spans) {
+    const x = SPAN_X + s.lane * LANE, top = s.top, end = s.bottom, stroke = paint(s.span.tone, 'diagram-ink');
+    if (s.span.shape === 'bracket') {
+      const t = round(top + 3), b = round(end - 3);
+      shapes.push({ kind: 'path', d: `M ${SPAN_TICK} ${t} H ${x - SPAN_BEND} Q ${x} ${t} ${x} ${round(t + SPAN_BEND)} V ${round(b - SPAN_BEND)} Q ${x} ${b} ${x - SPAN_BEND} ${b} H ${SPAN_TICK}`, stroke });
+    } else {
+      line(RIGHT, top, x + SPAN_BAR, top);
+      line(RIGHT, end, x + SPAN_BAR, end);
+      shapes.push({ kind: 'line', x1: x, y1: round(top + HEAD - 2), x2: x, y2: round(end - HEAD + 2), stroke });
+      shapes.push({ kind: 'path', d: `M ${x} ${top} L ${x - HEAD / 2} ${round(top + HEAD)} L ${x + HEAD / 2} ${round(top + HEAD)} Z`, fill: stroke });
+      shapes.push({ kind: 'path', d: `M ${x} ${end} L ${x - HEAD / 2} ${round(end - HEAD)} L ${x + HEAD / 2} ${round(end - HEAD)} Z`, fill: stroke });
+    }
+    const center = (s.top + s.bottom) / 2;
+    const baseline = round(s.notes.length ? center - 4 - 11 * (s.notes.length - 1) : center + 5);
+    text(labelX, baseline, s.span.label, SIZE, true, 'start', stroke);
+    s.notes.forEach((note, j) => text(labelX, round(baseline + 22 * (j + 1)), note, profile.subSize, false, 'start', stroke));
+  }
+
   for (const a of [...arrows].sort((p, q) => q.index - p.index)) {
     const dir = a.head < a.tail ? -1 : 1;
     shapes.push({ kind: 'path', d: `M ${RIGHT} ${a.tail} H ${a.leg - RADIUS} Q ${a.leg} ${a.tail} ${a.leg} ${round(a.tail + dir * RADIUS)} V ${round(a.head - dir * RADIUS)} Q ${a.leg} ${a.head} ${a.leg - RADIUS} ${a.head} H ${RIGHT + HEAD - 3}`, stroke: 'diagram-ink' });
@@ -206,5 +306,8 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     text(a.leg + 8, round((a.tail + a.head) / 2 + 3), a.label, SIZE, true, 'start');
   }
 
-  return { width: WIDTH, height: round(bottom + 40), label: spec.label, font: 'code-mono', shapes, frame: profile.frame };
+  const code = (spec.code ?? []).map((list, i) => pieces(list, `code[${i}]`, CODE_ROOM));
+  code.forEach((list, i) => runs(MID, round(bottom + CODE_TOP + i * CODE_STEP), list));
+  const height = code.length ? round(bottom + CODE_TOP + (code.length - 1) * CODE_STEP + 24) : round(bottom + 40);
+  return { width: WIDTH, height, label: spec.label, font: 'code-mono', shapes, frame: profile.frame };
 }

@@ -62,6 +62,39 @@ test('a pointer into a sized region lands in proportion', () => {
   assert.ok(paths.includes('M 454 130 L 466 124 L 466 136 Z'));
 });
 
+test('tones, spans, a title and code lines take theme roles', () => {
+  const spec: memoryLayout.MemoryLayout = {
+    label: 'a struct whose member a span names',
+    title: [['type: struct s', 'orange'], ' (s[0])'],
+    regions: [
+      { id: 'b', value: '0x2', sub: '(b, +0x008)', start: '0x1008' },
+      { id: 'a', value: '0x1', sub: '(a, +0x000)', start: '0x1000', marker: 'ptr: p', tone: 'red' },
+    ],
+    spans: [{ from: 'b', to: 'b', label: 'member: b', sub: '(+0x008)', tone: 'purple' }],
+    code: [[['p', 'red'], ' - 0x8 = ', ['0x1000', 'blue']]],
+  };
+  const scene = memoryLayout.layout(spec);
+  const svg = toWeb(scene);
+  assert.match(svg, /<tspan style="fill:var\(--diagram-orange\)">type: struct s<\/tspan><tspan style="fill:var\(--diagram-ink\)"> \(s\[0\]\)<\/tspan>/);
+  assert.match(svg, /<line x1="475" y1="[\d.]+" x2="475" y2="[\d.]+" style="stroke:var\(--diagram-purple\)/);
+  assert.match(svg, /<path d="M 475 [\d.]+ L 469 [\d.]+ L 481 [\d.]+ Z" style="fill:var\(--diagram-purple\)"\/>/);
+  assert.match(svg, /style="fill:var\(--diagram-purple\)">member: b<\/text>/);
+  assert.match(svg, /style="fill:var\(--diagram-red\)">ptr: p<\/text>/);
+  assert.match(svg, /<tspan style="fill:var\(--diagram-red\)">p<\/tspan><tspan style="fill:var\(--diagram-ink\)"> - 0x8 = <\/tspan><tspan style="fill:var\(--diagram-blue\)">0x1000<\/tspan>/);
+  assert.deepEqual(lintStatic(toStatic(scene, tokens, 'clean-light')), []);
+  assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ from: 'a', to: 'b', label: 'x' }] }), /from must be at or above to/);
+  assert.throws(() => memoryLayout.layout({ ...spec, code: [[['p', 'teal' as memoryLayout.Tone]]] }), /unknown tone "teal"/);
+  assert.throws(() => memoryLayout.layout({ ...spec, regions: [{ ...spec.regions[0], tone: 'orange' }, spec.regions[1]] }), /colors the marker; add one/);
+  const bracket = toWeb(memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], shape: 'bracket' }] }));
+  assert.match(bracket, /<path d="M 461 [^"]*" fill="none" style="stroke:var\(--diagram-purple\)/);
+  assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], shape: 'arc' as 'bracket' }] }), /must be "dimension" or "bracket"/);
+  const lines = toWeb(memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: ['struct s', '(s[0])'] }] }));
+  assert.match(lines, /style="fill:var\(--diagram-purple\)">struct s<\/text>/);
+  assert.match(lines, /style="fill:var\(--diagram-purple\)">\(s\[0\]\)<\/text>/);
+  assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: [] }] }), /must be a non-empty string or a list of them/);
+  assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: 'x'.repeat(30) }] }), /split it into lines/);
+});
+
 test('invalid specs name the problem', () => {
   const spec = (patch: object): memoryLayout.MemoryLayout => ({
     label: 'x',
