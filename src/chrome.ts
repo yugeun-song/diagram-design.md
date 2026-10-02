@@ -1,9 +1,9 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Readable, Writable } from 'node:stream';
-import { onCleanup } from './cleanup.ts';
+import { onCleanup, removeDir } from './cleanup.ts';
 
 type Message = { id?: number; method?: string; params?: any; result?: any; error?: { message: string }; sessionId?: string };
 
@@ -140,7 +140,7 @@ export class Chrome {
 
   private reap(): void {
     killGroup(this.proc);
-    rmSync(this.profile, { recursive: true, force: true });
+    removeDir(this.profile);
   }
 
   async close(): Promise<void> {

@@ -1,3 +1,5 @@
+import { rmSync } from 'node:fs';
+
 const tasks = new Set<() => void>();
 let installed = false;
 
@@ -21,4 +23,13 @@ export function onCleanup(task: () => void): () => void {
   }
   tasks.add(task);
   return () => { tasks.delete(task); };
+}
+
+// A Chrome helper can still be writing into its profile for a moment after the browser exits.
+export function removeDir(dir: string): void {
+  try {
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  } catch (error) {
+    console.error(`dg: could not remove ${dir}: ${(error as Error).message}`);
+  }
 }

@@ -1,11 +1,11 @@
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import { createServer, type Server, type ServerResponse } from 'node:http';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, extname, join, normalize, resolve, sep } from 'node:path';
 import { Chrome, killGroup } from './chrome.ts';
-import { onCleanup } from './cleanup.ts';
+import { onCleanup, removeDir } from './cleanup.ts';
 import type { Tokens } from './tokens.ts';
 
 const TYPES: Record<string, string> = {
@@ -102,7 +102,7 @@ export async function buildSite(blogDir: string, sources: string[]): Promise<{ d
   let child: ChildProcess | null = null;
   const remove = () => {
     killGroup(child);
-    rmSync(root, { recursive: true, force: true });
+    removeDir(root);
   };
   const release = onCleanup(remove);
   const cleanup = () => { release(); remove(); };
