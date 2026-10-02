@@ -1,4 +1,4 @@
-import { checkText, textWidth, type ProfileName, type Scene, type Shape } from './scene.ts';
+import { checkText, round, textWidth, type ProfileName, type Scene, type Shape } from './scene.ts';
 import type { Paint } from './tokens.ts';
 
 export type Field = [string, number] | { pad: number } | { other: string; size: number };
@@ -179,8 +179,6 @@ function place(cell: Cell, w: number, p: Profile): Placed {
   if (textWidth(cell.text, p.stack) <= w - 6) return { lines: [{ text: cell.text, size: p.stack, bold: true, fill: 'diagram-ink', dy: 4 }], height: 0 };
   return stack(cell.text, true, 'diagram-ink');
 }
-
-const round = (n: number) => Math.round(n * 100) / 100;
 
 export function layout(g: Grid, label: string, p: Profile = PROFILES.blog): Scene {
   const cols = g.headers.length;

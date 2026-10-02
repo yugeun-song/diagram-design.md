@@ -1,4 +1,5 @@
-import { checkText, textWidth, type ProfileName, type Scene, type Shape } from './scene.ts';
+import { arrowhead, dimension, DIMENSION_MIN, shaftEnd } from './arrow.ts';
+import { checkText, round, textWidth, type ProfileName, type Scene, type Shape } from './scene.ts';
 import { checkTone, paint, pieces, type Run, type Tone } from './tone.ts';
 import type { Paint } from './tokens.ts';
 
@@ -48,7 +49,7 @@ export const PROFILES: Record<ProfileName, Profile> = {
 };
 
 const WIDTH = 700, MARGIN = 10, LABEL = 28, TOP = 40, SIZE = 15, VALUE = 13, CELL = 13;
-const BOX = 92, HEAD_BOX = 72, INSET = 8, GAP = 86, HEAD = 12, TIP = 5, RADIUS = 12;
+const BOX = 92, HEAD_BOX = 72, INSET = 8, GAP = 86, RADIUS = 12;
 const ENTRY = 24, WRAP = 30, LOOP = 32, ARROW_LABEL = 20;
 const DIM_X = 20, DIM_BAR = 10, DIM_LABEL = 14, CODE_TOP = 48, CODE_STEP = 28;
 const SPEC_KEYS = new Set(['id', 'label', 'fields', 'link', 'nodes', 'head', 'tones', 'code']);
@@ -56,7 +57,6 @@ const ROLES: Role[] = ['node', 'link', 'walk', 'offset'];
 
 interface Row { name: string; size: number; offset: number; kind: 'field' | 'pad' | 'link' }
 
-const round = (n: number) => Math.round(n * 100) / 100;
 const isObject = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 
 function word(value: unknown, where: string): string {
@@ -153,7 +153,7 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
   const dimSub = `= 0x${offset.toString(16)}`;
   const dimLabel = offset ? DIM_X + DIM_LABEL + Math.max(textWidth('offsetof', SIZE), textWidth(dimSub, profile.sub)) : 0;
   const dimBaseline = Math.min((TOP + linkTop) / 2 - 4, linkTop - 31);
-  if (offset && (linkTop - TOP < 2 * (HEAD + TIP) + 8 || dimBaseline < 19)) throw new Error('fields: the fields above the link are too short for the offsetof dimension');
+  if (offset && (linkTop - TOP < DIMENSION_MIN || dimBaseline < 19)) throw new Error('fields: the fields above the link are too short for the offsetof dimension');
 
   const values = spec.nodes.flatMap((node) => Object.values(node.values ?? {}));
   const inner = Math.max(
@@ -192,10 +192,9 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
     for (let j = 1; j < cells.length; ++j) line(left, linkTop + j * profile.cell, left + w, linkTop + j * profile.cell, 'code-bg');
   };
   const cellText = (center: number) => cells.forEach((cell, j) => text(center, linkTop + (j + 0.5) * profile.cell + 4.5, cell, CELL, true, 'middle', 'code-bg'));
-  const arrowhead = (tip: number) => shapes.push({ kind: 'path', d: `M ${tip} ${forward} L ${round(tip - HEAD)} ${round(forward - HEAD / 2)} L ${round(tip - HEAD)} ${round(forward + HEAD / 2)} Z`, fill: walk });
   const arrow = (from: number, to: number) => {
-    shapes.push({ kind: 'path', d: `M ${from} ${forward} H ${round(to - TIP - HEAD + 3)}`, stroke: walk });
-    arrowhead(round(to - TIP));
+    shapes.push({ kind: 'path', d: `M ${from} ${forward} H ${shaftEnd(to, 'right')}`, stroke: walk });
+    shapes.push(arrowhead(to, forward, 'right', walk));
     text((from + to) / 2, forward + ARROW_LABEL, cells[0], SIZE, true, 'middle', walk);
   };
 
@@ -223,11 +222,7 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
     });
     if (offset) {
       const dx = round(left - DIM_X);
-      line(left, TOP, dx - DIM_BAR, TOP);
-      line(left, linkTop, dx - DIM_BAR, linkTop);
-      line(dx, TOP + TIP + HEAD - 2, dx, linkTop - TIP - HEAD + 2, measure);
-      shapes.push({ kind: 'path', d: `M ${dx} ${TOP + TIP} L ${round(dx - HEAD / 2)} ${TOP + TIP + HEAD} L ${round(dx + HEAD / 2)} ${TOP + TIP + HEAD} Z`, fill: measure });
-      shapes.push({ kind: 'path', d: `M ${dx} ${round(linkTop - TIP)} L ${round(dx - HEAD / 2)} ${round(linkTop - TIP - HEAD)} L ${round(dx + HEAD / 2)} ${round(linkTop - TIP - HEAD)} Z`, fill: measure });
+      shapes.push(...dimension(left, dx, -DIM_BAR, TOP, linkTop, measure));
       if (n === 0) {
         text(dx - DIM_LABEL, dimBaseline, 'offsetof', SIZE, true, 'end', measure);
         text(dx - DIM_LABEL, dimBaseline + 22, dimSub, profile.sub, false, 'end', measure);
@@ -250,10 +245,10 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
     shapes.push({
       kind: 'path',
       d: `M ${start} ${forward} H ${round(r - RADIUS)} Q ${r} ${forward} ${r} ${round(forward + RADIUS)} V ${round(yb - RADIUS)} Q ${r} ${yb} ${round(r - RADIUS)} ${yb} `
-        + `H ${round(l + RADIUS)} Q ${l} ${yb} ${l} ${round(yb - RADIUS)} V ${round(forward + RADIUS)} Q ${l} ${forward} ${round(l + RADIUS)} ${forward} H ${round(hx - TIP - HEAD + 3)}`,
+        + `H ${round(l + RADIUS)} Q ${l} ${yb} ${l} ${round(yb - RADIUS)} V ${round(forward + RADIUS)} Q ${l} ${forward} ${round(l + RADIUS)} ${forward} H ${shaftEnd(hx, 'right')}`,
       stroke: walk,
     });
-    arrowhead(round(hx - TIP));
+    shapes.push(arrowhead(hx, forward, 'right', walk));
     text((l + r) / 2, yb + ARROW_LABEL, cells[0], SIZE, true, 'middle', walk);
     after = round(yb + ARROW_LABEL);
   }

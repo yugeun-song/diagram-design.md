@@ -36,6 +36,7 @@ export function checkText(text: string, where: string): void {
 
 export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 export const textWidth = (text: string, size: number) => text.length * ADVANCE * size;
+export const round = (n: number) => Math.round(n * 100) / 100;
 const space = (s: string) => (/ {2}|^ | $/.test(s) ? ' xml:space="preserve"' : '');
 const fill = (name: Paint) => `style="fill:var(--${name})"`;
 const stroke = (name: Paint) => `style="stroke:var(--${name});stroke-width:var(--diagram-stroke)"`;
