@@ -17,6 +17,19 @@ test('the memory layout example renders the reference svg', () => {
   assert.equal(toWeb(memoryLayout.layout(layoutSpec)) + '\n', read('golden/frame-chain.svg'));
 });
 
+test('a field longer than four whole rows folds to its first row, a gap row and its last row', () => {
+  const g = memoryTable.grid({ unit: 'byte', fields: [['buf (char[256])', 256], ['len (int)', 4], { pad: 4 }] });
+  assert.deepEqual(g.rows.map((r) => [r.offset, r.cells.map((c) => c.kind).join(',')]), [
+    ['0x00', 'field'], ['0x08', 'gap'], ['0xf8', 'field'], ['0x100', 'field,pad'],
+  ]);
+  assert.equal(g.end, '0x108');
+  const short = memoryTable.grid({ unit: 'byte', fields: [['buf (char[32])', 32]] });
+  assert.equal(short.rows.length, 4);
+  const html = `<table class="mem-layout"><tr><th>Offset</th>${g.headers.map((h) => `<th>${h}</th>`).join('')}</tr>`
+    + g.rows.map((r) => `<tr><td class="offset">${r.offset}</td>${r.cells.map((c) => `<td${c.span > 1 ? ` colspan="${c.span}"` : ''} class="${c.kind}">${c.text}</td>`).join('')}</tr>`).join('') + '</table>';
+  assert.deepEqual(memoryTable.parseTable(html).rows, g.rows);
+});
+
 test('the memory table examples render the reference svg, and a raw table gives the same grid', () => {
   for (const spec of tableSpecs) {
     const g = memoryTable.grid(spec);
@@ -60,6 +73,7 @@ test('invalid specs name the problem', () => {
   assert.throws(() => memoryLayout.layout(spec({ colour: 'red' })), /unknown field "colour"/);
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'w', start: '0x20', h: 20 }, { value: '0x20', start: '0x10', to: 'a', h: 20 }] }), /needs 24; raise h/);
   assert.throws(() => memoryTable.grid({ unit: 'byte', fields: [['a', 3]] }), /add \{"pad": 5\}/);
+
 });
 
 test('review regressions stay fixed', () => {

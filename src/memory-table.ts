@@ -13,7 +13,7 @@ export interface MemoryTable {
   fields: Field[];
 }
 
-export type Kind = 'field' | 'pad' | 'other';
+export type Kind = 'field' | 'pad' | 'other' | 'gap';
 
 export interface Cell {
   text: string;
@@ -46,6 +46,24 @@ const KEYS = new Set(['id', 'label', 'unit', 'cols', 'order', 'base', 'fields'])
 const HEX = /^0x[0-9a-f]+$/i;
 
 const offsetLabel = (n: bigint) => `0x${n.toString(16).padStart(2, '0')}`;
+
+// A field that fills more than FOLD whole rows keeps its first and last rows, and
+// one ⋮ row stands for the rows between; the offsets still count every unit.
+const FOLD = 4;
+
+function fold(rows: Grid['rows'], cols: number): Grid['rows'] {
+  const whole = (row: Grid['rows'][number]) => row.cells.length === 1 && row.cells[0].span === cols;
+  const same = (a: Grid['rows'][number], b: Grid['rows'][number]) => a.cells[0].text === b.cells[0].text && a.cells[0].kind === b.cells[0].kind;
+  const out: Grid['rows'] = [];
+  for (let i = 0; i < rows.length;) {
+    let j = i;
+    while (whole(rows[i]) && j + 1 < rows.length && whole(rows[j + 1]) && same(rows[i], rows[j + 1])) ++j;
+    if (j - i + 1 > FOLD) out.push(rows[i], { offset: rows[i + 1].offset, cells: [{ text: '⋮', span: cols, kind: 'gap' }] }, rows[j]);
+    else out.push(...rows.slice(i, j + 1));
+    i = j + 1;
+  }
+  return out;
+}
 
 function field(value: unknown, i: number): [string, number, Kind] {
   const where = `fields[${i}]`;
@@ -100,7 +118,7 @@ export function grid(spec: MemoryTable): Grid {
   if (used > 0) throw new Error(`fields end ${used} ${spec.unit}s into the last row; add {"pad": ${cols - used}}`);
   return {
     headers: numbers.map((n) => (bytes ? `+${n}` : String(n))),
-    rows,
+    rows: fold(rows, cols),
     end: bytes ? offsetLabel(base + BigInt(rows.length * cols)) : undefined,
   };
 }
@@ -121,7 +139,7 @@ export function parseTable(html: string): Grid {
   const out: Grid['rows'] = rows.slice(1).map((row, r) => {
     const offset = withOffset ? row[0]?.text : undefined;
     const cells = row.slice(withOffset ? 1 : 0).map((c) => {
-      const kind: Kind = /\bfield\b/.test(c.cls) ? 'field' : /\bpad\b/.test(c.cls) ? 'pad' : 'other';
+      const kind: Kind = /\bfield\b/.test(c.cls) ? 'field' : /\bpad\b/.test(c.cls) ? 'pad' : /\bgap\b/.test(c.cls) ? 'gap' : 'other';
       checkText(c.text, `row ${r + 1}`);
       return { text: c.text, span: c.span, kind };
     });
@@ -143,6 +161,7 @@ function place(cell: Cell, w: number, p: Profile): Placed {
     const top = -((chars.length - 1) * step) / 2 + p.stack * 0.35;
     return { lines: chars.map((ch, i) => ({ text: ch, size: p.stack, bold, fill, dy: top + i * step })), height: chars.length * step + 16 };
   };
+  if (cell.kind === 'gap') return { lines: [{ text: '⋮', size: 26, bold: true, fill: 'text-secondary', dy: 10 }], height: 0 };
   if (cell.kind === 'pad') {
     return textWidth(cell.text, p.sub) <= w - 6 ? { lines: [{ text: cell.text, size: p.sub, bold: false, fill: 'text-secondary', dy: 4 }], height: 0 } : { lines: [], height: 0 };
   }
@@ -188,7 +207,7 @@ export function layout(g: Grid, label: string, p: Profile = PROFILES.blog): Scen
   let y = TOP;
   const tops = heights.map((h) => { const top = y; y = round(y + h); return top; });
   const bottom = y;
-  placed.forEach((cells, r) => cells.forEach((c) => shapes.push({ kind: 'rect', x: c.x, y: tops[r], w: c.w, h: heights[r], fill: c.cell.kind === 'pad' ? 'diagram-gap' : 'diagram-area' })));
+  placed.forEach((cells, r) => cells.forEach((c) => shapes.push({ kind: 'rect', x: c.x, y: tops[r], w: c.w, h: heights[r], fill: c.cell.kind === 'pad' || c.cell.kind === 'gap' ? 'diagram-gap' : 'diagram-area' })));
   shapes.push({ kind: 'outline', x: left, y: TOP, w: round(right - left), h: round(bottom - TOP), stroke: 'diagram-ink' });
   tops.slice(1).forEach((top) => shapes.push({ kind: 'line', x1: left, y1: top, x2: right, y2: top, stroke: 'diagram-ink' }));
   placed.forEach((cells, r) => cells.slice(1).forEach((c) => shapes.push({ kind: 'line', x1: c.x, y1: tops[r], x2: c.x, y2: round(tops[r] + heights[r]), stroke: 'diagram-ink' })));

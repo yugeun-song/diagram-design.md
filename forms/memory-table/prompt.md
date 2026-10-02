@@ -13,5 +13,6 @@ Write the layout below as one JSON object. The tool computes the rows, column sp
   - `{"other": "text", "size": n}` is any other cell.
 - Optional: `cols` (units per row, default 8 bytes or 32 bits), `"order": "desc"` to number bits from the top, `base` (hex offset of the first row), `id`, `label`.
 - Keep names short. A field that crosses a row boundary repeats its name on each row.
+- A field that fills more than four whole rows folds: its first and last rows stay, one `⋮` row stands for the rows between, and the offsets still count every byte.
 
 Output only the JSON.
