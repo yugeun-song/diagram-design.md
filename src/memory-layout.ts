@@ -1,5 +1,5 @@
 import { arrowhead, dimension, DIMENSION_MIN, shaftEnd, triangle } from './arrow.ts';
-import { ADVANCE, checkText, round, type ProfileName, type Scene, type Shape } from './scene.ts';
+import { checkText, round, textWidth, type ProfileName, type Scene, type Shape } from './scene.ts';
 import { checkTone, paint, pieces as tonePieces, type Piece, type Run, type Tone } from './tone.ts';
 import type { Paint } from './tokens.ts';
 
@@ -64,7 +64,6 @@ const HEX = /^0x[0-9a-f]+$/i;
 
 type Kind = 'value' | 'word' | 'gap';
 
-const width = (text: string, size: number) => text.length * ADVANCE * size;
 const name = (region: Region, i: number) => `regions[${i}]${region.id ? ` (${region.id})` : ''}`;
 const kind = (region: Region): Kind => (region.gap ? 'gap' : region.value !== undefined ? 'value' : 'word');
 const pieces = (value: unknown, where: string, room: number): Piece[] => tonePieces(value, where, room, SIZE);
@@ -110,7 +109,7 @@ export function validate(spec: MemoryLayout): void {
       [region.value, SIZE, INSIDE, 'value'], [region.word, PROFILES.slide.wordSize, INSIDE, 'word'], [region.sub, PROFILES.slide.subSize, INSIDE, 'sub'],
       [region.start, SIZE, OUTSIDE, 'start'], [region.marker, SIZE, OUTSIDE, 'marker'],
     ];
-    for (const [body, size, room, key] of text) if (body !== undefined && width(body, size) > room) throw new Error(`${where}.${key}: "${body}" is too long for its place`);
+    for (const [body, size, room, key] of text) if (body !== undefined && textWidth(body, size) > room) throw new Error(`${where}.${key}: "${body}" is too long for its place`);
     if (region.start !== undefined) {
       const start = BigInt(region.start);
       if (previous !== null && start >= previous) throw new Error(`${where}.start: must be lower than the start above it`);
@@ -211,7 +210,7 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     for (const b of arrows) {
       if (b.leg < a.leg && [a.tail, a.head].some((level) => level > b.top && level < b.bottom)) throw new Error(`${a.name} and ${b.name}: the arrows cross; reorder the regions or split the diagram`);
     }
-    const x1 = a.leg + 8, x2 = x1 + width(a.label, SIZE), level = (a.tail + a.head) / 2 + 3;
+    const x1 = a.leg + 8, x2 = x1 + textWidth(a.label, SIZE), level = (a.tail + a.head) / 2 + 3;
     if (x2 > WIDTH) throw new Error(`${a.name}: the label "${a.label}" ends at x=${Math.round(x2)}, past ${WIDTH}; overlapping arrows leave no room for long labels`);
     for (const b of arrows) {
       if (b === a) continue;
@@ -242,8 +241,8 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   spans.forEach((s, i) => {
     if (s.span.shape !== 'bracket' && s.bottom - s.top < DIMENSION_MIN) throw new Error(`spans[${i}]: the regions are too short for the arrowheads; raise h`);
     const room = WIDTH - 8 - labelX;
-    if (width(s.span.label, SIZE) > room) throw new Error(`spans[${i}].label: "${s.span.label}" is too long for its place`);
-    for (const note of s.notes) if (width(note, PROFILES.slide.subSize) > room) throw new Error(`spans[${i}].sub: "${note}" is too long for its place; split it into lines`);
+    if (textWidth(s.span.label, SIZE) > room) throw new Error(`spans[${i}].label: "${s.span.label}" is too long for its place`);
+    for (const note of s.notes) if (textWidth(note, PROFILES.slide.subSize) > room) throw new Error(`spans[${i}].sub: "${note}" is too long for its place; split it into lines`);
     for (const b of spans.slice(i + 1)) {
       if (Math.abs((s.top + s.bottom) / 2 - (b.top + b.bottom) / 2) < reach(s.notes) + reach(b.notes)) throw new Error(`spans: the labels "${s.span.label}" and "${b.span.label}" overlap; split the diagram`);
     }
