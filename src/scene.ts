@@ -48,11 +48,11 @@ export function toWeb(scene: Scene): string {
       case 'outline': return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="none" ${stroke(s.stroke)}/>`;
       case 'line': return `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" ${stroke(s.stroke)}/>`;
       case 'path': return s.fill ? `<path d="${s.d}" ${fill(s.fill)}/>` : `<path d="${s.d}" fill="none" ${stroke(s.stroke)}/>`;
-      case 'text': return `<text x="${s.x}" y="${s.y}" font-size="${s.size}"${s.bold ? ' font-weight="700"' : ''} text-anchor="${s.anchor}"${space(s.text)} ${fill(s.fill)}>${esc(s.text)}</text>`;
-      case 'runs': return `<text x="${s.x}" y="${s.y}" font-size="${s.size}"${s.bold ? ' font-weight="700"' : ''} text-anchor="${s.anchor}" xml:space="preserve">${s.runs.map((r) => `<tspan ${fill(r.fill)}>${esc(r.text)}</tspan>`).join('')}</text>`;
+      case 'text': return `<text x="${s.x}" y="${s.y}" font-size="${s.size}" text-anchor="${s.anchor}"${space(s.text)} ${fill(s.fill)}>${esc(s.text)}</text>`;
+      case 'runs': return `<text x="${s.x}" y="${s.y}" font-size="${s.size}" text-anchor="${s.anchor}" xml:space="preserve">${s.runs.map((r) => `<tspan ${fill(r.fill)}>${esc(r.text)}</tspan>`).join('')}</text>`;
     }
   });
-  return `<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="0 0 ${scene.width} ${scene.height}" font-family="${scene.font}, monospace" role="img" aria-label="${esc(scene.label)}">\n  ${body.join('\n  ')}\n</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="0 0 ${scene.width} ${scene.height}" font-family="${scene.font}, monospace" font-weight="700" role="img" aria-label="${esc(scene.label)}">\n  ${body.join('\n  ')}\n</svg>`;
 }
 
 export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: StaticOptions = {}): string {
@@ -84,16 +84,16 @@ export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: S
         const body = HANGUL.test(s.text)
           ? runs.map((run) => `<tspan font-family="${family(HANGUL.test(run) ? 'hangul-sans' : scene.font)}">${esc(run)}</tspan>`).join('')
           : esc(s.text);
-        out.push(`<text x="${s.x}" y="${s.y}" font-family="${family(scene.font)}" font-size="${s.size}"${s.bold ? ' font-weight="700"' : ''} text-anchor="${s.anchor}" fill="${paint(s.fill)}"${space(s.text)}>${body}</text>`);
+        out.push(`<text x="${s.x}" y="${s.y}" font-family="${family(scene.font)}" font-size="${s.size}" text-anchor="${s.anchor}" fill="${paint(s.fill)}"${space(s.text)}>${body}</text>`);
         break;
       }
       case 'runs':
-        out.push(`<text x="${s.x}" y="${s.y}" font-family="${family(scene.font)}" font-size="${s.size}"${s.bold ? ' font-weight="700"' : ''} text-anchor="${s.anchor}" xml:space="preserve">${s.runs.map((r) => `<tspan fill="${paint(r.fill)}">${esc(r.text)}</tspan>`).join('')}</text>`);
+        out.push(`<text x="${s.x}" y="${s.y}" font-family="${family(scene.font)}" font-size="${s.size}" text-anchor="${s.anchor}" xml:space="preserve">${s.runs.map((r) => `<tspan fill="${paint(r.fill)}">${esc(r.text)}</tspan>`).join('')}</text>`);
         break;
     }
   }
   const size = (n: number) => `${Math.round(n * scale * 100) / 100}${unit === 'pt' ? 'pt' : ''}`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size(vw)}" height="${size(vh)}" viewBox="${vx} ${vy} ${vw} ${vh}" role="img" aria-label="${esc(scene.label)}">\n  ${out.join('\n  ')}\n</svg>\n`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size(vw)}" height="${size(vh)}" viewBox="${vx} ${vy} ${vw} ${vh}" font-weight="700" role="img" aria-label="${esc(scene.label)}">\n  ${out.join('\n  ')}\n</svg>\n`;
 }
 
 export function lintStatic(svg: string): string[] {

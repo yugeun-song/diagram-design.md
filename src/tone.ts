@@ -13,6 +13,13 @@ export const TONES: Record<Tone, Paint> = {
   purple: 'diagram-purple',
 };
 
+export const WASHES: Record<Tone, Paint> = {
+  red: 'diagram-red-wash',
+  orange: 'diagram-orange-wash',
+  blue: 'diagram-blue-wash',
+  purple: 'diagram-purple-wash',
+};
+
 export const isTone = (value: unknown): value is Tone => typeof value === 'string' && Object.hasOwn(TONES, value);
 export const paint = (tone: Tone | undefined, fallback: Paint): Paint => (tone === undefined ? fallback : TONES[tone]);
 

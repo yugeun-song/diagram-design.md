@@ -263,7 +263,7 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     const { start, marker } = row.region;
     if (start === undefined) continue;
     line(ADDR + 2, row.bottom, LEFT, row.bottom);
-    if (marker !== undefined) text(ADDR, round(row.bottom - 12), marker, SIZE, true, 'end', paint(row.region.tone, 'syntax-keyword'));
+    if (marker !== undefined) text(ADDR, round(row.bottom - 12), marker, SIZE, true, 'end', paint(row.region.tone, 'diagram-red'));
     text(ADDR, round(row.bottom + (marker !== undefined ? 6 : 4)), start, SIZE, true, 'end');
   }
 

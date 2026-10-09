@@ -20,10 +20,10 @@ Colors are not part of it. Each comes from a role variable of the active theme, 
 |---|---|---|
 | frame | `--code-bg`, `--code-border` | `#f6f8fa`, `#d0d7de` |
 | strokes, labels, `accent` nodes | `--diagram-ink` | `#1a1a1a` |
-| regions, participants, nodes | `--diagram-area` | `#badac8` |
-| gaps, padding, `muted` nodes | `--diagram-gap` | `#dde2e6` |
-| markers, `alt` frames, `danger` nodes | `--syntax-keyword` | `#cf222e` |
-| tones (memory-layout `tone`, `title`, `spans`, `code`; struct-chain `tones`, `code`) | `--diagram-red`, `--diagram-orange`, `--diagram-blue`, `--diagram-purple` | `#cf222e`, `#e16f24`, `#0550ae`, `#8250df` |
+| regions, participants, nodes, untoned link cells | `--diagram-area` | `#b9e3c6` |
+| gaps, padding, `muted` nodes | `--diagram-gap` | `#eef0f3` |
+| tones (memory-layout `tone`, `title`, `spans`, `code`; struct-chain `tones`, `code`); red also for untoned markers, `alt` frames and `danger` nodes | `--diagram-red`, `--diagram-orange`, `--diagram-blue`, `--diagram-purple` | `#d81e5b`, `#cb5300`, `#007f7f`, `#7637c8` |
+| struct-chain link cells of a toned `link` | `--diagram-red-wash`, `--diagram-orange-wash`, `--diagram-blue-wash`, `--diagram-purple-wash` | `#ffd7dc`, `#ffdaca`, `#b0f1f0`, `#e6ddff` |
 | headers, padding labels, `⋮` | `--text-secondary` | `#4a4a4a` |
 | Mermaid notes | `--box-warn-bg`, `--box-warn-border` | `#fff7d6`, `#ef8200` |
 

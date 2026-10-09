@@ -116,7 +116,7 @@ test('a struct chain links only the embedded members, rings back to its head and
   assert.equal(texts(line).filter((t) => t === 'next').length, 3 + 2);
   const first = structChain.layout({ ...chainSpec, fields: [['list', 16], ['username', 256], ['age', 1], { pad: 7 }] });
   assert.ok(!texts(first).includes('offsetof'));
-  assert.match(toWeb(ring), /<rect x="[\d.]+" y="128" width="92" height="36" style="fill:var\(--diagram-purple\)"\/>/);
+  assert.match(toWeb(ring), /<rect x="[\d.]+" y="128" width="92" height="36" style="fill:var\(--diagram-purple-wash\)"\/>/);
 });
 
 test('invalid specs name the problem', () => {

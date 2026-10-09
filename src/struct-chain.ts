@@ -1,6 +1,6 @@
 import { arrowhead, dimension, DIMENSION_MIN, shaftEnd } from './arrow.ts';
 import { checkText, round, textWidth, type ProfileName, type Scene, type Shape } from './scene.ts';
-import { checkTone, paint, pieces, type Run, type Tone } from './tone.ts';
+import { checkTone, paint, pieces, WASHES, type Run, type Tone } from './tone.ts';
 import type { Paint } from './tokens.ts';
 
 export type Field = [string, number] | { pad: number };
@@ -138,7 +138,8 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
   const tones = spec.tones ?? {};
   const cells = spec.link.cells;
   const ink: Paint = 'diagram-ink';
-  const fill = paint(tones.link, ink), walk = paint(tones.walk, ink), measure = paint(tones.offset, ink);
+  const fill: Paint = tones.link === undefined ? 'diagram-area' : WASHES[tones.link];
+  const walk = paint(tones.walk, ink), measure = paint(tones.offset, ink);
 
   const heights = rows.map((row) =>
     row.kind === 'link' ? cells.length * profile.cell : row.kind === 'pad' ? profile.pad : round(Math.min(profile.max, profile.base + profile.step * Math.log2(row.size))));
@@ -189,9 +190,9 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
   const line = (x1: number, y1: number, x2: number, y2: number, stroke: Paint = ink) => shapes.push({ kind: 'line', x1: round(x1), y1: round(y1), x2: round(x2), y2: round(y2), stroke });
   const cellsAt = (left: number, w: number) => {
     cells.forEach((_, j) => shapes.push({ kind: 'rect', x: left, y: round(linkTop + j * profile.cell), w, h: profile.cell, fill }));
-    for (let j = 1; j < cells.length; ++j) line(left, linkTop + j * profile.cell, left + w, linkTop + j * profile.cell, 'code-bg');
+    for (let j = 1; j < cells.length; ++j) line(left, linkTop + j * profile.cell, left + w, linkTop + j * profile.cell);
   };
-  const cellText = (center: number) => cells.forEach((cell, j) => text(center, linkTop + (j + 0.5) * profile.cell + 4.5, cell, CELL, true, 'middle', 'code-bg'));
+  const cellText = (center: number) => cells.forEach((cell, j) => text(center, linkTop + (j + 0.5) * profile.cell + 4.5, cell, CELL, true, 'middle', ink));
   const arrow = (from: number, to: number) => {
     shapes.push({ kind: 'path', d: `M ${from} ${forward} H ${shaftEnd(to, 'right')}`, stroke: walk });
     shapes.push(arrowhead(to, forward, 'right', walk));
