@@ -1,4 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="0 0 700 428" font-family="code-mono, monospace" font-weight="700" role="img" aria-label="list_for_each follows only the next pointers of the embedded list members, from the head user_info_list through users[0], users[1] and users[2] back to the head, and container_of subtracts offsetof, 0x100, at each node to reach its struct user_info">
+  <path d="M 300.55 146 H 372.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 478.55 146 H 550.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 122.55 146 H 194.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 656.55 146 H 674.55 Q 686.55 146 686.55 158 V 296 Q 686.55 308 674.55 308 H 23.45 Q 11.45 308 11.45 296 V 158 Q 11.45 146 23.45 146 H 36.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
   <rect x="208.55" y="40" width="92" height="88" style="fill:var(--diagram-area)"/>
   <rect x="208.55" y="128" width="92" height="36" style="fill:var(--diagram-purple-wash)"/>
   <rect x="208.55" y="164" width="92" height="36" style="fill:var(--diagram-purple-wash)"/>
@@ -47,7 +51,6 @@
   <line x1="366.55" y1="47" x2="366.55" y2="121" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
   <path d="M 359.55 54 L 366.55 47 L 373.55 54" fill="none" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
   <path d="M 359.55 114 L 366.55 121 L 373.55 114" fill="none" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
-  <path d="M 300.55 146 H 372.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
   <path d="M 381.55 146 L 369.55 140 L 369.55 152 Z" style="fill:var(--diagram-red)"/>
   <text x="343.55" y="166" font-size="15" text-anchor="middle" style="fill:var(--diagram-red)">next</text>
   <rect x="564.55" y="40" width="92" height="88" style="fill:var(--diagram-area)"/>
@@ -73,7 +76,6 @@
   <line x1="544.55" y1="47" x2="544.55" y2="121" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
   <path d="M 537.55 54 L 544.55 47 L 551.55 54" fill="none" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
   <path d="M 537.55 114 L 544.55 121 L 551.55 114" fill="none" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
-  <path d="M 478.55 146 H 550.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
   <path d="M 559.55 146 L 547.55 140 L 547.55 152 Z" style="fill:var(--diagram-red)"/>
   <text x="521.55" y="166" font-size="15" text-anchor="middle" style="fill:var(--diagram-red)">next</text>
   <rect x="50.55" y="128" width="72" height="36" style="fill:var(--diagram-purple-wash)"/>
@@ -84,10 +86,8 @@
   <text x="86.55" y="186.5" font-size="13" text-anchor="middle" style="fill:var(--diagram-ink)">prev</text>
   <text x="86.55" y="220" font-size="15" text-anchor="middle" style="fill:var(--diagram-purple)">user_info_list</text>
   <text x="86.55" y="237" font-size="11" text-anchor="middle" style="fill:var(--diagram-purple)">(head)</text>
-  <path d="M 122.55 146 H 194.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
   <path d="M 203.55 146 L 191.55 140 L 191.55 152 Z" style="fill:var(--diagram-red)"/>
   <text x="165.55" y="166" font-size="15" text-anchor="middle" style="fill:var(--diagram-red)">next</text>
-  <path d="M 656.55 146 H 674.55 Q 686.55 146 686.55 158 V 296 Q 686.55 308 674.55 308 H 23.45 Q 11.45 308 11.45 296 V 158 Q 11.45 146 23.45 146 H 36.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
   <path d="M 45.55 146 L 33.55 140 L 33.55 152 Z" style="fill:var(--diagram-red)"/>
   <text x="349" y="328" font-size="15" text-anchor="middle" style="fill:var(--diagram-red)">next</text>
   <text x="103.55" y="376" font-size="15" text-anchor="start" xml:space="preserve"><tspan style="fill:var(--diagram-ink)">list_for_each(</tspan><tspan style="fill:var(--diagram-red)">pos</tspan><tspan style="fill:var(--diagram-ink)">, </tspan><tspan style="fill:var(--diagram-purple)">&amp;user_info_list</tspan><tspan style="fill:var(--diagram-ink)">)</tspan></text>

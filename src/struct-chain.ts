@@ -184,7 +184,7 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
   const shift = (WIDTH - MARGIN - right) / 2;
   const sx = (n: number) => round(n + shift);
 
-  const shapes: Shape[] = [];
+  const shapes: Shape[] = [], under: Shape[] = [];
   const text = (tx: number, ty: number, body: string, size: number, bold: boolean, anchor: 'start' | 'middle' | 'end', color: Paint) =>
     shapes.push({ kind: 'text', x: round(tx), y: round(ty), text: body, size, bold, anchor, fill: color });
   const line = (x1: number, y1: number, x2: number, y2: number, stroke: Paint = ink) => shapes.push({ kind: 'line', x1: round(x1), y1: round(y1), x2: round(x2), y2: round(y2), stroke });
@@ -194,7 +194,7 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
   };
   const cellText = (center: number) => cells.forEach((cell, j) => text(center, linkTop + (j + 0.5) * profile.cell + 4.5, cell, CELL, true, 'middle', ink));
   const arrow = (from: number, to: number) => {
-    shapes.push({ kind: 'path', d: `M ${from} ${forward} H ${shaftEnd(to, 'right')}`, stroke: walk });
+    under.push({ kind: 'path', d: `M ${from} ${forward} H ${shaftEnd(to, 'right')}`, stroke: walk });
     shapes.push(arrowhead(to, forward, 'right', walk));
     text((from + to) / 2, forward + ARROW_LABEL, cells[0], SIZE, true, 'middle', walk);
   };
@@ -243,7 +243,7 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
     arrow(round(hx + headW), sx(xs[0]));
     const l = sx(MARGIN), r = sx(lastRight + WRAP), start = sx(lastRight);
     const yb = round(Math.max(bottom + LOOP, linkBottom + (head.sub ? 37 : 20) + 24));
-    shapes.push({
+    under.push({
       kind: 'path',
       d: `M ${start} ${forward} H ${round(r - RADIUS)} Q ${r} ${forward} ${r} ${round(forward + RADIUS)} V ${round(yb - RADIUS)} Q ${r} ${yb} ${round(r - RADIUS)} ${yb} `
         + `H ${round(l + RADIUS)} Q ${l} ${yb} ${l} ${round(yb - RADIUS)} V ${round(forward + RADIUS)} Q ${l} ${forward} ${round(l + RADIUS)} ${forward} H ${shaftEnd(hx, 'right')}`,
@@ -261,5 +261,5 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
     runs: list.map((p) => ({ text: p.text, fill: paint(p.tone, ink) })),
   }));
   const height = code.length ? round(after + CODE_TOP + (code.length - 1) * CODE_STEP + 24) : round(after + 24);
-  return { width: WIDTH, height, label: spec.label, font: 'code-mono', shapes, frame: profile.frame };
+  return { width: WIDTH, height, label: spec.label, font: 'code-mono', shapes: [...under, ...shapes], frame: profile.frame };
 }

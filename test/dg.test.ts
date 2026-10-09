@@ -127,6 +127,14 @@ test('a struct chain links only the embedded members, rings back to its head and
   assert.match(toWeb(ring), /<rect x="[\d.]+" y="128" width="92" height="36" style="fill:var\(--diagram-purple-wash\)"\/>/);
 });
 
+test('a struct chain starts each pointer under the outline it leaves', () => {
+  const { shapes } = structChain.layout(chainSpec);
+  const firstOutline = shapes.findIndex((s) => s.kind === 'outline');
+  const shafts = shapes.flatMap((s, i) => (s.kind === 'path' && s.stroke === 'diagram-red' ? [i] : []));
+  assert.equal(shafts.length, 4);
+  assert.ok(shafts.every((i) => i < firstOutline));
+});
+
 test('invalid specs name the problem', () => {
   const spec = (patch: object): memoryLayout.MemoryLayout => ({
     label: 'x',
