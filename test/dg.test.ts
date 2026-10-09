@@ -6,7 +6,7 @@ import * as memoryLayout from '../src/memory-layout.ts';
 import * as memoryTable from '../src/memory-table.ts';
 import { lintJoins } from '../src/joins.ts';
 import { lintMermaid } from '../src/mermaid.ts';
-import { corners, lintStatic, toStatic, toWeb, type Scene } from '../src/scene.ts';
+import { corners, lintStatic, round, textWidth, toStatic, toWeb, type Scene } from '../src/scene.ts';
 import * as structChain from '../src/struct-chain.ts';
 import { loadTokens, readBlogTokens } from '../src/tokens.ts';
 
@@ -114,8 +114,13 @@ test('a memory layout frames only what it draws', () => {
   assert.ok(spanned.width > bare.width);
   const axisOf = (scene: ReturnType<typeof memoryLayout.layout>) => scene.shapes.find((s) => s.kind === 'text' && s.text === 'high')!;
   const long = memoryLayout.layout({ label: 'x', regions: [{ word: 'a', start: '0xffff800083fcbc38' }, { word: 'b', start: '0xffff800083fcbc30' }] });
-  assert.equal((axisOf(long) as { x: number }).x, 32);
+  assert.equal((axisOf(long) as { x: number }).x, 8.8);
   assert.equal((axisOf(bare) as { x: number }).x, 126.4);
+  const column = (scene: ReturnType<typeof memoryLayout.layout>) => scene.shapes.find((s) => s.kind === 'outline') as { x: number; w: number };
+  assert.equal(column(bare).w, 260);
+  const padded = memoryLayout.layout({ label: 'x', regions: [{ word: '00 00 00 00 00 00 00', start: '0x8' }, { word: 'b', start: '0x0' }] });
+  assert.deepEqual([column(padded).x, column(padded).w], [180, 300]);
+  assert.equal((axisOf(padded) as { x: number }).x, round(166 - textWidth('0x8', 14) - 46));
 });
 
 test('the struct chain example renders the reference svg', () => {
