@@ -13,6 +13,7 @@ Write the interaction below as a Mermaid `sequenceDiagram`.
 - `Note over <participant>` marks work done without a message. Use it sparingly.
 - Add no `%%{init}%%` or styling lines. The page supplies the look. Its colors follow the theme, clean-light by default, and can be changed freely to suit any theme. Its shapes, stroke weights and layout stay fixed.
 - Put `%% id: <name>` right after the diagram type to name exported files.
+- Do not pad labels with spaces to dodge lifelines. The page centers each branch name in its frame, clears the lifelines behind branch names and message labels, starts each message at its lifeline's center and closes the frame's dashed corners.
 
 Output only the Mermaid source.
 

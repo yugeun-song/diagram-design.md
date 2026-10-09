@@ -17,6 +17,7 @@ Write the flow below as a Mermaid `flowchart TD` (or `LR`).
 - Use one language in all labels.
 - Add no `%%{init}%%`, `classDef` or `style` lines. The page supplies the look. Its colors follow the theme, clean-light by default, and can be changed freely to suit any theme. Its shapes, stroke weights and layout stay fixed.
 - Put `%% id: <name>` right after the diagram type to name exported files.
+- Do not steer edges with invisible links, `linkStyle` or spacer nodes. The page routes every edge itself: straight when the two boxes line up, otherwise with one bend between ranks, entering a box at least 16 units from its corners, so no edge runs along a border or hides a jog behind its label.
 
 Output only the Mermaid source.
 
