@@ -61,8 +61,8 @@ test('a pointer into a sized region lands in proportion', () => {
     regions: [{ id: 'buf', word: 'buffer', start: '0x1000', size: '0x100' }, { value: '0x1080', start: '0x800', to: 'buf' }],
   });
   const paths = scene.shapes.filter((shape) => shape.kind === 'path').map((shape) => shape.d);
-  assert.ok(paths.some((d) => d.endsWith('Q 493 130 481 130 H 469')));
-  assert.ok(paths.includes('M 460 130 L 472 124 L 472 136 Z'));
+  assert.ok(paths.some((d) => d.endsWith('Q 493 102 481 102 H 469')));
+  assert.ok(paths.includes('M 460 102 L 472 96 L 472 108 Z'));
 });
 
 test('tones, spans, a title and code lines take theme roles', () => {
@@ -161,7 +161,7 @@ test('review regressions stay fixed', () => {
     { id: 'buf', word: 'buffer', start: '0x1000', size: '0x100' },
     { value: '0x1080', start: '0x800', to: 'buf' },
   ] });
-  assert.ok(sized.shapes.some((shape) => shape.kind === 'path' && shape.d === 'M 460 246 L 472 240 L 472 252 Z'));
+  assert.ok(sized.shapes.some((shape) => shape.kind === 'path' && shape.d === 'M 460 162 L 472 156 L 472 168 Z'));
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'a', h: '50' as unknown as number, start: '0x20' }] }), /h: must be a positive number/);
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ value: 4096 as unknown as string }] }), /must be a non-empty string/);
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a\nb' }] }), /control character/);

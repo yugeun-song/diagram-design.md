@@ -47,7 +47,7 @@ export interface Profile {
 }
 
 export const PROFILES: Record<ProfileName, Profile> = {
-  blog: { value: 156, word: 116, gap: 76, wordSize: 14, subSize: 11, frame: 24 },
+  blog: { value: 64, word: 60, gap: 40, wordSize: 14, subSize: 11, frame: 24 },
   slide: { value: 56, word: 48, gap: 32, wordSize: 15, subSize: 12, frame: 12 },
 };
 
@@ -55,6 +55,7 @@ const WIDTH = 700, TOP = 72, AXIS = 32, LEFT = 245, RIGHT = 455, MID = 350, ADDR
 const RUN = 26, RADIUS = 12, LANE = 24, SIZE = 15;
 const INSIDE = RIGHT - LEFT - 16, OUTSIDE = ADDR - AXIS - 16;
 const SPAN_X = RIGHT + 20, SPAN_BAR = 10, SPAN_TICK = RIGHT + 6, SPAN_BEND = 6, SPAN_LABEL = 14;
+const LABEL_GAP = 8;
 const TITLE_ROOM = 560, CODE_ROOM = WIDTH - 32, CODE_TOP = 64, CODE_STEP = 28;
 const SPEC_KEYS = new Set(['id', 'label', 'title', 'regions', 'spans', 'code']);
 const KEYS = new Set(['id', 'value', 'word', 'gap', 'sub', 'start', 'marker', 'tone', 'to', 'size', 'h']);
@@ -224,7 +225,7 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   // Nested spans take outer lanes.
   const spans = (spec.spans ?? []).map((span) => {
     const f = spec.regions.findIndex((r) => r.id === span.from), t = spec.regions.findIndex((r) => r.id === span.to);
-    return { span, top: rows[f].top, bottom: rows[t].bottom, lane: 0, notes: notes(span) };
+    return { span, top: rows[f].top, bottom: rows[t].bottom, center: (rows[f].top + rows[t].bottom) / 2, lane: 0, notes: notes(span) };
   });
   for (const s of spans) {
     for (const a of arrows) if (s.top < a.bottom && a.top < s.bottom) throw new Error(`spans: "${s.span.label}" shares rows with the arrow from ${a.name}; split the diagram`);
@@ -243,10 +244,23 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     const room = WIDTH - 8 - labelX;
     if (textWidth(s.span.label, SIZE) > room) throw new Error(`spans[${i}].label: "${s.span.label}" is too long for its place`);
     for (const note of s.notes) if (textWidth(note, PROFILES.slide.subSize) > room) throw new Error(`spans[${i}].sub: "${note}" is too long for its place; split it into lines`);
-    for (const b of spans.slice(i + 1)) {
-      if (Math.abs((s.top + s.bottom) / 2 - (b.top + b.bottom) / 2) < reach(s.notes) + reach(b.notes)) throw new Error(`spans: the labels "${s.span.label}" and "${b.span.label}" overlap; split the diagram`);
-    }
   });
+  const order = [...spans].sort((a, b) => a.center - b.center);
+  for (let pass = 0; pass <= order.length; ++pass) {
+    let moved = false;
+    for (let k = 1; k < order.length; ++k) {
+      const u = order[k - 1], l = order[k];
+      const overlap = reach(u.notes) + reach(l.notes) - (l.center - u.center);
+      if (overlap <= 0.5) continue;
+      const up = Math.max(0, u.center - reach(u.notes) - u.top), down = Math.max(0, l.bottom - reach(l.notes) - l.center);
+      if (pass === order.length || up + down < overlap) throw new Error(`spans: the labels "${u.span.label}" and "${l.span.label}" overlap; split the diagram`);
+      const need = Math.min(overlap + LABEL_GAP, up + down);
+      u.center -= (need * up) / (up + down);
+      l.center += (need * down) / (up + down);
+      moved = true;
+    }
+    if (!moved) break;
+  }
 
   if (spec.title !== undefined) runs(MID, TOP - 24, pieces(spec.title, 'title', TITLE_ROOM));
 
@@ -287,8 +301,7 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     } else {
       shapes.push(...dimension(RIGHT, x, SPAN_BAR, top, end, stroke));
     }
-    const center = (s.top + s.bottom) / 2;
-    const baseline = round(s.notes.length ? center - 4 - 11 * (s.notes.length - 1) : center + 5);
+    const baseline = round(s.notes.length ? s.center - 4 - 11 * (s.notes.length - 1) : s.center + 5);
     text(labelX, baseline, s.span.label, SIZE, true, 'start', stroke);
     s.notes.forEach((note, j) => text(labelX, round(baseline + 22 * (j + 1)), note, profile.subSize, false, 'start', stroke));
   }
