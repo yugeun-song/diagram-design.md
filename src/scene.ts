@@ -20,6 +20,7 @@ export interface Scene {
   font: string;
   shapes: Shape[];
   frame?: number;
+  x?: number;
 }
 
 export interface StaticOptions {
@@ -52,7 +53,7 @@ export function toWeb(scene: Scene): string {
       case 'runs': return `<text x="${s.x}" y="${s.y}" font-size="${s.size}" text-anchor="${s.anchor}" xml:space="preserve">${s.runs.map((r) => `<tspan ${fill(r.fill)}>${esc(r.text)}</tspan>`).join('')}</text>`;
     }
   });
-  return `<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="0 0 ${scene.width} ${scene.height}" font-family="${scene.font}, monospace" font-weight="700" role="img" aria-label="${esc(scene.label)}">\n  ${body.join('\n  ')}\n</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="${scene.x ?? 0} 0 ${scene.width} ${scene.height}" font-family="${scene.font}, monospace" font-weight="700" role="img" aria-label="${esc(scene.label)}">\n  ${body.join('\n  ')}\n</svg>`;
 }
 
 export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: StaticOptions = {}): string {
@@ -62,7 +63,7 @@ export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: S
   const width = tokens.stroke;
   const family = (name: string) => tokens.fonts[name] ?? name;
   const pad = scene.frame ?? 0;
-  const [vx, vy, vw, vh] = [-pad, -pad, round(scene.width + 2 * pad), round(scene.height + 2 * pad)];
+  const [vx, vy, vw, vh] = [round((scene.x ?? 0) - pad), -pad, round(scene.width + 2 * pad), round(scene.height + 2 * pad)];
   const out: string[] = [];
   if (pad) out.push(`<rect x="${vx + 0.5}" y="${vy + 0.5}" width="${round(vw - 1)}" height="${round(vh - 1)}" rx="10" fill="${paint('code-bg')}" stroke="${paint('code-border')}" stroke-width="1"/>`);
   for (const s of scene.shapes) {

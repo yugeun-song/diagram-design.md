@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="0 0 700 380" font-family="code-mono, monospace" font-weight="700" role="img" aria-label="Stack column: the saved frame pointers form a linked list that climbs the stack">
+<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="4.85 0 700 380" font-family="code-mono, monospace" font-weight="700" role="img" aria-label="Stack column: the saved frame pointers form a linked list that climbs the stack">
   <text x="32" y="54" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">high</text>
   <line x1="32" y1="340" x2="32" y2="82" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
   <path d="M 32 74 L 26 86 L 38 86 Z" style="fill:var(--diagram-ink)"/>

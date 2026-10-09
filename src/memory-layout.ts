@@ -316,5 +316,11 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   const code = (spec.code ?? []).map((list, i) => pieces(list, `code[${i}]`, CODE_ROOM));
   code.forEach((list, i) => runs(MID, round(bottom + CODE_TOP + i * CODE_STEP), list));
   const height = code.length ? round(bottom + CODE_TOP + (code.length - 1) * CODE_STEP + 24) : round(bottom + 40);
-  return { width: WIDTH, height, label: spec.label, font: 'code-mono', shapes, frame: profile.frame };
+  const spanRight = spans.map((s) => labelX + Math.max(textWidth(s.span.label, SIZE), ...s.notes.map((note) => textWidth(note, profile.subSize))));
+  const arrowRight = arrows.map((a) => a.leg + 8 + textWidth(a.label, SIZE));
+  const titleWidth = spec.title === undefined ? 0 : textWidth(pieces(spec.title, 'title', TITLE_ROOM).map((p) => p.text).join(''), SIZE);
+  const left = Math.min(AXIS - textWidth('high', SIZE) / 2, MID - titleWidth / 2);
+  const right = Math.max(RIGHT, MID + titleWidth / 2, ...spanRight, ...arrowRight);
+  const x = round((left + right) / 2 - MID);
+  return { width: WIDTH, height, label: spec.label, font: 'code-mono', shapes, frame: profile.frame, ...(x === 0 ? {} : { x }) };
 }

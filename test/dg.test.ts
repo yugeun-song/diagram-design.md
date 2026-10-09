@@ -98,6 +98,14 @@ test('tones, spans, a title and code lines take theme roles', () => {
   assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: 'x'.repeat(30) }] }), /split it into lines/);
 });
 
+test('a memory layout centers what it draws', () => {
+  const bare = memoryLayout.layout({ label: 'x', regions: [{ word: 'a', start: '0x10' }, { word: 'b', start: '0x0' }] });
+  assert.ok(bare.x !== undefined && bare.x < 0);
+  assert.match(toWeb(bare), new RegExp(`viewBox="${bare.x} 0 700 `));
+  const spanned = memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'a', start: '0x10' }, { id: 'b', word: 'b', start: '0x0' }], spans: [{ from: 'a', to: 'b', label: 'both' }] });
+  assert.ok((spanned.x ?? 0) > bare.x);
+});
+
 test('the struct chain example renders the reference svg', () => {
   assert.equal(toWeb(structChain.layout(chainSpec)) + '\n', read('golden/user-info-list.svg'));
 });
