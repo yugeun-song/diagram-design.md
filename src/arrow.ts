@@ -1,9 +1,10 @@
-import { round, type Shape } from './scene.ts';
+import { BORDER, round, STROKE, type Shape } from './scene.ts';
 import type { Paint } from './tokens.ts';
 
 export const HEAD = 12, TIP = 5;
-const POINTER_OVERLAP = 3, OPEN = 7, MITER = 2;
-export const DIMENSION_MIN = 2 * (OPEN + TIP + MITER) + 8;
+const POINTER_OVERLAP = 3, OPEN = 7, DIMENSION_GAP = 1.5;
+const DIMENSION_TIP = BORDER / 2 + DIMENSION_GAP + (STROKE / 2) * Math.SQRT2;
+export const DIMENSION_MIN = 2 * (OPEN + DIMENSION_TIP) + 8;
 
 export type Toward = 'up' | 'down' | 'left' | 'right';
 
@@ -28,11 +29,11 @@ export function chevron(tip: number, across: number, toward: Toward, stroke: Pai
 }
 
 export function dimension(edge: number, x: number, bar: number, top: number, end: number, stroke: Paint): Shape[] {
-  const upper = top + TIP + MITER, lower = end - TIP - MITER;
+  const upper = round(top + DIMENSION_TIP), lower = round(end - DIMENSION_TIP);
   return [
     { kind: 'line', x1: round(edge), y1: round(top), x2: round(x + bar), y2: round(top), stroke: 'diagram-ink' },
     { kind: 'line', x1: round(edge), y1: round(end), x2: round(x + bar), y2: round(end), stroke: 'diagram-ink' },
-    { kind: 'line', x1: round(x), y1: round(upper), x2: round(x), y2: round(lower), stroke },
+    { kind: 'line', x1: round(x), y1: round(upper), x2: round(x), y2: round(lower), stroke, weight: 'stroke' },
     chevron(upper, x, 'up', stroke),
     chevron(lower, x, 'down', stroke),
   ];

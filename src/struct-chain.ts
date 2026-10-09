@@ -1,5 +1,5 @@
 import { arrowhead, dimension, DIMENSION_MIN, shaftEnd } from './arrow.ts';
-import { checkText, round, textWidth, type ProfileName, type Scene, type Shape } from './scene.ts';
+import { checkText, FONT, round, textWidth, tighten, type ProfileName, type Scene, type Shape } from './scene.ts';
 import { checkTone, paint, pieces, WASHES, type Run, type Tone } from './tone.ts';
 import type { Paint } from './tokens.ts';
 
@@ -44,14 +44,14 @@ export interface Profile {
 }
 
 export const PROFILES: Record<ProfileName, Profile> = {
-  blog: { base: 48, step: 5, max: 104, cell: 36, pad: 28, sub: 11, frame: 24 },
-  slide: { base: 40, step: 1.5, max: 56, cell: 24, pad: 16, sub: 12, frame: 12 },
+  blog: { base: 68, step: 6, max: 128, cell: 44, pad: 34, sub: 12, frame: 24 },
+  slide: { base: 48, step: 2, max: 64, cell: 28, pad: 20, sub: 12, frame: 12 },
 };
 
-const WIDTH = 700, MARGIN = 10, LABEL = 28, TOP = 40, SIZE = 15, VALUE = 13, CELL = 13;
-const BOX = 92, HEAD_BOX = 72, INSET = 8, GAP = 86, RADIUS = 12;
+const WIDTH = 700, MARGIN = 10, LABEL = 34, TOP = 48, SIZE = 15, VALUE = 14, CELL = 14, ARROW = 14;
+const BOX = 108, HEAD_BOX = 80, INSET = 20, GAP = 64, RADIUS = 12;
 const ENTRY = 24, WRAP = 30, LOOP = 32, ARROW_LABEL = 20;
-const DIM_X = 20, DIM_BAR = 10, DIM_LABEL = 14, CODE_TOP = 48, CODE_STEP = 28;
+const DIM_X = 18, DIM_BAR = 10, DIM_LABEL = 12, CODE_TOP = 48, CODE_STEP = 28;
 const SPEC_KEYS = new Set(['id', 'label', 'fields', 'link', 'nodes', 'head', 'tones', 'code']);
 const ROLES: Role[] = ['node', 'link', 'walk', 'offset'];
 
@@ -163,7 +163,7 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
     ...cells.map((cell) => textWidth(cell, CELL)),
   );
   const box = Math.max(BOX, Math.ceil(inner + 2 * INSET), ...spec.nodes.map((node) => Math.ceil(textWidth(node.name, SIZE))));
-  const gap = Math.max(GAP, Math.ceil(textWidth(cells[0], SIZE) + 16));
+  const gap = Math.max(GAP, Math.ceil(textWidth(cells[0], ARROW) + 24));
 
   let x = MARGIN + dimLabel, headX = 0, headW = 0;
   const head = spec.head;
@@ -192,11 +192,11 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
     cells.forEach((_, j) => shapes.push({ kind: 'rect', x: left, y: round(linkTop + j * profile.cell), w, h: profile.cell, fill }));
     for (let j = 1; j < cells.length; ++j) line(left, linkTop + j * profile.cell, left + w, linkTop + j * profile.cell);
   };
-  const cellText = (center: number) => cells.forEach((cell, j) => text(center, linkTop + (j + 0.5) * profile.cell + 4.5, cell, CELL, true, 'middle', ink));
+  const cellText = (center: number) => cells.forEach((cell, j) => text(center, linkTop + (j + 0.5) * profile.cell + 5, cell, CELL, true, 'middle', ink));
   const arrow = (from: number, to: number) => {
     under.push({ kind: 'path', d: `M ${from} ${forward} H ${shaftEnd(to, 'right')}`, stroke: walk });
     shapes.push(arrowhead(to, forward, 'right', walk));
-    text((from + to) / 2, forward + ARROW_LABEL, cells[0], SIZE, true, 'middle', walk);
+    text((from + to) / 2, forward + ARROW_LABEL, cells[0], ARROW, true, 'middle', walk);
   };
 
   xs.forEach((left0, n) => {
@@ -219,14 +219,14 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
       const value = node.values?.[row.name];
       if (value === undefined) return text(center, middle + 5, row.name, SIZE, true, 'middle', ink);
       text(center, middle - 5, row.name, SIZE, true, 'middle', ink);
-      text(center, middle + 13, value, VALUE, false, 'middle', ink);
+      text(center, middle + 15, value, VALUE, false, 'middle', ink);
     });
     if (offset) {
       const dx = round(left - DIM_X);
       shapes.push(...dimension(left, dx, -DIM_BAR, TOP, linkTop, measure));
       if (n === 0) {
         text(dx - DIM_LABEL, dimBaseline, 'offsetof', SIZE, true, 'end', measure);
-        text(dx - DIM_LABEL, dimBaseline + 22, dimSub, profile.sub, false, 'end', measure);
+        text(dx - DIM_LABEL, dimBaseline + 21, dimSub, profile.sub, false, 'end', measure);
       }
     }
     if (n > 0) arrow(sx(xs[n - 1] + box), left);
@@ -238,11 +238,11 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
     cellsAt(hx, headW);
     shapes.push({ kind: 'outline', x: hx, y: linkTop, w: headW, h: cells.length * profile.cell, stroke: ink });
     cellText(hx + headW / 2);
-    text(hx + headW / 2, linkBottom + 20, head.name, SIZE, true, 'middle', mark);
-    if (head.sub) text(hx + headW / 2, linkBottom + 37, head.sub, profile.sub, false, 'middle', mark);
+    text(hx + headW / 2, linkBottom + 24, head.name, SIZE, true, 'middle', mark);
+    if (head.sub) text(hx + headW / 2, linkBottom + 43, head.sub, profile.sub, false, 'middle', mark);
     arrow(round(hx + headW), sx(xs[0]));
     const l = sx(MARGIN), r = sx(lastRight + WRAP), start = sx(lastRight);
-    const yb = round(Math.max(bottom + LOOP, linkBottom + (head.sub ? 37 : 20) + 24));
+    const yb = round(Math.max(bottom + LOOP, linkBottom + (head.sub ? 43 : 24) + 24));
     under.push({
       kind: 'path',
       d: `M ${start} ${forward} H ${round(r - RADIUS)} Q ${r} ${forward} ${r} ${round(forward + RADIUS)} V ${round(yb - RADIUS)} Q ${r} ${yb} ${round(r - RADIUS)} ${yb} `
@@ -250,7 +250,7 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
       stroke: walk,
     });
     shapes.push(arrowhead(hx, forward, 'right', walk));
-    text((l + r) / 2, yb + ARROW_LABEL, cells[0], SIZE, true, 'middle', walk);
+    text((l + r) / 2, yb + ARROW_LABEL, cells[0], ARROW, true, 'middle', walk);
     after = round(yb + ARROW_LABEL);
   }
 
@@ -261,5 +261,5 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
     runs: list.map((p) => ({ text: p.text, fill: paint(p.tone, ink) })),
   }));
   const height = code.length ? round(after + CODE_TOP + (code.length - 1) * CODE_STEP + 24) : round(after + 24);
-  return { width: WIDTH, height, label: spec.label, font: 'code-mono', shapes: [...under, ...shapes], frame: profile.frame };
+  return tighten({ width: WIDTH, height, label: spec.label, font: FONT, shapes: [...under, ...shapes], frame: profile.frame }, MARGIN);
 }

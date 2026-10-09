@@ -13,7 +13,7 @@ Write the chain below as one JSON object. The tool computes the boxes, the offse
 - `nodes`: the structures in list order, each `{"name": "users[0]", "values": {"username": "\"alice\""}}`. `values` prints a value under a member's name.
 - Optional:
   - `head`: `{"name": "user_info_list", "sub": "(head)"}`, a bare link drawn on the left with its name under it. A head makes the chain a ring: the head points to the first node and the last node points back to the head. The head has no box around it and no `offsetof`, as `container_of` never applies to it.
-  - `tones`: colors by role, `{"node": ..., "link": ..., "walk": ..., "offset": ...}`, for the node names, the link cells and the head, the forward arrows, and the `offsetof` dimension. A tone is `red`, `orange`, `blue` or `purple`; a role without one takes the ink.
+  - `tones`: colors by role, `{"node": ..., "link": ..., "walk": ..., "offset": ...}`, for the node names, the link cells and the head, the forward arrows, and the `offsetof` dimension. A tone is `red`, `orange`, `blue` or `purple`. A toned link fills its cells with the tone's light wash and names the head in the tone. Without a tone the link cells take the area fill, and every other role takes the ink.
   - `code`: lines of runs under the chain, such as the loop that walks it. The lines share a left edge, so indentation shows. A run is `"text"` or `["text", tone]`.
 - The canvas is as wide as the other forms. A head and three nodes fit; the tool says when a chain does not.
 - Use one language in the whole diagram.

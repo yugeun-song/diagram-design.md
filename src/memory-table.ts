@@ -1,4 +1,4 @@
-import { checkText, round, textWidth, type ProfileName, type Scene, type Shape } from './scene.ts';
+import { checkText, FONT, round, textWidth, tighten, type ProfileName, type Scene, type Shape } from './scene.ts';
 import type { Paint } from './tokens.ts';
 
 export type Field = [string, number] | { pad: number } | { other: string; size: number };
@@ -37,11 +37,11 @@ export interface Profile {
 }
 
 export const PROFILES: Record<ProfileName, Profile> = {
-  blog: { row: 56, sub: 11, header: 11, word: 14, stack: 11, frame: 24 },
-  slide: { row: 60, sub: 12, header: 12, word: 15, stack: 12, frame: 12 },
+  blog: { row: 68, sub: 12, header: 12, word: 15, stack: 12, frame: 24 },
+  slide: { row: 64, sub: 12, header: 12, word: 15, stack: 12, frame: 12 },
 };
 
-const WIDTH = 700, MARGIN = 16, TOP = 40, TICK = 12, GAP = 14, SIZE = 15;
+const WIDTH = 700, MARGIN = 16, TOP = 44, TICK = 12, GAP = 14, SIZE = 15, OFFSET = 14, RULER = 24;
 const KEYS = new Set(['id', 'label', 'unit', 'cols', 'order', 'base', 'fields']);
 const HEX = /^0x[0-9a-f]+$/i;
 
@@ -173,7 +173,7 @@ function place(cell: Cell, w: number, p: Profile): Placed {
   const [name, type] = match && match[1] ? [match[1], match[2]] : [cell.text, ''];
   if (textWidth(name, SIZE) <= w - 12 && (!type || textWidth(type, p.sub) <= w - 8)) {
     return type
-      ? { lines: [{ text: name, size: SIZE, bold: true, fill: 'diagram-ink', dy: -4 }, { text: type, size: p.sub, bold: false, fill: 'diagram-ink', dy: 16 }], height: 0 }
+      ? { lines: [{ text: name, size: SIZE, bold: true, fill: 'diagram-ink', dy: -6 }, { text: type, size: p.sub, bold: false, fill: 'text-secondary', dy: 15 }], height: 0 }
       : { lines: [{ text: name, size: SIZE, bold: true, fill: 'diagram-ink', dy: 5 }], height: 0 };
   }
   if (textWidth(cell.text, p.stack) <= w - 6) return { lines: [{ text: cell.text, size: p.stack, bold: true, fill: 'diagram-ink', dy: 4 }], height: 0 };
@@ -184,7 +184,7 @@ export function layout(g: Grid, label: string, p: Profile = PROFILES.blog): Scen
   const cols = g.headers.length;
   const offsets = g.rows.some((r) => r.offset !== undefined);
   const labels = [...g.rows.map((r) => r.offset ?? ''), g.end ?? ''];
-  const left = offsets ? Math.ceil(MARGIN + Math.max(...labels.map((l) => textWidth(l, SIZE))) + GAP) : MARGIN;
+  const left = offsets ? Math.ceil(MARGIN + Math.max(...labels.map((l) => textWidth(l, OFFSET))) + GAP) : MARGIN;
   const right = WIDTH - MARGIN;
   const unit = (right - left) / cols;
   const placed = g.rows.map((row) => {
@@ -201,7 +201,9 @@ export function layout(g: Grid, label: string, p: Profile = PROFILES.blog): Scen
   const text = (x: number, y: number, body: string, size: number, bold: boolean, anchor: 'start' | 'middle' | 'end', fill: Paint) =>
     shapes.push({ kind: 'text', x, y, text: body, size, bold, anchor, fill });
 
-  g.headers.forEach((h, i) => text(round(left + (i + 0.5) * unit), TOP - 12, h, p.header, false, 'middle', 'text-secondary'));
+  g.headers.forEach((h, i) => text(round(left + (i + 0.5) * unit), round(TOP - RULER / 2 + p.header * 0.35), h, p.header, false, 'middle', 'text-secondary'));
+  for (let i = 1; i < cols; ++i) shapes.push({ kind: 'line', x1: round(left + i * unit), y1: TOP - RULER, x2: round(left + i * unit), y2: TOP, stroke: 'diagram-ink' });
+  shapes.push({ kind: 'path', d: `M ${left} ${TOP} V ${TOP - RULER} H ${round(right)} V ${TOP}`, stroke: 'diagram-ink', weight: 'border' });
   let y = TOP;
   const tops = heights.map((h) => { const top = y; y = round(y + h); return top; });
   const bottom = y;
@@ -213,12 +215,12 @@ export function layout(g: Grid, label: string, p: Profile = PROFILES.blog): Scen
     [...tops, bottom].forEach((at, i) => {
       if (!labels[i]) return;
       shapes.push({ kind: 'line', x1: left - TICK, y1: at, x2: left, y2: at, stroke: 'diagram-ink' });
-      text(left - GAP, round(at + 4), labels[i], SIZE, true, 'end', 'diagram-ink');
+      text(left - GAP, round(at + 5), labels[i], OFFSET, false, 'end', 'diagram-ink');
     });
   }
   placed.forEach((cells, r) => cells.forEach((c) => {
     const center = tops[r] + heights[r] / 2;
     for (const line of c.placed.lines) text(round(c.x + c.w / 2), round(center + line.dy), line.text, line.size, line.bold, 'middle', line.fill);
   }));
-  return { width: WIDTH, height: round(bottom + (offsets ? 20 : 16)), label, font: 'code-mono', shapes, frame: p.frame };
+  return tighten({ width: WIDTH, height: round(bottom + (offsets ? 20 : 16)), label, font: FONT, shapes, frame: p.frame }, MARGIN);
 }

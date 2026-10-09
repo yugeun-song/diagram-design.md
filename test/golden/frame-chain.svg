@@ -1,37 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="4.85 0 700 380" font-family="code-mono, monospace" font-weight="700" role="img" aria-label="Stack column: the saved frame pointers form a linked list that climbs the stack">
-  <text x="32" y="54" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">high</text>
-  <line x1="32" y1="340" x2="32" y2="82" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <path d="M 32 74 L 26 86 L 38 86 Z" style="fill:var(--diagram-ink)"/>
-  <text x="32" y="364" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">low</text>
-  <rect x="245" y="72" width="210" height="60" style="fill:var(--diagram-area)"/>
-  <rect x="245" y="132" width="210" height="40" style="fill:var(--diagram-gap)"/>
-  <rect x="245" y="172" width="210" height="64" style="fill:var(--diagram-area)"/>
-  <rect x="245" y="236" width="210" height="40" style="fill:var(--diagram-gap)"/>
-  <rect x="245" y="276" width="210" height="64" style="fill:var(--diagram-area)"/>
-  <rect x="245" y="72" width="210" height="268" fill="none" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <line x1="245" y1="132" x2="455" y2="132" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <line x1="245" y1="172" x2="455" y2="172" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <line x1="245" y1="236" x2="455" y2="236" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <line x1="245" y1="276" x2="455" y2="276" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <line x1="233" y1="132" x2="245" y2="132" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <text x="231" y="136" font-size="15" text-anchor="end" style="fill:var(--diagram-ink)">0xffff800083fcbcd0</text>
-  <line x1="233" y1="236" x2="245" y2="236" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <text x="231" y="240" font-size="15" text-anchor="end" style="fill:var(--diagram-ink)">0xffff800083fcbc90</text>
-  <line x1="233" y1="340" x2="245" y2="340" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <text x="231" y="328" font-size="15" text-anchor="end" style="fill:var(--diagram-red)">X29 = sp</text>
-  <text x="231" y="346" font-size="15" text-anchor="end" style="fill:var(--diagram-ink)">0xffff800083fcbc30</text>
-  <text x="350" y="98" font-size="14" text-anchor="middle" style="fill:var(--diagram-ink)">truncated</text>
-  <text x="350" y="120" font-size="11" text-anchor="middle" style="fill:var(--diagram-ink)">(caller's caller)</text>
-  <text x="350" y="162" font-size="26" text-anchor="middle" style="fill:var(--text-secondary)">⋮</text>
-  <text x="350" y="200" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">0xffff800083fcbcd0</text>
-  <text x="350" y="224" font-size="11" text-anchor="middle" style="fill:var(--diagram-ink)">(caller frame)</text>
-  <text x="350" y="266" font-size="26" text-anchor="middle" style="fill:var(--text-secondary)">⋮</text>
-  <text x="350" y="304" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">0xffff800083fcbc90</text>
-  <text x="350" y="328" font-size="11" text-anchor="middle" style="fill:var(--diagram-ink)">(current frame)</text>
-  <path d="M 455 308 H 481 Q 493 308 493 296 V 248 Q 493 236 481 236 H 469" fill="none" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <path d="M 460 236 L 472 230 L 472 242 Z" style="fill:var(--diagram-ink)"/>
-  <text x="501" y="275" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">*(0xffff800083fcbc90)</text>
-  <path d="M 455 204 H 481 Q 493 204 493 192 V 144 Q 493 132 481 132 H 469" fill="none" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <path d="M 460 132 L 472 126 L 472 138 Z" style="fill:var(--diagram-ink)"/>
-  <text x="501" y="171" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">*(0xffff800083fcbcd0)</text>
+<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="6 0 698.4 468" style="--diagram-width:698.4" font-family="code-mono, hangul-sans, monospace" font-weight="700" role="img" aria-label="Stack column: the saved frame pointers form a linked list that climbs the stack">
+  <text x="32" y="58" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">high</text>
+  <line x1="32" y1="424" x2="32" y2="86" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <path d="M 32 78 L 26 90 L 38 90 Z" style="fill:var(--diagram-ink)"/>
+  <text x="32" y="448" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">low</text>
+  <rect x="220" y="76" width="260" height="76" style="fill:var(--diagram-area)"/>
+  <rect x="220" y="152" width="260" height="52" style="fill:var(--diagram-gap)"/>
+  <rect x="220" y="204" width="260" height="84" style="fill:var(--diagram-area)"/>
+  <rect x="220" y="288" width="260" height="52" style="fill:var(--diagram-gap)"/>
+  <rect x="220" y="340" width="260" height="84" style="fill:var(--diagram-area)"/>
+  <rect x="220" y="76" width="260" height="348" fill="none" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="220" y1="152" x2="480" y2="152" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="220" y1="204" x2="480" y2="204" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="220" y1="288" x2="480" y2="288" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="220" y1="340" x2="480" y2="340" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="208" y1="152" x2="220" y2="152" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <text x="206" y="157" font-size="14" text-anchor="end" style="fill:var(--diagram-ink)">0xffff800083fcbcd0</text>
+  <line x1="208" y1="288" x2="220" y2="288" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <text x="206" y="293" font-size="14" text-anchor="end" style="fill:var(--diagram-ink)">0xffff800083fcbc90</text>
+  <line x1="208" y1="424" x2="220" y2="424" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <text x="206" y="411" font-size="15" text-anchor="end" style="fill:var(--diagram-red)">X29 = sp</text>
+  <text x="206" y="429" font-size="14" text-anchor="end" style="fill:var(--diagram-ink)">0xffff800083fcbc30</text>
+  <text x="350" y="108" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">truncated</text>
+  <text x="350" y="129" font-size="12" text-anchor="middle" style="fill:var(--text-secondary)">(caller's caller)</text>
+  <text x="350" y="188" font-size="26" text-anchor="middle" style="fill:var(--text-secondary)">⋮</text>
+  <text x="350" y="240" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">0xffff800083fcbcd0</text>
+  <text x="350" y="261" font-size="12" text-anchor="middle" style="fill:var(--text-secondary)">(caller frame)</text>
+  <text x="350" y="324" font-size="26" text-anchor="middle" style="fill:var(--text-secondary)">⋮</text>
+  <text x="350" y="376" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">0xffff800083fcbc90</text>
+  <text x="350" y="397" font-size="12" text-anchor="middle" style="fill:var(--text-secondary)">(current frame)</text>
+  <path d="M 480 382 H 500 Q 512 382 512 370 V 300 Q 512 288 500 288 H 494" fill="none" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 485 288 L 497 282 L 497 294 Z" style="fill:var(--diagram-ink)"/>
+  <text x="520" y="338" font-size="14" text-anchor="start" style="fill:var(--diagram-ink)">*(0xffff800083fcbc90)</text>
+  <path d="M 480 246 H 500 Q 512 246 512 234 V 164 Q 512 152 500 152 H 494" fill="none" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 485 152 L 497 146 L 497 158 Z" style="fill:var(--diagram-ink)"/>
+  <text x="520" y="202" font-size="14" text-anchor="start" style="fill:var(--diagram-ink)">*(0xffff800083fcbcd0)</text>
 </svg>

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import * as memoryLayout from '../src/memory-layout.ts';
 import * as memoryTable from '../src/memory-table.ts';
 import { lintMermaid } from '../src/mermaid.ts';
-import { lintStatic, toStatic, toWeb } from '../src/scene.ts';
+import { corners, lintStatic, toStatic, toWeb, type Scene } from '../src/scene.ts';
 import * as structChain from '../src/struct-chain.ts';
 import { loadTokens, readBlogTokens } from '../src/tokens.ts';
 
@@ -35,6 +35,9 @@ test('a field longer than four whole rows folds to its first row, a gap row and 
 test('the memory table examples render the reference svg, and a raw table gives the same grid', () => {
   for (const spec of tableSpecs) {
     const g = memoryTable.grid(spec);
+    const { shapes } = memoryTable.layout(g, '');
+    assert.equal(shapes.filter((s) => s.kind === 'line' && s.y1 === 20 && s.y2 === 44).length, g.headers.length - 1);
+    assert.equal(shapes.filter((s) => s.kind === 'path' && s.stroke === 'diagram-ink' && / V 20 H [\d.]+ V 44$/.test(s.d)).length, 1);
     assert.equal(toWeb(memoryTable.layout(g, spec.label ?? '')) + '\n', read(`golden/${spec.id}.svg`));
     const header = (g.rows[0].offset !== undefined ? '<th>Offset</th>' : '') + g.headers.map((h) => `<th>${h}</th>`).join('');
     const rows = g.rows.map((r) => (r.offset !== undefined ? `<td class="offset">${r.offset}</td>` : '')
@@ -61,8 +64,8 @@ test('a pointer into a sized region lands in proportion', () => {
     regions: [{ id: 'buf', word: 'buffer', start: '0x1000', size: '0x100' }, { value: '0x1080', start: '0x800', to: 'buf' }],
   });
   const paths = scene.shapes.filter((shape) => shape.kind === 'path').map((shape) => shape.d);
-  assert.ok(paths.some((d) => d.endsWith('Q 493 102 481 102 H 469')));
-  assert.ok(paths.includes('M 460 102 L 472 96 L 472 108 Z'));
+  assert.ok(paths.some((d) => d.endsWith('Q 512 114 500 114 H 494')));
+  assert.ok(paths.includes('M 485 114 L 497 108 L 497 120 Z'));
 });
 
 test('tones, spans, a title and code lines take theme roles', () => {
@@ -79,8 +82,11 @@ test('tones, spans, a title and code lines take theme roles', () => {
   const scene = memoryLayout.layout(spec);
   const svg = toWeb(scene);
   assert.match(svg, /<tspan style="fill:var\(--diagram-orange\)">type: struct s<\/tspan><tspan style="fill:var\(--diagram-ink\)"> \(s\[0\]\)<\/tspan>/);
-  assert.match(svg, /<line x1="475" y1="[\d.]+" x2="475" y2="[\d.]+" style="stroke:var\(--diagram-purple\)/);
-  assert.match(svg, /<path d="M 468 [\d.]+ L 475 [\d.]+ L 482 [\d.]+" fill="none" style="stroke:var\(--diagram-purple\)/);
+  assert.match(svg, /<line x1="500" y1="[\d.]+" x2="500" y2="[\d.]+" style="stroke:var\(--diagram-purple\);stroke-width:var\(--diagram-stroke\)/);
+  assert.match(svg, /<path d="M 493 [\d.]+ L 500 [\d.]+ L 507 [\d.]+" fill="none" style="stroke:var\(--diagram-purple\)/);
+  assert.match(svg, /font-size="12" text-anchor="middle" style="fill:var\(--text-secondary\)">\(b, \+0x008\)<\/text>/);
+  assert.match(svg, /<rect x="220" y="76" width="260" height="[\d.]+" fill="none" style="stroke:var\(--diagram-ink\);stroke-width:var\(--diagram-border\)"\/>/);
+  assert.match(svg, /<line x1="208" y1="[\d.]+" x2="220" y2="[\d.]+" style="stroke:var\(--diagram-ink\);stroke-width:var\(--diagram-border\)"\/>/);
   assert.match(svg, /style="fill:var\(--diagram-purple\)">member: b<\/text>/);
   assert.match(svg, /style="fill:var\(--diagram-red\)">ptr: p<\/text>/);
   assert.match(svg, /<tspan style="fill:var\(--diagram-red\)">p<\/tspan><tspan style="fill:var\(--diagram-ink\)"> - 0x8 = <\/tspan><tspan style="fill:var\(--diagram-blue\)">0x1000<\/tspan>/);
@@ -89,21 +95,26 @@ test('tones, spans, a title and code lines take theme roles', () => {
   assert.throws(() => memoryLayout.layout({ ...spec, code: [[['p', 'teal' as memoryLayout.Tone]]] }), /unknown tone "teal"/);
   assert.throws(() => memoryLayout.layout({ ...spec, regions: [{ ...spec.regions[0], tone: 'orange' }, spec.regions[1]] }), /colors the marker; add one/);
   const bracket = toWeb(memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], shape: 'bracket' }] }));
-  assert.match(bracket, /<path d="M 461 [^"]*" fill="none" style="stroke:var\(--diagram-purple\)/);
+  assert.match(bracket, /<path d="M 480 76.2 H [^"]* H 480" fill="none" style="stroke:var\(--diagram-purple\)/);
   assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], shape: 'arc' as 'bracket' }] }), /must be "dimension" or "bracket"/);
   const lines = toWeb(memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: ['struct s', '(s[0])'] }] }));
   assert.match(lines, /style="fill:var\(--diagram-purple\)">struct s<\/text>/);
   assert.match(lines, /style="fill:var\(--diagram-purple\)">\(s\[0\]\)<\/text>/);
   assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: [] }] }), /must be a non-empty string or a list of them/);
-  assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: 'x'.repeat(30) }] }), /split it into lines/);
+  assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: 'x'.repeat(40) }] }), /split it into lines/);
 });
 
-test('a memory layout centers what it draws', () => {
+test('a memory layout frames only what it draws', () => {
   const bare = memoryLayout.layout({ label: 'x', regions: [{ word: 'a', start: '0x10' }, { word: 'b', start: '0x0' }] });
-  assert.ok(bare.x !== undefined && bare.x < 0);
-  assert.match(toWeb(bare), new RegExp(`viewBox="${bare.x} 0 700 `));
+  assert.ok(bare.x !== undefined && bare.width < 700);
+  assert.match(toWeb(bare), new RegExp(`viewBox="${bare.x} 0 ${bare.width} [\\d.]+" style="--diagram-width:${bare.width}"`));
   const spanned = memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'a', start: '0x10' }, { id: 'b', word: 'b', start: '0x0' }], spans: [{ from: 'a', to: 'b', label: 'both' }] });
-  assert.ok((spanned.x ?? 0) > bare.x);
+  assert.equal(spanned.x, bare.x);
+  assert.ok(spanned.width > bare.width);
+  const axisOf = (scene: ReturnType<typeof memoryLayout.layout>) => scene.shapes.find((s) => s.kind === 'text' && s.text === 'high')!;
+  const long = memoryLayout.layout({ label: 'x', regions: [{ word: 'a', start: '0xffff800083fcbc38' }, { word: 'b', start: '0xffff800083fcbc30' }] });
+  assert.equal((axisOf(long) as { x: number }).x, 32);
+  assert.equal((axisOf(bare) as { x: number }).x, 126.4);
 });
 
 test('the struct chain example renders the reference svg', () => {
@@ -124,7 +135,18 @@ test('a struct chain links only the embedded members, rings back to its head and
   assert.equal(texts(line).filter((t) => t === 'next').length, 3 + 2);
   const first = structChain.layout({ ...chainSpec, fields: [['list', 16], ['username', 256], ['age', 1], { pad: 7 }] });
   assert.ok(!texts(first).includes('offsetof'));
-  assert.match(toWeb(ring), /<rect x="[\d.]+" y="128" width="92" height="36" style="fill:var\(--diagram-purple-wash\)"\/>/);
+  assert.match(toWeb(ring), /<rect x="[\d.]+" y="164" width="112" height="44" style="fill:var\(--diagram-purple-wash\)"\/>/);
+});
+
+test('a box can round any of its corners', () => {
+  const scene = { width: 100, height: 100, label: 'x', font: 'code-mono', shapes: [
+    { kind: 'rect', x: 10, y: 10, w: 80, h: 40, fill: 'diagram-area', corners: corners(true, false) },
+    { kind: 'outline', x: 10, y: 10, w: 80, h: 80, stroke: 'diagram-ink', rounded: true },
+  ] } satisfies Scene;
+  const svg = toWeb(scene);
+  assert.match(svg, /<path d="M 18 10 H 82 A 8 8 0 0 1 90 18 V 50 H 10 V 18 A 8 8 0 0 1 18 10 Z" style="fill:var\(--diagram-area\)"\/>/);
+  assert.match(svg, /<rect x="10" y="10" width="80" height="80" rx="8" fill="none"/);
+  assert.deepEqual(lintStatic(toStatic(scene, tokens, 'clean-light')), []);
 });
 
 test('a struct chain starts each pointer under the outline it leaves', () => {
@@ -152,7 +174,7 @@ test('invalid specs name the problem', () => {
   assert.throws(() => structChain.layout(chain({ link: { field: 'list', cells: [] } })), /one to three pointer names/);
   assert.throws(() => structChain.layout(chain({ nodes: [{ name: 'a', values: { list: '0x0' } }] })), /"list" is not a field outside the link/);
   assert.throws(() => structChain.layout(chain({ fields: [['a', 8], ['a', 8], ['list', 16]] })), /"a" is used twice/);
-  assert.throws(() => structChain.layout(chain({ fields: [{ pad: 8 }, ['list', 16]], nodes: [{ name: 'a' }] })), /too short for the offsetof dimension/);
+  assert.throws(() => structChain.layout(chain({ fields: [{ pad: 8 }, ['list', 16]], nodes: [{ name: 'a' }] }), structChain.PROFILES.slide), /too short for the offsetof dimension/);
   assert.throws(() => structChain.layout(chain({ tones: { edge: 'red' } })), /tones: unknown field "edge"/);
   assert.throws(() => structChain.layout(chain({ tones: { walk: 'green' } })), /unknown tone "green"/);
   assert.throws(() => structChain.layout(chain({ nodes: [...chainSpec.nodes, { name: 'users[3]' }] })), /4 structures need \d+ units, past 700/);
@@ -177,7 +199,7 @@ test('review regressions stay fixed', () => {
     { id: 'buf', word: 'buffer', start: '0x1000', size: '0x100' },
     { value: '0x1080', start: '0x800', to: 'buf' },
   ] });
-  assert.ok(sized.shapes.some((shape) => shape.kind === 'path' && shape.d === 'M 460 162 L 472 156 L 472 168 Z'));
+  assert.ok(sized.shapes.some((shape) => shape.kind === 'path' && shape.d === 'M 485 190 L 497 184 L 497 196 Z'));
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'a', h: '50' as unknown as number, start: '0x20' }] }), /h: must be a positive number/);
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ value: 4096 as unknown as string }] }), /must be a non-empty string/);
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a\nb' }] }), /control character/);

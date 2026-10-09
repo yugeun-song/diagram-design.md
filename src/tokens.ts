@@ -5,6 +5,7 @@ export type Theme = Record<string, string>;
 
 export interface Tokens {
   stroke: number;
+  border: number;
   fonts: Record<string, string>;
   themes: Record<string, Theme>;
 }
@@ -32,11 +33,13 @@ export function readBlogTokens(blogDir: string): Tokens {
       }));
     }
   }
-  const stroke = Number(/--diagram-stroke:\s*([\d.]+)/.exec(readFileSync(join(blogDir, 'styles/base.css'), 'utf8'))?.[1]);
+  const base = readFileSync(join(blogDir, 'styles/base.css'), 'utf8');
+  const stroke = Number(/--diagram-stroke:\s*([\d.]+)/.exec(base)?.[1]);
+  const border = Number(/--diagram-border:\s*([\d.]+)/.exec(base)?.[1]);
   const aliases = /FAMILY_ALIASES = \{([^}]*)\}/.exec(readFileSync(join(blogDir, 'build/download-fonts.py'), 'utf8'))?.[1] ?? '';
   const fonts = Object.fromEntries([...aliases.matchAll(/"([^"]+)":\s*"([\w-]+)"/g)].map((m) => [m[2], m[1]]));
-  if (!stroke || !fonts['code-mono']) throw new Error(`${blogDir}: cannot read the stroke width or the font aliases`);
-  return { stroke, fonts, themes };
+  if (!stroke || !border || !fonts['latin-sans']) throw new Error(`${blogDir}: cannot read the stroke and border widths or the font aliases`);
+  return { stroke, border, fonts, themes };
 }
 
 export function color(tokens: Tokens, theme: string, name: Paint): string {

@@ -1,5 +1,5 @@
 import { arrowhead, dimension, DIMENSION_MIN, shaftEnd, triangle } from './arrow.ts';
-import { checkText, round, textWidth, type ProfileName, type Scene, type Shape } from './scene.ts';
+import { BORDER, checkText, FONT, round, STROKE, textWidth, tighten, type ProfileName, type Scene, type Shape } from './scene.ts';
 import { checkTone, paint, pieces as tonePieces, type Piece, type Run, type Tone } from './tone.ts';
 import type { Paint } from './tokens.ts';
 
@@ -47,14 +47,14 @@ export interface Profile {
 }
 
 export const PROFILES: Record<ProfileName, Profile> = {
-  blog: { value: 64, word: 60, gap: 40, wordSize: 14, subSize: 11, frame: 24 },
-  slide: { value: 56, word: 48, gap: 32, wordSize: 15, subSize: 12, frame: 12 },
+  blog: { value: 84, word: 76, gap: 52, wordSize: 15, subSize: 12, frame: 24 },
+  slide: { value: 64, word: 56, gap: 36, wordSize: 15, subSize: 12, frame: 12 },
 };
 
-const WIDTH = 700, TOP = 72, AXIS = 32, LEFT = 245, RIGHT = 455, MID = 350, ADDR = 231;
-const RUN = 26, RADIUS = 12, LANE = 24, SIZE = 15;
-const INSIDE = RIGHT - LEFT - 16, OUTSIDE = ADDR - AXIS - 16;
-const SPAN_X = RIGHT + 20, SPAN_BAR = 10, SPAN_TICK = RIGHT + 6, SPAN_BEND = 6, SPAN_LABEL = 14;
+const WIDTH = 700, EDGE = 8, TOP = 76, AXIS = 32, LEFT = 220, RIGHT = 480, MID = 350, ADDR = 206;
+const RUN = 20, RADIUS = 12, LANE = 24, SIZE = 15, ARROW = 14, ADDRESS = 14;
+const INSIDE = RIGHT - LEFT - 32, OUTSIDE = ADDR - AXIS - 16, AXIS_GAP = 46;
+const SPAN_X = RIGHT + 20, SPAN_BAR = 10, SPAN_BEND = 6, SPAN_LABEL = 14, SEAM = 0.5;
 const LABEL_GAP = 8;
 const TITLE_ROOM = 560, CODE_ROOM = WIDTH - 32, CODE_TOP = 64, CODE_STEP = 28;
 const SPEC_KEYS = new Set(['id', 'label', 'title', 'regions', 'spans', 'code']);
@@ -108,7 +108,7 @@ export function validate(spec: MemoryLayout): void {
     }
     const text: Array<[string | undefined, number, number, string]> = [
       [region.value, SIZE, INSIDE, 'value'], [region.word, PROFILES.slide.wordSize, INSIDE, 'word'], [region.sub, PROFILES.slide.subSize, INSIDE, 'sub'],
-      [region.start, SIZE, OUTSIDE, 'start'], [region.marker, SIZE, OUTSIDE, 'marker'],
+      [region.start, ADDRESS, OUTSIDE, 'start'], [region.marker, SIZE, OUTSIDE, 'marker'],
     ];
     for (const [body, size, room, key] of text) if (body !== undefined && textWidth(body, size) > room) throw new Error(`${where}.${key}: "${body}" is too long for its place`);
     if (region.start !== undefined) {
@@ -170,7 +170,7 @@ interface Arrow { index: number; name: string; tail: number; head: number; top: 
 
 export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Scene {
   validate(spec);
-  const shapes: Shape[] = [];
+  const shapes: Shape[] = [], dimensions: Shape[] = [], brackets: Shape[] = [];
   const text = (x: number, y: number, body: string, size: number, bold: boolean, anchor: 'start' | 'middle' | 'end', fill: Paint = 'diagram-ink') =>
     shapes.push({ kind: 'text', x, y, text: body, size, bold, anchor, fill });
   const line = (x1: number, y1: number, x2: number, y2: number) => shapes.push({ kind: 'line', x1, y1, x2, y2, stroke: 'diagram-ink' });
@@ -186,6 +186,12 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     return row;
   });
   const bottom = y;
+
+  const titleWidth = spec.title === undefined ? 0 : textWidth(pieces(spec.title, 'title', TITLE_ROOM).map((p) => p.text).join(''), SIZE);
+  const widest = Math.max(0, ...spec.regions.flatMap((r) => [r.start === undefined ? 0 : textWidth(r.start, ADDRESS), r.marker === undefined ? 0 : textWidth(r.marker, SIZE)]));
+  const axis = Math.max(AXIS, round(ADDR - widest - AXIS_GAP));
+  const left = Math.min(axis - textWidth('high', SIZE) / 2, MID - titleWidth / 2);
+  const limit = left + WIDTH - 2 * EDGE;
 
   const arrows: Arrow[] = [];
   rows.forEach((row, i) => {
@@ -211,12 +217,12 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     for (const b of arrows) {
       if (b.leg < a.leg && [a.tail, a.head].some((level) => level > b.top && level < b.bottom)) throw new Error(`${a.name} and ${b.name}: the arrows cross; reorder the regions or split the diagram`);
     }
-    const x1 = a.leg + 8, x2 = x1 + textWidth(a.label, SIZE), level = (a.tail + a.head) / 2 + 3;
-    if (x2 > WIDTH) throw new Error(`${a.name}: the label "${a.label}" ends at x=${Math.round(x2)}, past ${WIDTH}; overlapping arrows leave no room for long labels`);
+    const x1 = a.leg + 8, x2 = x1 + textWidth(a.label, ARROW), level = (a.tail + a.head) / 2 + 3;
+    if (x2 > limit) throw new Error(`${a.name}: the label "${a.label}" ends at x=${Math.round(x2)}, past ${Math.round(limit)}; overlapping arrows leave no room for long labels`);
     for (const b of arrows) {
       if (b === a) continue;
-      const leg = b.leg > x1 && b.leg < x2 && level - SIZE < b.bottom && level + 4 > b.top;
-      const run = b.leg > x1 && [b.tail, b.head].some((l) => l > level - SIZE && l < level + 4);
+      const leg = b.leg > x1 && b.leg < x2 && level - ARROW < b.bottom && level + 4 > b.top;
+      const run = b.leg > x1 && [b.tail, b.head].some((l) => l > level - ARROW && l < level + 4);
       if (leg || run) throw new Error(`${a.name}: the label "${a.label}" runs into the arrow from ${b.name}`);
     }
   }
@@ -241,7 +247,7 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   const reach = (lines: string[]) => 22 + 11 * Math.max(0, lines.length - 1);
   spans.forEach((s, i) => {
     if (s.span.shape !== 'bracket' && s.bottom - s.top < DIMENSION_MIN) throw new Error(`spans[${i}]: the regions are too short for the arrowheads; raise h`);
-    const room = WIDTH - 8 - labelX;
+    const room = limit - labelX;
     if (textWidth(s.span.label, SIZE) > room) throw new Error(`spans[${i}].label: "${s.span.label}" is too long for its place`);
     for (const note of s.notes) if (textWidth(note, PROFILES.slide.subSize) > room) throw new Error(`spans[${i}].sub: "${note}" is too long for its place; split it into lines`);
   });
@@ -264,10 +270,10 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
 
   if (spec.title !== undefined) runs(MID, TOP - 24, pieces(spec.title, 'title', TITLE_ROOM));
 
-  text(AXIS, TOP - 18, 'high', SIZE, true, 'middle');
-  line(AXIS, bottom, AXIS, TOP + 10);
-  shapes.push(triangle(TOP + 2, AXIS, 'up', 'diagram-ink'));
-  text(AXIS, round(bottom + 24), 'low', SIZE, true, 'middle');
+  text(axis, TOP - 18, 'high', SIZE, true, 'middle');
+  line(axis, bottom, axis, TOP + 10);
+  shapes.push(triangle(TOP + 2, axis, 'up', 'diagram-ink'));
+  text(axis, round(bottom + 24), 'low', SIZE, true, 'middle');
 
   for (const row of rows) shapes.push({ kind: 'rect', x: LEFT, y: row.top, w: RIGHT - LEFT, h: round(row.bottom - row.top), fill: row.region.gap ? 'diagram-gap' : 'diagram-area' });
   shapes.push({ kind: 'outline', x: LEFT, y: TOP, w: RIGHT - LEFT, h: round(bottom - TOP), stroke: 'diagram-ink' });
@@ -277,8 +283,8 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     const { start, marker } = row.region;
     if (start === undefined) continue;
     line(ADDR + 2, row.bottom, LEFT, row.bottom);
-    if (marker !== undefined) text(ADDR, round(row.bottom - 12), marker, SIZE, true, 'end', paint(row.region.tone, 'diagram-red'));
-    text(ADDR, round(row.bottom + (marker !== undefined ? 6 : 4)), start, SIZE, true, 'end');
+    if (marker !== undefined) text(ADDR, round(row.bottom - 13), marker, SIZE, true, 'end', paint(row.region.tone, 'diagram-red'));
+    text(ADDR, round(row.bottom + 5), start, ADDRESS, false, 'end');
   }
 
   for (const row of rows) {
@@ -288,18 +294,24 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
       continue;
     }
     const isValue = region.value !== undefined;
-    const baseline = round(region.sub !== undefined ? center - 4 : center + 5);
-    text(MID, baseline, isValue ? region.value! : region.word!, isValue ? SIZE : profile.wordSize, isValue, 'middle');
-    if (region.sub !== undefined) text(MID, round(baseline + (isValue ? 24 : 22)), region.sub, profile.subSize, false, 'middle');
+    const baseline = round(region.sub !== undefined ? center - 6 : center + 5);
+    text(MID, baseline, isValue ? region.value! : region.word!, isValue ? SIZE : profile.wordSize, true, 'middle');
+    if (region.sub !== undefined) text(MID, round(baseline + 21), region.sub, profile.subSize, false, 'middle', 'text-secondary');
   }
 
+  const ticks = new Set(spans.filter((s) => s.span.shape !== 'bracket').flatMap((s) => [s.top, s.bottom]));
   for (const s of spans) {
     const x = SPAN_X + s.lane * LANE, top = s.top, end = s.bottom, stroke = paint(s.span.tone, 'diagram-ink');
     if (s.span.shape === 'bracket') {
-      const t = round(top + 3), b = round(end - 3);
-      shapes.push({ kind: 'path', d: `M ${SPAN_TICK} ${t} H ${x - SPAN_BEND} Q ${x} ${t} ${x} ${round(t + SPAN_BEND)} V ${round(b - SPAN_BEND)} Q ${x} ${b} ${x - SPAN_BEND} ${b} H ${SPAN_TICK}`, stroke });
+      const arm = (y: number, inward: number) => {
+        if (!ticks.has(y)) return y === TOP || y === bottom ? y + (inward * (STROKE - BORDER)) / 2 : y;
+        brackets.push({ kind: 'line', x1: RIGHT, y1: round(y + inward * SEAM), x2: x - SPAN_BEND, y2: round(y + inward * SEAM), stroke, weight: 'border' });
+        return y + (inward * (BORDER + STROKE)) / 2;
+      };
+      const t = round(arm(top, 1)), b = round(arm(end, -1));
+      brackets.push({ kind: 'path', d: `M ${RIGHT} ${t} H ${x - SPAN_BEND} Q ${x} ${t} ${x} ${round(t + SPAN_BEND)} V ${round(b - SPAN_BEND)} Q ${x} ${b} ${x - SPAN_BEND} ${b} H ${RIGHT}`, stroke });
     } else {
-      shapes.push(...dimension(RIGHT, x, SPAN_BAR, top, end, stroke));
+      dimensions.push(...dimension(RIGHT, x, SPAN_BAR, top, end, stroke));
     }
     const baseline = round(s.notes.length ? s.center - 4 - 11 * (s.notes.length - 1) : s.center + 5);
     text(labelX, baseline, s.span.label, SIZE, true, 'start', stroke);
@@ -310,17 +322,11 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     const dir = a.head < a.tail ? -1 : 1;
     shapes.push({ kind: 'path', d: `M ${RIGHT} ${a.tail} H ${a.leg - RADIUS} Q ${a.leg} ${a.tail} ${a.leg} ${round(a.tail + dir * RADIUS)} V ${round(a.head - dir * RADIUS)} Q ${a.leg} ${a.head} ${a.leg - RADIUS} ${a.head} H ${shaftEnd(RIGHT, 'left')}`, stroke: 'diagram-ink' });
     shapes.push(arrowhead(RIGHT, a.head, 'left', 'diagram-ink'));
-    text(a.leg + 8, round((a.tail + a.head) / 2 + 3), a.label, SIZE, true, 'start');
+    text(a.leg + 8, round((a.tail + a.head) / 2 + 3), a.label, ARROW, true, 'start');
   }
 
   const code = (spec.code ?? []).map((list, i) => pieces(list, `code[${i}]`, CODE_ROOM));
   code.forEach((list, i) => runs(MID, round(bottom + CODE_TOP + i * CODE_STEP), list));
-  const height = code.length ? round(bottom + CODE_TOP + (code.length - 1) * CODE_STEP + 24) : round(bottom + 40);
-  const spanRight = spans.map((s) => labelX + Math.max(textWidth(s.span.label, SIZE), ...s.notes.map((note) => textWidth(note, profile.subSize))));
-  const arrowRight = arrows.map((a) => a.leg + 8 + textWidth(a.label, SIZE));
-  const titleWidth = spec.title === undefined ? 0 : textWidth(pieces(spec.title, 'title', TITLE_ROOM).map((p) => p.text).join(''), SIZE);
-  const left = Math.min(AXIS - textWidth('high', SIZE) / 2, MID - titleWidth / 2);
-  const right = Math.max(RIGHT, MID + titleWidth / 2, ...spanRight, ...arrowRight);
-  const x = round((left + right) / 2 - MID);
-  return { width: WIDTH, height, label: spec.label, font: 'code-mono', shapes, frame: profile.frame, ...(x === 0 ? {} : { x }) };
+  const height = code.length ? round(bottom + CODE_TOP + (code.length - 1) * CODE_STEP + 24) : round(bottom + 44);
+  return tighten({ width: WIDTH, height, label: spec.label, font: FONT, shapes: [...brackets, ...dimensions, ...shapes], frame: profile.frame }, EDGE);
 }

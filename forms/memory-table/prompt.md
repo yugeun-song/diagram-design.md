@@ -1,6 +1,6 @@
 # Memory table
 
-A byte or bit layout drawn as a grid in the memory-layout style, with offsets on its left edge. Use it for data that is wide and flat: struct layouts, packet headers, register bitfields.
+A byte or bit layout drawn as a grid in the memory-layout style, with offsets on its left edge and a ruler of column numbers along its top. Use it for data that is wide and flat: struct layouts, packet headers, register bitfields.
 
 ## Prompt
 
