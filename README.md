@@ -14,6 +14,8 @@ Each folder holds `prompt.md` (how to write the source, for a person or a model)
 
 All five share the form of the memory-layout figure: ink lines 2 wide with box borders 1.6 wide, roomy boxes whose labels fill at most about 60 % of their width, opaque area and gap fills, bold Cascadia Code labels, 12-unit triangle arrowheads on pointers, open right-angle arrowheads on dimension lines, radius-12 bends and the code-block frame. A pointer's arrowhead stops 5 units short of the line or box it points at, and a dimension line's open arrowhead 1.5 units short of its extension line, so neither touches it. The JSON forms draw them there, and the blog's script moves each Mermaid arrowhead back to that distance. That form, the stroke weights and the layout are the design and stay fixed.
 
+Strokes join without seams, notches or hairline gaps at any zoom, because anti-aliasing shows each of them. A stroke that ends on another shape ends on its center line or under it, never on its edge. Lines that turn a corner are one path with a mitered join, never two butt ends. Where a mark meets a reference line, the reference line stays in front: an outline, separator or extension line is painted over the bracket or shaft that touches it, and the mark rests on its edge instead of hiding under its middle. No gap is narrower than 1 unit, and two fills meet only under a stroke. `lintJoins` (`src/joins.ts`) finds each of these in a scene, and the tests run it on every example.
+
 Colors are not part of it. Each comes from a role variable of the active theme, and can be changed freely to suit any theme. The default is clean-light, the left half of each mockup:
 
 | Role | Variable | clean-light |

@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import * as memoryLayout from '../src/memory-layout.ts';
 import * as memoryTable from '../src/memory-table.ts';
+import { lintJoins } from '../src/joins.ts';
 import { lintMermaid } from '../src/mermaid.ts';
 import { corners, lintStatic, toStatic, toWeb, type Scene } from '../src/scene.ts';
 import * as structChain from '../src/struct-chain.ts';
@@ -155,6 +156,28 @@ test('a struct chain starts each pointer under the outline it leaves', () => {
   const shafts = shapes.flatMap((s, i) => (s.kind === 'path' && s.stroke === 'diagram-red' ? [i] : []));
   assert.equal(shafts.length, 4);
   assert.ok(shafts.every((i) => i < firstOutline));
+});
+
+test('strokes join without seams, notches or hairline gaps', () => {
+  const spans: memoryLayout.MemoryLayout = {
+    label: 'a bracket over a measured region',
+    regions: [
+      { id: 'next', value: 'struct s', sub: '(s[1])' },
+      { id: 'here', value: '0x1000', start: '0x1010' },
+      { id: 'data', value: 'data', start: '0x1000', marker: 'base', tone: 'blue' },
+    ],
+    spans: [
+      { from: 'next', to: 'next', label: 'next', tone: 'orange', shape: 'bracket' },
+      { from: 'here', to: 'data', label: 'sizeof', tone: 'purple' },
+    ],
+  };
+  const scenes = [
+    memoryLayout.layout(layoutSpec),
+    memoryLayout.layout(spans),
+    ...tableSpecs.map((spec) => memoryTable.layout(memoryTable.grid(spec), spec.label ?? '')),
+    structChain.layout(chainSpec),
+  ];
+  for (const scene of scenes) assert.deepEqual(lintJoins(scene), [], scene.label);
 });
 
 test('invalid specs name the problem', () => {

@@ -25,5 +25,6 @@ Write the layout below as one JSON object. The tool computes every coordinate, c
   - `spans`: marks on the right that name a run of regions, each `{"from": id, "to": id, "label": "...", "sub": "...", "tone": ..., "shape": ...}` with `from` the higher region. The default `"shape": "dimension"` draws a dimension line with an open arrowhead at each boundary, for sizes and offsets. `"bracket"` draws a bracket, for grouping. Nested spans take outer lanes. A span cannot share rows with an arrow. A `sub` that does not fit one line can be a list of lines, such as `["struct user_info", "(users[0])"]`.
   - `code`: lines of runs under the column, such as a call whose arguments take the tones of the regions they name.
 - Use one language in the whole diagram.
+- The tool draws every stroke and join. Do not edit the SVG it writes: its strokes meet on center lines or under a covering stroke, its corners are single mitered paths, and nothing touches edge to edge, so no seam, notch or hairline gap shows at any zoom.
 
 Output only the JSON.

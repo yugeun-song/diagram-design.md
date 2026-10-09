@@ -17,5 +17,6 @@ Write the chain below as one JSON object. The tool computes the boxes, the offse
   - `code`: lines of runs under the chain, such as the loop that walks it. The lines share a left edge, so indentation shows. A run is `"text"` or `["text", tone]`.
 - The canvas is as wide as the other forms. A head and three nodes fit; the tool says when a chain does not.
 - Use one language in the whole diagram.
+- The tool draws every stroke and join. Do not edit the SVG it writes: its strokes meet on center lines or under a covering stroke, its corners are single mitered paths, and nothing touches edge to edge, so no seam, notch or hairline gap shows at any zoom.
 
 Output only the JSON.
