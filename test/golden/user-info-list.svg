@@ -19,9 +19,9 @@
   <text x="254.55" y="266" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">padding</text>
   <line x1="208.55" y1="40" x2="178.55" y2="40" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
   <line x1="208.55" y1="128" x2="178.55" y2="128" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <line x1="188.55" y1="55" x2="188.55" y2="113" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
-  <path d="M 188.55 45 L 182.55 57 L 194.55 57 Z" style="fill:var(--diagram-blue)"/>
-  <path d="M 188.55 123 L 182.55 111 L 194.55 111 Z" style="fill:var(--diagram-blue)"/>
+  <line x1="188.55" y1="47" x2="188.55" y2="121" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 181.55 54 L 188.55 47 L 195.55 54" fill="none" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 181.55 114 L 188.55 121 L 195.55 114" fill="none" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
   <text x="174.55" y="80" font-size="15" text-anchor="end" style="fill:var(--diagram-blue)">offsetof</text>
   <text x="174.55" y="102" font-size="11" text-anchor="end" style="fill:var(--diagram-blue)">= 0x100</text>
   <rect x="386.55" y="40" width="92" height="88" style="fill:var(--diagram-area)"/>
@@ -44,9 +44,9 @@
   <text x="432.55" y="266" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">padding</text>
   <line x1="386.55" y1="40" x2="356.55" y2="40" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
   <line x1="386.55" y1="128" x2="356.55" y2="128" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <line x1="366.55" y1="55" x2="366.55" y2="113" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
-  <path d="M 366.55 45 L 360.55 57 L 372.55 57 Z" style="fill:var(--diagram-blue)"/>
-  <path d="M 366.55 123 L 360.55 111 L 372.55 111 Z" style="fill:var(--diagram-blue)"/>
+  <line x1="366.55" y1="47" x2="366.55" y2="121" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 359.55 54 L 366.55 47 L 373.55 54" fill="none" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 359.55 114 L 366.55 121 L 373.55 114" fill="none" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
   <path d="M 300.55 146 H 372.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
   <path d="M 381.55 146 L 369.55 140 L 369.55 152 Z" style="fill:var(--diagram-red)"/>
   <text x="343.55" y="166" font-size="15" text-anchor="middle" style="fill:var(--diagram-red)">next</text>
@@ -70,9 +70,9 @@
   <text x="610.55" y="266" font-size="11" text-anchor="middle" style="fill:var(--text-secondary)">padding</text>
   <line x1="564.55" y1="40" x2="534.55" y2="40" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
   <line x1="564.55" y1="128" x2="534.55" y2="128" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-stroke)"/>
-  <line x1="544.55" y1="55" x2="544.55" y2="113" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
-  <path d="M 544.55 45 L 538.55 57 L 550.55 57 Z" style="fill:var(--diagram-blue)"/>
-  <path d="M 544.55 123 L 538.55 111 L 550.55 111 Z" style="fill:var(--diagram-blue)"/>
+  <line x1="544.55" y1="47" x2="544.55" y2="121" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 537.55 54 L 544.55 47 L 551.55 54" fill="none" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
+  <path d="M 537.55 114 L 544.55 121 L 551.55 114" fill="none" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
   <path d="M 478.55 146 H 550.55" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
   <path d="M 559.55 146 L 547.55 140 L 547.55 152 Z" style="fill:var(--diagram-red)"/>
   <text x="521.55" y="166" font-size="15" text-anchor="middle" style="fill:var(--diagram-red)">next</text>

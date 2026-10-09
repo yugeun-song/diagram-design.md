@@ -2,8 +2,8 @@ import { round, type Shape } from './scene.ts';
 import type { Paint } from './tokens.ts';
 
 export const HEAD = 12, TIP = 5;
-const POINTER_OVERLAP = 3, DIMENSION_OVERLAP = 2;
-export const DIMENSION_MIN = 2 * (HEAD + TIP) + 8;
+const POINTER_OVERLAP = 3, OPEN = 7, MITER = 2;
+export const DIMENSION_MIN = 2 * (OPEN + TIP + MITER) + 8;
 
 export type Toward = 'up' | 'down' | 'left' | 'right';
 
@@ -20,12 +20,20 @@ export const arrowhead = (at: number, across: number, toward: Toward, fill: Pain
 
 export const shaftEnd = (at: number, toward: Toward): number => round(at + back(toward) * (TIP + HEAD - POINTER_OVERLAP));
 
+export function chevron(tip: number, across: number, toward: Toward, stroke: Paint): Shape {
+  const t = round(tip), base = round(t + back(toward) * OPEN);
+  const c = round(across), a = round(across - OPEN), b = round(across + OPEN);
+  const d = toward === 'up' || toward === 'down' ? `M ${a} ${base} L ${c} ${t} L ${b} ${base}` : `M ${base} ${a} L ${t} ${c} L ${base} ${b}`;
+  return { kind: 'path', d, stroke };
+}
+
 export function dimension(edge: number, x: number, bar: number, top: number, end: number, stroke: Paint): Shape[] {
+  const upper = top + TIP + MITER, lower = end - TIP - MITER;
   return [
     { kind: 'line', x1: round(edge), y1: round(top), x2: round(x + bar), y2: round(top), stroke: 'diagram-ink' },
     { kind: 'line', x1: round(edge), y1: round(end), x2: round(x + bar), y2: round(end), stroke: 'diagram-ink' },
-    { kind: 'line', x1: round(x), y1: round(top + TIP + HEAD - DIMENSION_OVERLAP), x2: round(x), y2: round(end - TIP - HEAD + DIMENSION_OVERLAP), stroke },
-    arrowhead(top, x, 'up', stroke),
-    arrowhead(end, x, 'down', stroke),
+    { kind: 'line', x1: round(x), y1: round(upper), x2: round(x), y2: round(lower), stroke },
+    chevron(upper, x, 'up', stroke),
+    chevron(lower, x, 'down', stroke),
   ];
 }

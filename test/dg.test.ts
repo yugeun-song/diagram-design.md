@@ -80,7 +80,7 @@ test('tones, spans, a title and code lines take theme roles', () => {
   const svg = toWeb(scene);
   assert.match(svg, /<tspan style="fill:var\(--diagram-orange\)">type: struct s<\/tspan><tspan style="fill:var\(--diagram-ink\)"> \(s\[0\]\)<\/tspan>/);
   assert.match(svg, /<line x1="475" y1="[\d.]+" x2="475" y2="[\d.]+" style="stroke:var\(--diagram-purple\)/);
-  assert.match(svg, /<path d="M 475 [\d.]+ L 469 [\d.]+ L 481 [\d.]+ Z" style="fill:var\(--diagram-purple\)"\/>/);
+  assert.match(svg, /<path d="M 468 [\d.]+ L 475 [\d.]+ L 482 [\d.]+" fill="none" style="stroke:var\(--diagram-purple\)/);
   assert.match(svg, /style="fill:var\(--diagram-purple\)">member: b<\/text>/);
   assert.match(svg, /style="fill:var\(--diagram-red\)">ptr: p<\/text>/);
   assert.match(svg, /<tspan style="fill:var\(--diagram-red\)">p<\/tspan><tspan style="fill:var\(--diagram-ink\)"> - 0x8 = <\/tspan><tspan style="fill:var\(--diagram-blue\)">0x1000<\/tspan>/);
