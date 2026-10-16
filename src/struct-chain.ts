@@ -1,5 +1,5 @@
 import { arrowhead, dimension, DIMENSION_MIN, shaftEnd } from './arrow.ts';
-import { checkText, FONT, round, textWidth, tighten, type ProfileName, type Scene, type Shape } from './scene.ts';
+import { checkText, CODE_SIZE, CODE_STEP, FONT, round, textWidth, tighten, type ProfileName, type Scene, type Shape } from './scene.ts';
 import { checkTone, paint, pieces, WASHES, type Run, type Tone } from './tone.ts';
 import type { Paint } from './tokens.ts';
 
@@ -51,7 +51,7 @@ export const PROFILES: Record<ProfileName, Profile> = {
 const WIDTH = 700, MARGIN = 10, LABEL = 34, TOP = 48, SIZE = 15, VALUE = 14, CELL = 14, ARROW = 14;
 const BOX = 108, HEAD_BOX = 80, INSET = 20, GAP = 64, RADIUS = 12;
 const ENTRY = 24, WRAP = 30, LOOP = 32, ARROW_LABEL = 20;
-const DIM_X = 18, DIM_BAR = 10, DIM_LABEL = 12, CODE_TOP = 48, CODE_STEP = 28;
+const DIM_X = 18, DIM_BAR = 10, DIM_LABEL = 12, CODE_TOP = 48;
 const SPEC_KEYS = new Set(['id', 'label', 'fields', 'link', 'nodes', 'head', 'tones', 'code']);
 const ROLES: Role[] = ['node', 'link', 'walk', 'offset'];
 
@@ -254,10 +254,10 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
     after = round(yb + ARROW_LABEL);
   }
 
-  const code = (spec.code ?? []).map((list, i) => pieces(list, `code[${i}]`, WIDTH - 32, SIZE));
-  const widest = Math.max(0, ...code.map((list) => textWidth(list.map((p) => p.text).join(''), SIZE)));
+  const code = (spec.code ?? []).map((list, i) => pieces(list, `code[${i}]`, WIDTH - 32, CODE_SIZE));
+  const widest = Math.max(0, ...code.map((list) => textWidth(list.map((p) => p.text).join(''), CODE_SIZE)));
   code.forEach((list, i) => shapes.push({
-    kind: 'runs', x: round((WIDTH - widest) / 2), y: round(after + CODE_TOP + i * CODE_STEP), size: SIZE, bold: true, anchor: 'start',
+    kind: 'runs', x: round((WIDTH - widest) / 2), y: round(after + CODE_TOP + i * CODE_STEP), size: CODE_SIZE, code: true, anchor: 'start',
     runs: list.map((p) => ({ text: p.text, fill: paint(p.tone, ink) })),
   }));
   const height = code.length ? round(after + CODE_TOP + (code.length - 1) * CODE_STEP + 24) : round(after + 24);

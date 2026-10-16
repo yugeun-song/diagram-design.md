@@ -1,5 +1,5 @@
 import { arrowhead, dimension, DIMENSION_MIN, shaftEnd, triangle } from './arrow.ts';
-import { BORDER, checkText, FONT, round, STROKE, textWidth, tighten, type ProfileName, type Scene, type Shape } from './scene.ts';
+import { BORDER, checkText, CODE_SIZE, CODE_STEP, FONT, round, STROKE, textWidth, tighten, type ProfileName, type Scene, type Shape } from './scene.ts';
 import { checkTone, paint, pieces as tonePieces, type Piece, type Run, type Tone } from './tone.ts';
 import type { Paint } from './tokens.ts';
 
@@ -56,7 +56,7 @@ const RUN = 20, RADIUS = 12, LANE = 24, SIZE = 15, ARROW = 14, ADDRESS = 14;
 const INSIDE = RIGHT - LEFT - 32, OUTSIDE = ADDR - AXIS - 16, AXIS_GAP = 46, FILL = 0.6;
 const SPAN_X = RIGHT + 20, SPAN_BAR = 10, SPAN_BEND = 6, SPAN_LABEL = 14, SEAM = 0.5;
 const LABEL_GAP = 8;
-const TITLE_ROOM = 560, CODE_ROOM = WIDTH - 32, CODE_TOP = 64, CODE_STEP = 28;
+const TITLE_ROOM = 560, CODE_ROOM = WIDTH - 32, CODE_TOP = 64;
 const SPEC_KEYS = new Set(['id', 'label', 'title', 'regions', 'spans', 'code']);
 const KEYS = new Set(['id', 'value', 'word', 'gap', 'sub', 'start', 'marker', 'tone', 'to', 'size', 'h']);
 const SPAN_KEYS = new Set(['from', 'to', 'label', 'sub', 'tone', 'shape']);
@@ -67,7 +67,7 @@ type Kind = 'value' | 'word' | 'gap';
 
 const name = (region: Region, i: number) => `regions[${i}]${region.id ? ` (${region.id})` : ''}`;
 const kind = (region: Region): Kind => (region.gap ? 'gap' : region.value !== undefined ? 'value' : 'word');
-const pieces = (value: unknown, where: string, room: number): Piece[] => tonePieces(value, where, room, SIZE);
+const pieces = (value: unknown, where: string, room: number, size = SIZE): Piece[] => tonePieces(value, where, room, size);
 const notes = (span: Span): string[] => (span.sub === undefined ? [] : Array.isArray(span.sub) ? span.sub : [span.sub]);
 
 function upper(spec: MemoryLayout, t: number): bigint | null {
@@ -140,7 +140,7 @@ export function validate(spec: MemoryLayout): void {
   if (spec.title !== undefined) pieces(spec.title, 'title', TITLE_ROOM);
   if (spec.code !== undefined) {
     if (!Array.isArray(spec.code) || !spec.code.length) throw new Error('code: must be a non-empty list of lines');
-    spec.code.forEach((line, i) => pieces(line, `code[${i}]`, CODE_ROOM));
+    spec.code.forEach((line, i) => pieces(line, `code[${i}]`, CODE_ROOM, CODE_SIZE));
   }
   if (spec.spans === undefined) return;
   if (!Array.isArray(spec.spans) || !spec.spans.length) throw new Error('spans: must be a non-empty list');
@@ -174,8 +174,8 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   const text = (x: number, y: number, body: string, size: number, bold: boolean, anchor: 'start' | 'middle' | 'end', fill: Paint = 'diagram-ink') =>
     shapes.push({ kind: 'text', x, y, text: body, size, bold, anchor, fill });
   const line = (x1: number, y1: number, x2: number, y2: number) => shapes.push({ kind: 'line', x1, y1, x2, y2, stroke: 'diagram-ink' });
-  const runs = (x: number, y: number, list: Piece[]) =>
-    shapes.push({ kind: 'runs', x, y, size: SIZE, bold: true, anchor: 'middle', runs: list.map((p) => ({ text: p.text, fill: paint(p.tone, 'diagram-ink') })) });
+  const runs = (x: number, y: number, list: Piece[], code = false) =>
+    shapes.push({ kind: 'runs', x, y, size: code ? CODE_SIZE : SIZE, code, anchor: 'middle', runs: list.map((p) => ({ text: p.text, fill: paint(p.tone, 'diagram-ink') })) });
 
   let y = TOP;
   const rows = spec.regions.map((region) => {
@@ -330,8 +330,8 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     text(a.leg + 8, round((a.tail + a.head) / 2 + 3), a.label, ARROW, true, 'start');
   }
 
-  const code = (spec.code ?? []).map((list, i) => pieces(list, `code[${i}]`, CODE_ROOM));
-  code.forEach((list, i) => runs(mid, round(bottom + CODE_TOP + i * CODE_STEP), list));
+  const code = (spec.code ?? []).map((list, i) => pieces(list, `code[${i}]`, CODE_ROOM, CODE_SIZE));
+  code.forEach((list, i) => runs(mid, round(bottom + CODE_TOP + i * CODE_STEP), list, true));
   const height = code.length ? round(bottom + CODE_TOP + (code.length - 1) * CODE_STEP + 24) : round(bottom + 44);
   return tighten({ width: WIDTH, height, label: spec.label, font: FONT, shapes: [...brackets, ...dimensions, ...shapes], frame: profile.frame }, EDGE);
 }

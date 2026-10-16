@@ -91,6 +91,9 @@ test('tones, spans, a title and code lines take theme roles', () => {
   assert.match(svg, /style="fill:var\(--diagram-purple\)">member: b<\/text>/);
   assert.match(svg, /style="fill:var\(--diagram-red\)">ptr: p<\/text>/);
   assert.match(svg, /<tspan style="fill:var\(--diagram-red\)">p<\/tspan><tspan style="fill:var\(--diagram-ink\)"> - 0x8 = <\/tspan><tspan style="fill:var\(--diagram-blue\)">0x1000<\/tspan>/);
+  assert.match(svg, /font-size="15" text-anchor="middle" xml:space="preserve"><tspan style="fill:var\(--diagram-orange\)">type: struct s/);
+  assert.match(svg, /font-size="13.4" font-weight="400" text-anchor="middle" xml:space="preserve"><tspan style="fill:var\(--diagram-red\)">p<\/tspan>/);
+  assert.match(toStatic(scene, tokens, 'clean-light'), /font-size="13.4" font-weight="400" text-anchor="middle" xml:space="preserve"><tspan fill="#d81e5b">p<\/tspan>/);
   assert.deepEqual(lintStatic(toStatic(scene, tokens, 'clean-light')), []);
   assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ from: 'a', to: 'b', label: 'x' }] }), /from must be at or above to/);
   assert.throws(() => memoryLayout.layout({ ...spec, code: [[['p', 'teal' as memoryLayout.Tone]]] }), /unknown tone "teal"/);

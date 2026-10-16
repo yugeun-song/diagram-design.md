@@ -15,7 +15,7 @@ export type Shape =
   | { kind: 'path'; d: string; fill: Paint; stroke?: never }
   | { kind: 'path'; d: string; stroke: Paint; fill?: never; weight?: Weight }
   | { kind: 'text'; x: number; y: number; text: string; size: number; bold?: boolean; anchor: Anchor; fill: Paint }
-  | { kind: 'runs'; x: number; y: number; runs: Array<{ text: string; fill: Paint }>; size: number; bold?: boolean; anchor: Anchor };
+  | { kind: 'runs'; x: number; y: number; runs: Array<{ text: string; fill: Paint }>; size: number; code?: boolean; anchor: Anchor };
 
 export interface Scene {
   width: number;
@@ -33,6 +33,7 @@ export interface StaticOptions {
 }
 
 export const FONT = 'code-mono';
+export const CODE_SIZE = 13.4, CODE_STEP = 22.1;
 export const BORDER = 1.6, STROKE = 2;
 export const CORNER = 8;
 const ADVANCE = 0.6, HANGUL_ADVANCE = 0.864;
@@ -97,6 +98,7 @@ function cornerPath(x: number, y: number, w: number, h: number, [tl, tr, br, bl]
 const rounded = (s: { corners?: Corners }) => !!s.corners?.some(Boolean);
 
 const space = (s: string) => (/ {2}|^ | $/.test(s) ? ' xml:space="preserve"' : '');
+const weight = (s: { code?: boolean }) => (s.code ? ' font-weight="400"' : '');
 const fill = (name: Paint) => `style="fill:var(--${name})"`;
 const stroke = (name: Paint, weight: Weight) => `style="stroke:var(--${name});stroke-width:var(--diagram-${weight})"`;
 const lineWeight = (s: Shape): Weight => (s.kind === 'outline' ? 'border' : s.kind === 'line' ? s.weight ?? 'border' : s.kind === 'path' && !s.fill ? s.weight ?? 'stroke' : 'stroke');
@@ -109,7 +111,7 @@ export function toWeb(scene: Scene): string {
       case 'line': return `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" ${stroke(s.stroke, lineWeight(s))}/>`;
       case 'path': return s.fill ? `<path d="${s.d}" ${fill(s.fill)}/>` : `<path d="${s.d}" fill="none" ${stroke(s.stroke, lineWeight(s))}/>`;
       case 'text': return `<text x="${s.x}" y="${s.y}" font-size="${s.size}" text-anchor="${s.anchor}"${space(s.text)} ${fill(s.fill)}>${esc(s.text)}</text>`;
-      case 'runs': return `<text x="${s.x}" y="${s.y}" font-size="${s.size}" text-anchor="${s.anchor}" xml:space="preserve">${s.runs.map((r) => `<tspan ${fill(r.fill)}>${esc(r.text)}</tspan>`).join('')}</text>`;
+      case 'runs': return `<text x="${s.x}" y="${s.y}" font-size="${s.size}"${weight(s)} text-anchor="${s.anchor}" xml:space="preserve">${s.runs.map((r) => `<tspan ${fill(r.fill)}>${esc(r.text)}</tspan>`).join('')}</text>`;
     }
   });
   return `<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="${scene.x ?? 0} 0 ${scene.width} ${scene.height}" style="--diagram-width:${scene.width}" font-family="${scene.font}, hangul-sans, monospace" font-weight="700" role="img" aria-label="${esc(scene.label)}">\n  ${body.join('\n  ')}\n</svg>`;
@@ -148,7 +150,7 @@ export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: S
         break;
       }
       case 'runs':
-        out.push(`<text x="${s.x}" y="${s.y}" font-family="${family(scene.font)}" font-size="${s.size}" text-anchor="${s.anchor}" xml:space="preserve">${s.runs.map((r) => `<tspan fill="${paint(r.fill)}">${esc(r.text)}</tspan>`).join('')}</text>`);
+        out.push(`<text x="${s.x}" y="${s.y}" font-family="${family(scene.font)}" font-size="${s.size}"${weight(s)} text-anchor="${s.anchor}" xml:space="preserve">${s.runs.map((r) => `<tspan fill="${paint(r.fill)}">${esc(r.text)}</tspan>`).join('')}</text>`);
         break;
     }
   }
