@@ -215,7 +215,7 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
         if (heights[i] >= 20) text(center, middle + 4, 'padding', profile.sub, false, 'middle', 'text-secondary');
         return;
       }
-      const value = node.values?.[row.name];
+      const value = node.values && Object.hasOwn(node.values, row.name) ? node.values[row.name] : undefined;
       if (value === undefined) return text(center, middle + 5, row.name, SIZE, true, 'middle', ink);
       text(center, middle - 5, row.name, SIZE, true, 'middle', ink);
       text(center, middle + 15, value, VALUE, false, 'middle', ink);

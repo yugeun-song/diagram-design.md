@@ -5,7 +5,7 @@ export type Field = [string, number] | { pad: number } | { other: string; size: 
 
 export interface MemoryTable {
   id?: string;
-  label?: string;
+  label: string;
   unit: 'byte' | 'bit';
   cols?: number;
   order?: 'asc' | 'desc';
@@ -22,6 +22,7 @@ export interface Cell {
 }
 
 export interface Grid {
+  label: string;
   headers: string[];
   rows: Array<{ offset?: string; cells: Cell[] }>;
   end?: string;
@@ -41,9 +42,10 @@ export const PROFILES: Record<ProfileName, Profile> = {
   slide: { row: 64, sub: 12, header: 12, word: 15, stack: 12, frame: 12 },
 };
 
-const WIDTH = 700, MARGIN = 16, TOP = 44, TICK = 12, GAP = 14, SIZE = 15, OFFSET = 14, RULER = 24;
+const WIDTH = 700, MARGIN = 16, TOP = 44, TICK = 12, GAP = 14, SIZE = 15, OFFSET = 14, RULER = 24, RULER_ROOM = 4;
 const KEYS = new Set(['id', 'label', 'unit', 'cols', 'order', 'base', 'fields']);
 const HEX = /^0x[0-9a-f]+$/i;
+const SPACE = 1n << 64n;
 
 const offsetLabel = (n: bigint) => `0x${n.toString(16).padStart(2, '0')}`;
 
@@ -51,19 +53,8 @@ const offsetLabel = (n: bigint) => `0x${n.toString(16).padStart(2, '0')}`;
 // one ⋮ row stands for the rows between; the offsets still count every unit.
 const FOLD = 4;
 
-function fold(rows: Grid['rows'], cols: number): Grid['rows'] {
-  const whole = (row: Grid['rows'][number]) => row.cells.length === 1 && row.cells[0].span === cols;
-  const same = (a: Grid['rows'][number], b: Grid['rows'][number]) => a.cells[0].text === b.cells[0].text && a.cells[0].kind === b.cells[0].kind;
-  const out: Grid['rows'] = [];
-  for (let i = 0; i < rows.length;) {
-    let j = i;
-    while (whole(rows[i]) && j + 1 < rows.length && whole(rows[j + 1]) && same(rows[i], rows[j + 1])) ++j;
-    if (j - i + 1 > FOLD) out.push(rows[i], { offset: rows[i + 1].offset, cells: [{ text: '⋮', span: cols, kind: 'gap' }] }, rows[j]);
-    else out.push(...rows.slice(i, j + 1));
-    i = j + 1;
-  }
-  return out;
-}
+// Identical whole rows are kept as one run with a count, so a huge field costs no more than a small one.
+interface Run { first: number; count: number; cells: Cell[] }
 
 function field(value: unknown, i: number): [string, number, Kind] {
   const where = `fields[${i}]`;
@@ -74,7 +65,7 @@ function field(value: unknown, i: number): [string, number, Kind] {
   else if (keys === 'other,size') [text, size, kind] = [(value as { other: string }).other, (value as { size: number }).size, 'other'];
   else throw new Error(`${where}: expected ["name", size], {"pad": n} or {"other": "text", "size": n}`);
   if (typeof text !== 'string' || !text.trim()) throw new Error(`${where}: the name must be a non-empty string`);
-  if (!Number.isInteger(size) || (size as number) < 1) throw new Error(`${where}: the size must be a positive integer`);
+  if (!Number.isSafeInteger(size) || (size as number) < 1) throw new Error(`${where}: the size must be a positive integer below 2^53`);
   checkText(text, where);
   return [text.trim(), size as number, kind];
 }
@@ -82,50 +73,79 @@ function field(value: unknown, i: number): [string, number, Kind] {
 export function grid(spec: MemoryTable): Grid {
   if (!spec || typeof spec !== 'object' || Array.isArray(spec)) throw new Error('the spec must be a JSON object');
   for (const key of Object.keys(spec)) if (!KEYS.has(key)) throw new Error(`unknown field "${key}"`);
+  if (typeof spec.label !== 'string' || !spec.label.trim()) throw new Error('label: required');
+  checkText(spec.label, 'label');
   if (spec.unit !== 'byte' && spec.unit !== 'bit') throw new Error('unit: must be "byte" or "bit"');
   if (spec.order !== undefined && spec.order !== 'asc' && spec.order !== 'desc') throw new Error('order: must be "asc" or "desc"');
-  if (spec.label !== undefined) {
-    if (typeof spec.label !== 'string') throw new Error('label: must be a string');
-    checkText(spec.label, 'label');
-  }
   if (!Array.isArray(spec.fields) || !spec.fields.length) throw new Error('fields: required');
   const bytes = spec.unit === 'byte';
   const cols = spec.cols ?? (bytes ? 8 : 32);
   if (!Number.isInteger(cols) || cols < 1 || cols > 64) throw new Error('cols: must be an integer from 1 to 64');
-  if (spec.base !== undefined && (typeof spec.base !== 'string' || !HEX.test(spec.base))) throw new Error(`base: "${spec.base}" is not a hex number such as 0x1000`);
+  if (spec.base !== undefined && (typeof spec.base !== 'string' || !HEX.test(spec.base) || BigInt(spec.base) >= SPACE)) throw new Error(`base: "${spec.base}" is not a 64-bit hex address such as 0x1000`);
   const base = BigInt(spec.base ?? 0);
   const desc = spec.order === 'desc';
   const numbers = Array.from({ length: cols }, (_, i) => (desc ? cols - 1 - i : i));
-  const rows: Grid['rows'] = [];
+  const whole = (run: Run) => run.cells.length === 1 && run.cells[0].span === cols;
+  const runs: Run[] = [];
+  let rows = 0, used = 0, total = 0;
   let cells: Cell[] = [];
-  let used = 0;
-  const close = () => {
-    rows.push({ offset: bytes ? offsetLabel(base + BigInt(rows.length * cols)) : undefined, cells: desc ? cells.reverse() : cells });
-    cells = [];
-    used = 0;
+  const close = (count: number, list: Cell[]) => {
+    const run = { first: rows, count, cells: desc ? list.reverse() : list };
+    const last = runs.at(-1);
+    if (last && whole(last) && whole(run) && last.cells[0].text === run.cells[0].text && last.cells[0].kind === run.cells[0].kind) last.count += count;
+    else runs.push(run);
+    rows += count;
   };
   spec.fields.forEach((value, i) => {
     const [text, size, kind] = field(value, i);
+    if (size > Number.MAX_SAFE_INTEGER - total) throw new Error(`fields[${i}]: the sizes add up past 2^53`);
+    total += size;
     let left = size;
-    while (left > 0) {
+    if (used > 0) {
       const span = Math.min(left, cols - used);
       cells.push({ text, span, kind });
       used += span;
       left -= span;
-      if (used === cols) close();
+      if (used < cols) return;
+      close(1, cells);
+      cells = [];
+      used = 0;
     }
+    const count = Math.floor(left / cols);
+    if (count) close(count, [{ text, span: cols, kind }]);
+    left -= count * cols;
+    if (left) [cells, used] = [[{ text, span: left, kind }], left];
   });
   if (used > 0) throw new Error(`fields end ${used} ${spec.unit}s into the last row; add {"pad": ${cols - used}}`);
+  if (bytes && base + BigInt(rows) * BigInt(cols) > SPACE) throw new Error('fields: the table runs past the 64-bit address space');
+  const offset = (row: number) => (bytes ? offsetLabel(base + BigInt(row) * BigInt(cols)) : undefined);
+  const row = (at: number, list: Cell[]) => ({ offset: offset(at), cells: list.map((c) => ({ ...c })) });
   return {
+    label: spec.label.trim(),
     headers: numbers.map((n) => (bytes ? `+${n}` : String(n))),
-    rows: fold(rows, cols),
-    end: bytes ? offsetLabel(base + BigInt(rows.length * cols)) : undefined,
+    rows: runs.flatMap(({ first, count, cells: list }) => (count > FOLD
+      ? [row(first, list), { offset: offset(first + 1), cells: [{ text: '⋮', span: cols, kind: 'gap' as const }] }, row(first + count - 1, list)]
+      : Array.from({ length: count }, (_, k) => row(first + k, list)))),
+    end: offset(rows),
   };
 }
 
-const decode = (s: string) => s.replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&').trim();
+const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0' };
+
+function decode(s: string): string {
+  return s.replace(/<[^>]*>/g, '').replace(/&(?:#(\d{1,7})|#x([0-9a-f]{1,6})|([a-z]+));/gi, (match, dec?: string, hex?: string, entity?: string) => {
+    if (entity) return Object.hasOwn(ENTITIES, entity) ? ENTITIES[entity] : match;
+    const code = dec ? Number(dec) : parseInt(hex!, 16);
+    return code <= 0x10ffff ? String.fromCodePoint(code) : match;
+  }).trim();
+}
 
 export function parseTable(html: string): Grid {
+  const open = /^<table\b([^>]*)>/i.exec(html)?.[1] ?? '';
+  const named = /\baria-label=(?:"([^"]*)"|'([^']*)')/i.exec(open);
+  const label = decode(named ? named[1] ?? named[2] : /<caption\b[^>]*>([\s\S]*?)<\/caption>/i.exec(html)?.[1] ?? '');
+  if (!label) throw new Error('a mem-layout table needs an aria-label or a <caption> that names it');
+  checkText(label, 'label');
   const rows = [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map((row) =>
     [...row[1].matchAll(/<(th|td)\b([^>]*)>([\s\S]*?)<\/\1>/gi)].map(([, tag, attrs, body]) => ({
       tag: tag.toLowerCase(),
@@ -136,8 +156,10 @@ export function parseTable(html: string): Grid {
   if (rows.length < 2 || rows[0].some((c) => c.tag !== 'th')) throw new Error('a mem-layout table needs a header row of <th> and at least one data row');
   const withOffset = rows[0][0].text === 'Offset';
   const headers = rows[0].slice(withOffset ? 1 : 0).map((c) => c.text);
+  headers.forEach((h, i) => checkText(h, `header ${i + 1}`));
   const out: Grid['rows'] = rows.slice(1).map((row, r) => {
     const offset = withOffset ? row[0]?.text : undefined;
+    if (offset !== undefined) checkText(offset, `row ${r + 1} offset`);
     const cells = row.slice(withOffset ? 1 : 0).map((c) => {
       const kind: Kind = /\bfield\b/.test(c.cls) ? 'field' : /\bpad\b/.test(c.cls) ? 'pad' : /\bgap\b/.test(c.cls) ? 'gap' : 'other';
       checkText(c.text, `row ${r + 1}`);
@@ -149,7 +171,7 @@ export function parseTable(html: string): Grid {
   });
   const last = out.at(-1)?.offset;
   const end = last !== undefined && HEX.test(last) ? offsetLabel(BigInt(last) + BigInt(headers.length)) : undefined;
-  return { headers, rows: out, end };
+  return { label, headers, rows: out, end };
 }
 
 interface Placed { lines: Array<{ text: string; size: number; bold: boolean; fill: Paint; dy: number }>; height: number }
@@ -180,13 +202,15 @@ function place(cell: Cell, w: number, p: Profile): Placed {
   return stack(cell.text, true, 'diagram-ink');
 }
 
-export function layout(g: Grid, label: string, p: Profile = PROFILES.blog): Scene {
+export function layout(g: Grid, p: Profile = PROFILES.blog): Scene {
   const cols = g.headers.length;
   const offsets = g.rows.some((r) => r.offset !== undefined);
   const labels = [...g.rows.map((r) => r.offset ?? ''), g.end ?? ''];
   const left = offsets ? Math.ceil(MARGIN + Math.max(...labels.map((l) => textWidth(l, OFFSET))) + GAP) : MARGIN;
   const right = WIDTH - MARGIN;
   const unit = (right - left) / cols;
+  const number = g.headers.reduce((a, b) => (textWidth(b, p.header) >= textWidth(a, p.header) ? b : a), '');
+  if (textWidth(number, p.header) + RULER_ROOM > unit) throw new Error(`the ${cols} columns are ${round(Math.max(0, unit))} units wide, too narrow for the column number "${number}"; use fewer columns`);
   const placed = g.rows.map((row) => {
     let x = left;
     return row.cells.map((cell) => {
@@ -222,5 +246,5 @@ export function layout(g: Grid, label: string, p: Profile = PROFILES.blog): Scen
     const center = tops[r] + heights[r] / 2;
     for (const line of c.placed.lines) text(round(c.x + c.w / 2), round(center + line.dy), line.text, line.size, line.bold, 'middle', line.fill);
   }));
-  return tighten({ width: WIDTH, height: round(bottom + (offsets ? 20 : 16)), label, font: FONT, shapes, frame: p.frame }, MARGIN);
+  return tighten({ width: WIDTH, height: round(bottom + (offsets ? 20 : 16)), label: g.label, font: FONT, shapes, frame: p.frame }, MARGIN);
 }

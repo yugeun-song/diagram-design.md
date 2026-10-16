@@ -41,7 +41,8 @@ const HANGUL = /([ᄀ-ᇿ㄰-㆏가-힣]+)/;
 const HANGUL_CHAR = /[ᄀ-ᇿ㄰-㆏가-힣]/;
 
 export function checkText(text: string, where: string): void {
-  if (/[\u0000-\u001f\u007f]/.test(text)) throw new Error(`${where}: contains a control character or a line break`);
+  if (/[\u0000-\u001f\u007f-\u009f]/.test(text)) throw new Error(`${where}: contains a control character or a line break`);
+  if (/[\ufffe\uffff]|\p{Cs}/u.test(text)) throw new Error(`${where}: contains U+FFFE, U+FFFF or an unpaired surrogate, which XML cannot carry`);
 }
 
 export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

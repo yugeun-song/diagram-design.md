@@ -55,7 +55,9 @@ const WIDTH = 700, EDGE = 8, TOP = 76, AXIS = 32, LEFT = 220, RIGHT = 480, MID =
 const RUN = 20, RADIUS = 12, LANE = 24, SIZE = 15, ARROW = 14, ADDRESS = 14;
 const INSIDE = RIGHT - LEFT - 32, OUTSIDE = ADDR - AXIS - 16, AXIS_GAP = 46, FILL = 0.6;
 const SPAN_X = RIGHT + 20, SPAN_BAR = 10, SPAN_BEND = 6, SPAN_LABEL = 14, SEAM = 0.5;
-const LABEL_GAP = 8;
+const LABEL_GAP = 8, CAP = 12, TITLE_FOOT = TOP - 21;
+// A row keeps its text and the marker over its start clear of the rows beside it.
+const ROW_MIN = 30, SUB_ROW_MIN = 44;
 const TITLE_ROOM = 560, CODE_ROOM = WIDTH - 32, CODE_TOP = 64;
 const SPEC_KEYS = new Set(['id', 'label', 'title', 'regions', 'spans', 'code']);
 const KEYS = new Set(['id', 'value', 'word', 'gap', 'sub', 'start', 'marker', 'tone', 'to', 'size', 'h']);
@@ -98,6 +100,7 @@ export function validate(spec: MemoryLayout): void {
     if (region.gap !== undefined && region.gap !== true) throw new Error(`${where}.gap: must be true`);
     const kinds = [region.value !== undefined, region.word !== undefined, region.gap === true].filter(Boolean).length;
     if (kinds !== 1) throw new Error(`${where}: needs exactly one of value, word or "gap": true`);
+    if (region.gap && region.sub !== undefined) throw new Error(`${where}.sub: a gap draws no text`);
     if (region.h !== undefined && !(typeof region.h === 'number' && Number.isFinite(region.h) && region.h > 0)) throw new Error(`${where}.h: must be a positive number`);
     for (const key of ['start', 'size'] as const) {
       if (region[key] !== undefined && !HEX.test(region[key]!)) throw new Error(`${where}.${key}: "${region[key]}" is not a hex number such as 0x1000`);
@@ -178,9 +181,11 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     shapes.push({ kind: 'runs', x, y, size: code ? CODE_SIZE : SIZE, code, anchor: 'middle', runs: list.map((p) => ({ text: p.text, fill: paint(p.tone, 'diagram-ink') })) });
 
   let y = TOP;
-  const rows = spec.regions.map((region) => {
+  const rows = spec.regions.map((region, i) => {
     const k = kind(region);
     const h = round(region.h === undefined ? profile[k] : (region.h * profile[k]) / PROFILES.blog[k]);
+    const least = region.sub === undefined ? ROW_MIN : SUB_ROW_MIN;
+    if (h < least) throw new Error(`${name(region, i)}.h: ${region.h} is too short for the row's text; raise h to ${Math.ceil((least * PROFILES.blog[k]) / profile[k])}`);
     const row = { region, top: y, bottom: round(y + h), center: round(y + h / 2) };
     y = row.bottom;
     return row;
@@ -196,7 +201,9 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   const column = Math.floor(Math.min(LEFT, RIGHT - inside / FILL)), mid = (column + RIGHT) / 2, addr = column - (LEFT - ADDR);
   const widest = Math.max(0, ...spec.regions.flatMap((r) => [r.start === undefined ? 0 : textWidth(r.start, ADDRESS), r.marker === undefined ? 0 : textWidth(r.marker, SIZE)]));
   const axis = round(addr - widest - AXIS_GAP);
-  const limit = Math.min(AXIS - textWidth('high', SIZE) / 2, MID - titleWidth / 2) + WIDTH - 2 * EDGE;
+  const high = textWidth('high', SIZE);
+  const limit = Math.min(AXIS - high / 2, MID - titleWidth / 2) + WIDTH - 2 * EDGE;
+  if (titleWidth && mid - titleWidth / 2 < axis + high / 2 + LABEL_GAP) throw new Error('title: runs into the "high" label of the axis; shorten it');
 
   const arrows: Arrow[] = [];
   rows.forEach((row, i) => {
@@ -236,10 +243,10 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   // Nested spans take outer lanes.
   const spans = (spec.spans ?? []).map((span) => {
     const f = spec.regions.findIndex((r) => r.id === span.from), t = spec.regions.findIndex((r) => r.id === span.to);
-    return { span, top: rows[f].top, bottom: rows[t].bottom, center: (rows[f].top + rows[t].bottom) / 2, lane: 0, notes: notes(span) };
+    return { span, top: rows[f].top, bottom: rows[t].bottom, center: (rows[f].top + rows[t].bottom) / 2, lane: 0, notes: notes(span), baseline: 0 };
   });
   for (const s of spans) {
-    for (const a of arrows) if (s.top < a.bottom && a.top < s.bottom) throw new Error(`spans: "${s.span.label}" shares rows with the arrow from ${a.name}; split the diagram`);
+    for (const a of arrows) if (s.top <= a.bottom && a.top <= s.bottom) throw new Error(`spans: "${s.span.label}" shares rows with the arrow from ${a.name}; split the diagram`);
   }
   const spanLanes: Array<Array<[number, number]>> = [];
   for (const s of [...spans].sort((a, b) => a.bottom - a.top - (b.bottom - b.top))) {
@@ -272,6 +279,12 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     }
     if (!moved) break;
   }
+  const ceiling = titleWidth && mid + titleWidth / 2 + LABEL_GAP > labelX ? TITLE_FOOT + LABEL_GAP : 0;
+  spans.forEach((s, i) => {
+    s.baseline = round(s.notes.length ? s.center - 4 - 11 * (s.notes.length - 1) : s.center + 5);
+    if (s.baseline - CAP < ceiling) throw new Error(`spans[${i}]: "${s.span.label}" and its notes rise into the title or past the top; raise h or use fewer lines`);
+  });
+  const foot = Math.max(bottom + 24, ...spans.map((s) => s.baseline + 22 * s.notes.length));
 
   if (spec.title !== undefined) runs(mid, TOP - 24, pieces(spec.title, 'title', TITLE_ROOM));
 
@@ -318,9 +331,8 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     } else {
       dimensions.push(...dimension(RIGHT, x, SPAN_BAR, top, end, stroke));
     }
-    const baseline = round(s.notes.length ? s.center - 4 - 11 * (s.notes.length - 1) : s.center + 5);
-    text(labelX, baseline, s.span.label, SIZE, true, 'start', stroke);
-    s.notes.forEach((note, j) => text(labelX, round(baseline + 22 * (j + 1)), note, profile.subSize, false, 'start', stroke));
+    text(labelX, s.baseline, s.span.label, SIZE, true, 'start', stroke);
+    s.notes.forEach((note, j) => text(labelX, round(s.baseline + 22 * (j + 1)), note, profile.subSize, false, 'start', stroke));
   }
 
   for (const a of [...arrows].sort((p, q) => q.index - p.index)) {
@@ -331,7 +343,7 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   }
 
   const code = (spec.code ?? []).map((list, i) => pieces(list, `code[${i}]`, CODE_ROOM, CODE_SIZE));
-  code.forEach((list, i) => runs(mid, round(bottom + CODE_TOP + i * CODE_STEP), list, true));
-  const height = code.length ? round(bottom + CODE_TOP + (code.length - 1) * CODE_STEP + 24) : round(bottom + 44);
+  code.forEach((list, i) => runs(mid, round(foot - 24 + CODE_TOP + i * CODE_STEP), list, true));
+  const height = code.length ? round(foot - 24 + CODE_TOP + (code.length - 1) * CODE_STEP + 24) : round(foot + 20);
   return tighten({ width: WIDTH, height, label: spec.label, font: FONT, shapes: [...brackets, ...dimensions, ...shapes], frame: profile.frame }, EDGE);
 }

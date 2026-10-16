@@ -65,8 +65,7 @@ const isProfile = (value: string): value is ProfileName => Object.hasOwn(memoryL
 function scene(spec: Spec, profile: ProfileName): Scene {
   if (isLayout(spec)) return memoryLayout.layout(spec, memoryLayout.PROFILES[profile]);
   if (isChain(spec)) return structChain.layout(spec, structChain.PROFILES[profile]);
-  const table = spec as memoryTable.MemoryTable;
-  return memoryTable.layout(memoryTable.grid(table), table?.label ?? '', memoryTable.PROFILES[profile]);
+  return memoryTable.layout(memoryTable.grid(spec as memoryTable.MemoryTable), memoryTable.PROFILES[profile]);
 }
 
 function themes(tokens: Tokens, list: string): string[] {

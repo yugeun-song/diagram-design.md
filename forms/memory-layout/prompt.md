@@ -13,16 +13,16 @@ Write the layout below as one JSON object. The tool computes every coordinate, c
   - `word`: a plain word when the region holds no single value, such as `truncated`.
   - `"gap": true`: an omitted span, drawn as `⋮`.
 - Optional region fields:
-  - `sub`: a short note in parentheses under the value, such as `(caller frame)`.
+  - `sub`: a short note in parentheses under the value, such as `(caller frame)`. A gap takes none.
   - `start`: the region's lowest address, printed at its bottom edge. Starts fall from top to bottom.
   - `marker`: the register that holds `start`, such as `X29 = sp`.
   - `tone`: the color of `marker`: `red`, `orange`, `blue` or `purple`. Each theme shades the hue for its background, so a tone keeps one meaning across themes. Without a tone a marker takes the red tone.
   - `id`: a name for `to` to target.
   - `to`: the id of the region the value points into. The arrow and its `*(value)` label are derived. The value must equal the target's `start`, or lie above it when the target has a `size` or the region above it has a `start`.
-  - `h`: a height in diagram units (default 84 for a value, 76 for a word, 52 for a gap).
+  - `h`: a height in diagram units (default 84 for a value, 76 for a word, 52 for a gap), at least 30, or 44 with a `sub`.
 - Optional top-level fields:
-  - `title`: one line of runs above the column. A run is `"text"` or `["text", tone]`.
-  - `spans`: marks on the right that name a run of regions, each `{"from": id, "to": id, "label": "...", "sub": "...", "tone": ..., "shape": ...}` with `from` the higher region. The default `"shape": "dimension"` draws a dimension line with an open arrowhead at each boundary, for sizes and offsets. `"bracket"` draws a bracket, for grouping. Nested spans take outer lanes. A span cannot share rows with an arrow. A `sub` that does not fit one line can be a list of lines, such as `["struct user_info", "(users[0])"]`.
+  - `title`: one line of runs above the column, short enough to clear the `high` label of the address axis. A run is `"text"` or `["text", tone]`.
+  - `spans`: marks on the right that name a run of regions, each `{"from": id, "to": id, "label": "...", "sub": "...", "tone": ..., "shape": ...}` with `from` the higher region. The default `"shape": "dimension"` draws a dimension line with an open arrowhead at each boundary, for sizes and offsets. `"bracket"` draws a bracket, for grouping. Nested spans take outer lanes. A span cannot share rows or a boundary with an arrow. A `sub` that does not fit one line can be a list of lines, such as `["struct user_info", "(users[0])"]`.
   - `code`: lines of runs under the column, such as a call whose arguments take the tones of the regions they name.
 - Use one language in the whole diagram.
 - The tool draws every stroke and join. Do not edit the SVG it writes: its strokes meet on center lines or under a covering stroke, its corners are single mitered paths, and nothing touches edge to edge, so no seam, notch or hairline gap shows at any zoom.
