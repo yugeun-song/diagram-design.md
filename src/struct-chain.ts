@@ -129,10 +129,9 @@ function parse(spec: StructChain): { rows: Row[]; at: number } {
   return { rows, at };
 }
 
-// Each structure is a column of its fields, lowest offset on top. The forward pointers run
-// from link to link at the height of the first cell, and with a head the last one rings back
-// under the columns. A dimension left of each column measures offsetof, the step container_of
-// takes; they are all the same, so only the first one carries the label.
+// Each structure is a column of its fields, lowest offset on top. Forward pointers run link to link
+// at the first cell's height, and with a head the last one rings back under the columns. The
+// offsetof dimension left of each column is the same everywhere, so only the first is labeled.
 export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Scene {
   const { rows, at } = parse(spec);
   const tones = spec.tones ?? {};

@@ -1,6 +1,6 @@
 # diagram-design.md
 
-Diagrams as code for [vmfault.dev](https://vmfault.dev) posts and slide decks. Each diagram is a short text source. The blog draws it at build time, and `dg.ts` exports it for slides.
+Diagrams as code for [vmfault.dev](https://vmfault.dev) posts and slide decks. Each diagram is a short text source; the blog draws it at build time, and `dg.ts` exports it for slides.
 
 | Form | Source | Use it for |
 |---|---|---|
@@ -12,11 +12,20 @@ Diagrams as code for [vmfault.dev](https://vmfault.dev) posts and slide decks. E
 
 Each folder holds `prompt.md` (how to write the source, for a person or a model), `example.*` and `mockup.png` (clean-light left, spaceduck right).
 
-All five share the form of the memory-layout figure: ink lines 2 wide with box borders 1.6 wide, roomy boxes whose labels fill at most about 60 % of their width, opaque area and gap fills, bold labels in the code font, code lines set like the page's code blocks (regular weight, 13.4 units on a 22.1-unit step), 12-unit triangle arrowheads on pointers, open right-angle arrowheads on dimension lines, radius-12 bends and the code-block frame. A pointer's arrowhead stops 5 units short of the line or box it points at, and a dimension line's open arrowhead 1.5 units short of its extension line, so neither touches it. The JSON forms draw them there, and the blog's script moves each Mermaid arrowhead back to that distance. That form, the stroke weights and the layout are the design and stay fixed.
+## Form
 
-Strokes join without seams, notches or hairline gaps at any zoom, because anti-aliasing shows each of them. A stroke that ends on another shape ends on its center line or under it, never on its edge. Lines that turn a corner are one path with a mitered join, never two butt ends. Where a mark meets a reference line, the reference line stays in front: an outline, separator or extension line is painted over the bracket or shaft that touches it, and the mark rests on its edge instead of hiding under its middle. No gap is narrower than 1 unit, and two fills meet only under a stroke. `lintJoins` (`src/joins.ts`) finds each of these in a scene, and the tests run it on every example. For Mermaid, the blog's script routes flowchart edges orthogonally: straight when the boxes line up, otherwise one bend between ranks, entering a box at least 16 units from its corners. It also starts sequence messages at the lifeline's center, squares the dashes of frames so their corners close, and clears the lifelines behind frame conditions and message labels.
+All five share the form of the memory-layout figure. The form, the stroke weights and the layout are the design and stay fixed.
 
-Colors are not part of it. Each comes from a role variable of the active theme, and can be changed freely to suit any theme. The default is clean-light, the left half of each mockup:
+- Strokes: ink lines 2 wide, box borders 1.6 wide, radius-12 bends, in the code-block frame.
+- Boxes: roomy, labels filling at most about 60 % of the width, opaque area and gap fills.
+- Text: bold labels in the code font. Code lines are set like the page's code blocks: regular weight, 13.4 units on a 22.1-unit step.
+- Arrowheads: a pointer ends in a 12-unit triangle 5 units short of the line or box it points at, a dimension line in an open right angle 1.5 units short of its extension line, so neither touches it.
+- Joins: no seams, notches or hairline gaps at any zoom, since anti-aliasing shows each. A stroke ends on the center line of the shape it meets or under it, never on its edge; a corner is one mitered path. A reference line (outline, separator, extension line) is painted over the bracket or shaft that touches it, which rests on its edge. No gap is narrower than 1 unit, and two fills meet only under a stroke. `lintJoins` (`src/joins.ts`) finds each of these, and the tests run it on every example.
+- Mermaid: the blog's script holds arrowheads at the same distance and routes flowchart edges orthogonally, straight when the boxes line up, otherwise with one bend between ranks, entering a box at least 16 units from its corners. It starts sequence messages at the lifeline's center, squares frame dashes so their corners close, and clears the lifelines behind frame conditions and message labels.
+
+## Colors
+
+Colors are not part of the form. Each comes from a role variable of the active theme and can be changed freely. The default is clean-light, the left half of each mockup:
 
 | Role | Variable | clean-light |
 |---|---|---|
@@ -33,11 +42,11 @@ Colors are not part of it. Each comes from a role variable of the active theme, 
 
 ## Posts
 
-The blog mounts this repository as its `diagrams` submodule. A post writes the source in a fenced block (` ```memory-layout `, ` ```memory-table `, ` ```struct-chain ` or ` ```mermaid `). The build draws the three JSON forms as SVG and fails on an invalid spec, and the page draws Mermaid.
+The blog mounts this repository as its `diagrams` submodule. A post writes the source in a fenced block (` ```memory-layout `, ` ```memory-table `, ` ```struct-chain ` or ` ```mermaid `). The build draws the three JSON forms as SVG and fails on an invalid spec; the page draws Mermaid.
 
 ## Commands
 
-Node 26 runs `dg.ts` as is. There is nothing to install.
+Node 26 runs `dg.ts` as is; there is nothing to install.
 
 | Command | Output |
 |---|---|
@@ -49,14 +58,14 @@ Node 26 runs `dg.ts` as is. There is nothing to install.
 | `node dg.ts mockup forms/<form>` | the folder's `mockup.png` |
 | `node dg.ts tokens [--check]` | `tokens.json` from the blog themes, or a drift check |
 
-`slide`, `mockup` and `tokens` read the blog checkout at `--blog` (default `../blog`): theme CSS, fonts and, for Mermaid, a temporary build of the engine. Chrome renders the PNGs.
+`slide`, `mockup` and `tokens` read the blog checkout at `--blog` (default `../blog`): theme CSS, fonts and, for Mermaid, a temporary build of the engine. `slide` and `mockup` draw their PNGs in a headless browser that `src/png.ts` drives through `src/chrome.ts`; `render`, `check`, `tokens` and the tests need no browser.
 
 ## Slides
 
-- A static SVG uses presentation attributes and hex colors only, with no `<style>`, `var()`, classes, markers or `foreignObject`. A slide editor that imports SVG can insert it and convert it to shapes. One that takes only images gets the PNG.
-- The slide profile shortens memory regions and enlarges small text. Text at the fitted size must reach 18pt, or 14pt for notes and headers. A diagram that falls short fails with the scale it needs; write a shorter variant such as `example.slide.mmd`.
+- A static SVG uses presentation attributes and hex colors only: no `<style>`, `var()`, classes, markers or `foreignObject`. A slide editor that imports SVG can convert it to shapes; one that takes only images gets the PNG.
+- The slide profile shortens memory regions and enlarges small text. At the fitted size, text must reach 18pt, or 14pt below 15 units (notes, headers, code lines). A diagram that falls short fails with the scale it needs; write a shorter variant such as `example.slide.mmd`.
 - Editing the converted shapes needs the three font families that `tokens.json` names installed.
 
 ## Test
 
-`npm test` runs the tests. `npx tsc -p .` type-checks in strict mode; the blog's `npm run typecheck` also covers `src/`.
+`npm test` runs the tests. With the blog checked out next to this repo, `../blog/node_modules/.bin/tsc -p . --typeRoots ../blog/node_modules/@types` type-checks it in strict mode; the blog's `npm run typecheck` covers `src/` too.
