@@ -12,7 +12,7 @@ Diagrams as code for [vmfault.dev](https://vmfault.dev) posts and slide decks. E
 
 Each folder holds `prompt.md` (how to write the source, for a person or a model), `example.*` and `mockup.png` (clean-light left, spaceduck right).
 
-All five share the form of the memory-layout figure: ink lines 2 wide with box borders 1.6 wide, roomy boxes whose labels fill at most about 60 % of their width, opaque area and gap fills, bold Cascadia Code labels, code lines set like the page's code blocks (regular weight, 13.4 units on a 22.1-unit step), 12-unit triangle arrowheads on pointers, open right-angle arrowheads on dimension lines, radius-12 bends and the code-block frame. A pointer's arrowhead stops 5 units short of the line or box it points at, and a dimension line's open arrowhead 1.5 units short of its extension line, so neither touches it. The JSON forms draw them there, and the blog's script moves each Mermaid arrowhead back to that distance. That form, the stroke weights and the layout are the design and stay fixed.
+All five share the form of the memory-layout figure: ink lines 2 wide with box borders 1.6 wide, roomy boxes whose labels fill at most about 60 % of their width, opaque area and gap fills, bold labels in the code font, code lines set like the page's code blocks (regular weight, 13.4 units on a 22.1-unit step), 12-unit triangle arrowheads on pointers, open right-angle arrowheads on dimension lines, radius-12 bends and the code-block frame. A pointer's arrowhead stops 5 units short of the line or box it points at, and a dimension line's open arrowhead 1.5 units short of its extension line, so neither touches it. The JSON forms draw them there, and the blog's script moves each Mermaid arrowhead back to that distance. That form, the stroke weights and the layout are the design and stay fixed.
 
 Strokes join without seams, notches or hairline gaps at any zoom, because anti-aliasing shows each of them. A stroke that ends on another shape ends on its center line or under it, never on its edge. Lines that turn a corner are one path with a mitered join, never two butt ends. Where a mark meets a reference line, the reference line stays in front: an outline, separator or extension line is painted over the bracket or shaft that touches it, and the mark rests on its edge instead of hiding under its middle. No gap is narrower than 1 unit, and two fills meet only under a stroke. `lintJoins` (`src/joins.ts`) finds each of these in a scene, and the tests run it on every example. For Mermaid, the blog's script routes flowchart edges orthogonally: straight when the boxes line up, otherwise one bend between ranks, entering a box at least 16 units from its corners. It also starts sequence messages at the lifeline's center, squares the dashes of frames so their corners close, and clears the lifelines behind frame conditions and message labels.
 
@@ -53,9 +53,9 @@ Node 26 runs `dg.ts` as is. There is nothing to install.
 
 ## Slides
 
-- A static SVG uses presentation attributes and hex colors only, with no `<style>`, `var()`, classes, markers or `foreignObject`. PowerPoint can insert it and convert it to shapes. Google Slides takes the PNG.
+- A static SVG uses presentation attributes and hex colors only, with no `<style>`, `var()`, classes, markers or `foreignObject`. A slide editor that imports SVG can insert it and convert it to shapes. One that takes only images gets the PNG.
 - The slide profile shortens memory regions and enlarges small text. Text at the fitted size must reach 18pt, or 14pt for notes and headers. A diagram that falls short fails with the scale it needs; write a shorter variant such as `example.slide.mmd`.
-- Editing in PowerPoint needs Cascadia Code, Atkinson Hyperlegible and Pretendard installed.
+- Editing the converted shapes needs the three font families that `tokens.json` names installed.
 
 ## Test
 
