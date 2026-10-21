@@ -297,6 +297,10 @@ test('limits are checked before anything is drawn', () => {
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ value: '0x1', h: 0.5 }] }, memoryLayout.PROFILES.slide), /raise h to 0.58/);
   assert.doesNotThrow(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a', h: 30 }, { word: 'b', sub: 'c', h: 44 }] }));
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ gap: true, sub: 'b' }] }), /a gap draws no text/);
+  const filled = toWeb(memoryLayout.layout({ label: 'x', regions: [{ word: 'a', fill: 'purple' }, { word: 'b', fill: 'gap' }, { word: 'c' }] }));
+  assert.deepEqual([...filled.matchAll(/<rect [^>]*style="fill:var\(--([\w-]+)\)"/g)].map((m) => m[1]), ['diagram-purple-wash', 'diagram-gap', 'diagram-area']);
+  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a', fill: 'green' as 'gap' }] }), /fill: must be "area", "gap" or a tone/);
+  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ gap: true, fill: 'area' }] }), /a gap takes the gap fill/);
 
   const noted = (n: number): memoryLayout.MemoryLayout => ({
     label: 'x',

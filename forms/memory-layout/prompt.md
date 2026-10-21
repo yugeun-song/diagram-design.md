@@ -17,6 +17,7 @@ Write the layout below as one JSON object. The tool computes every coordinate, c
   - `start`: the region's lowest address, printed at its bottom edge. Starts fall from top to bottom.
   - `marker`: the register that holds `start`, such as `X29 = sp`.
   - `tone`: the color of `marker`: `red`, `orange`, `blue` or `purple`. Each theme shades the hue for its background, so a tone keeps one meaning across themes. Without a tone a marker takes the red tone.
+  - `fill`: the region's fill: `area` (the default), `gap` for padding or unused bytes that still show their value, or a tone for its light wash, such as `purple` for the cells of an embedded `list_head`. A gap takes the gap fill.
   - `id`: a name for `to` to target.
   - `to`: the id of the region the value points into. The arrow and its `*(value)` label are derived. The value must equal the target's `start`, or lie above it when the target has a `size` or the region above it has a `start`.
   - `h`: a height as a multiple of the default row, which is the column width over 2.3 (a gap is 0.6 of it); 2 draws a row twice as tall. The row must stay at least 30 units tall, or 44 with a `sub`.

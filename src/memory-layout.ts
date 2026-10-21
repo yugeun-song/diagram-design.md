@@ -1,6 +1,6 @@
 import { arrowhead, dimension, DIMENSION_MIN, shaftEnd, triangle } from './arrow.ts';
 import { BORDER, checkText, CODE_SIZE, CODE_STEP, FONT, LINE_STEP, round, STROKE, textWidth, tighten, type ProfileName, type Scene, type Shape } from './scene.ts';
-import { checkTone, paint, pieces as tonePieces, type Piece, type Run, type Tone } from './tone.ts';
+import { checkTone, paint, pieces as tonePieces, WASHES, type Piece, type Run, type Tone } from './tone.ts';
 import type { Paint } from './tokens.ts';
 
 export type { Run, Tone } from './tone.ts';
@@ -14,6 +14,7 @@ export interface Region {
   start?: string;
   marker?: string;
   tone?: Tone;
+  fill?: 'area' | 'gap' | Tone;
   to?: string;
   size?: string;
   h?: number;
@@ -60,7 +61,7 @@ const LABEL_GAP = 8, CAP = 12, TITLE_FOOT = TOP - 21;
 const ROW_MIN = 30, SUB_ROW_MIN = 44, ASPECT = 2.3, MIN_COLUMN = 160;
 const TITLE_ROOM = 560, CODE_ROOM = WIDTH - 32, CODE_TOP = 64;
 const SPEC_KEYS = new Set(['id', 'label', 'title', 'regions', 'spans', 'code']);
-const KEYS = new Set(['id', 'value', 'word', 'gap', 'sub', 'start', 'marker', 'tone', 'to', 'size', 'h']);
+const KEYS = new Set(['id', 'value', 'word', 'gap', 'sub', 'start', 'marker', 'tone', 'fill', 'to', 'size', 'h']);
 const SPAN_KEYS = new Set(['from', 'to', 'label', 'sub', 'tone', 'shape']);
 const STRINGS = ['id', 'value', 'word', 'sub', 'start', 'marker', 'to', 'size'] as const;
 const HEX = /^0x[0-9a-f]+$/i;
@@ -101,6 +102,8 @@ export function validate(spec: MemoryLayout): void {
     const kinds = [region.value !== undefined, region.word !== undefined, region.gap === true].filter(Boolean).length;
     if (kinds !== 1) throw new Error(`${where}: needs exactly one of value, word or "gap": true`);
     if (region.gap && region.sub !== undefined) throw new Error(`${where}.sub: a gap draws no text`);
+    if (region.fill !== undefined && region.fill !== 'area' && region.fill !== 'gap' && !Object.hasOwn(WASHES, region.fill)) throw new Error(`${where}.fill: must be "area", "gap" or a tone such as "purple"`);
+    if (region.gap && region.fill !== undefined) throw new Error(`${where}.fill: a gap takes the gap fill`);
     if (region.h !== undefined && !(typeof region.h === 'number' && Number.isFinite(region.h) && region.h > 0)) throw new Error(`${where}.h: must be a positive number`);
     for (const key of ['start', 'size'] as const) {
       if (region[key] !== undefined && !HEX.test(region[key]!)) throw new Error(`${where}.${key}: "${region[key]}" is not a hex number such as 0x1000`);
@@ -294,7 +297,8 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   shapes.push(triangle(TOP + 2, axis, 'up', 'diagram-ink'));
   text(axis, round(bottom + 24), 'low', SIZE, true, 'middle');
 
-  for (const row of rows) shapes.push({ kind: 'rect', x: column, y: row.top, w: RIGHT - column, h: round(row.bottom - row.top), fill: row.region.gap ? 'diagram-gap' : 'diagram-area' });
+  const fillOf = (region: Region): Paint => (region.gap || region.fill === 'gap' ? 'diagram-gap' : region.fill === undefined || region.fill === 'area' ? 'diagram-area' : WASHES[region.fill]);
+  for (const row of rows) shapes.push({ kind: 'rect', x: column, y: row.top, w: RIGHT - column, h: round(row.bottom - row.top), fill: fillOf(row.region) });
   shapes.push({ kind: 'outline', x: column, y: TOP, w: RIGHT - column, h: round(bottom - TOP), stroke: 'diagram-ink' });
   for (const row of rows.slice(0, -1)) line(column, row.bottom, RIGHT, row.bottom);
 
