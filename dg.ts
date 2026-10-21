@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import * as canvas from './src/canvas.ts';
 import * as memoryLayout from './src/memory-layout.ts';
 import * as memoryTable from './src/memory-table.ts';
 import * as structChain from './src/struct-chain.ts';
@@ -20,7 +21,7 @@ const USAGE = `usage:
 const SLIDE = { width: 880, height: 460, main: 18, minor: 14, max: 24 };
 const ID = /^[a-z0-9][a-z0-9-]*$/;
 
-type Spec = memoryLayout.MemoryLayout | memoryTable.MemoryTable | structChain.StructChain;
+type Spec = memoryLayout.MemoryLayout | memoryTable.MemoryTable | structChain.StructChain | canvas.Canvas;
 interface Item { id: string; spec?: Spec; mermaid?: string }
 
 class UsageError extends Error {}
@@ -63,6 +64,7 @@ const isChain = (spec: Spec): spec is structChain.StructChain => !!spec && typeo
 const isProfile = (value: string): value is ProfileName => Object.hasOwn(memoryLayout.PROFILES, value);
 
 function scene(spec: Spec, profile: ProfileName): Scene {
+  if (canvas.isCanvas(spec)) return canvas.layout(spec, canvas.PROFILES[profile]);
   if (isLayout(spec)) return memoryLayout.layout(spec, memoryLayout.PROFILES[profile]);
   if (isChain(spec)) return structChain.layout(spec, structChain.PROFILES[profile]);
   return memoryTable.layout(memoryTable.grid(spec as memoryTable.MemoryTable), memoryTable.PROFILES[profile]);

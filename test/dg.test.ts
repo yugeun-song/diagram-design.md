@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import * as canvas from '../src/canvas.ts';
 import * as memoryLayout from '../src/memory-layout.ts';
 import * as memoryTable from '../src/memory-table.ts';
 import { lintJoins } from '../src/joins.ts';
@@ -14,6 +15,7 @@ const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf
 const layoutSpec: memoryLayout.MemoryLayout = JSON.parse(read('../forms/memory-layout/example.json'));
 const tableSpecs: memoryTable.MemoryTable[] = JSON.parse(read('../forms/memory-table/example.json'));
 const chainSpec: structChain.StructChain = JSON.parse(read('../forms/struct-chain/example.json'));
+const canvasSpecs: canvas.Canvas[] = JSON.parse(read('../forms/canvas/example.json'));
 const tokens = loadTokens();
 
 test('the memory layout example renders the reference svg', () => {
@@ -326,4 +328,23 @@ test('the mermaid lint flags what the page would break', () => {
 const blog = fileURLToPath(new URL('../../blog/', import.meta.url));
 test('tokens.json matches the blog themes', { skip: !existsSync(blog) && 'no blog checkout' }, () => {
   assert.deepEqual(readBlogTokens(blog), tokens);
+});
+
+test('the canvas examples render, join cleanly and export as static svgs', () => {
+  for (const spec of canvasSpecs) {
+    const scene = canvas.layout(spec);
+    assert.ok(scene.width > 0 && scene.height > 0, spec.id);
+    assert.deepEqual(lintJoins(scene), [], spec.id);
+    assert.deepEqual(lintStatic(toStatic(scene, tokens, 'clean-light')), [], spec.id);
+  }
+});
+
+test('invalid canvas specs name the problem', () => {
+  const box = { box: 'a', x: 0, y: 0, w: 100, h: 40, label: 'a' };
+  assert.throws(() => canvas.layout({ label: 'x', items: [box, { arrow: ['a.right', 'b.left'] }] }), /"b" is not an id/);
+  assert.throws(() => canvas.layout({ label: 'x', items: [{ ...box, w: 60, label: 'struct task_struct' }] }), /needs \d+ units of width; it has 60/);
+  assert.throws(() => canvas.layout({ label: 'x', items: [{ ...box, colour: 'red' } as canvas.Item] }), /unknown field "colour"/);
+  assert.throws(() => canvas.layout({ label: 'x', items: [box, { dimension: [[0, 0], [100, 100]] }] }), /must share x or y/);
+  assert.throws(() => canvas.layout({ label: 'x', items: [box, { arrow: ['a.right', [110, 20]] }] }), /needs 21/);
+  assert.throws(() => canvas.layout({ label: 'x', items: [box, { box: 'a', x: 0, y: 60, w: 100, h: 40 }] }), /duplicate id "a"/);
 });

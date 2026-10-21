@@ -1,0 +1,101 @@
+[
+  {
+    "id": "task-stack",
+    "label": "An arm64 task and its virtually mapped kernel stack: task->stack points to the lowest word, which holds STACK_END_MAGIC, struct pt_regs sits at the top under the guard page that vmalloc adds, x29 points to the frame record, and sp_el0 holds current",
+    "title": "arm64 Kernel Stack",
+    "items": [
+      {"box": "rq", "x": 0, "y": 174, "w": 176, "h": 84, "label": ["cfs_rq", "tasks_timeline", "(red-black tree)"]},
+      {"column": "task", "x": 216, "y": 0, "w": 192, "cells": [
+        {"h": 60, "label": "thread", "fill": "purple"},
+        {"h": 130, "label": "..."},
+        {"h": 52, "label": "sched_entity se", "line": "dashed", "id": "se"},
+        {"h": 28},
+        {"h": 64, "label": "usage, flags"},
+        {"h": 64, "label": "void *stack", "fill": "red", "id": "stackp"},
+        {"h": 64, "label": ["thread_info", "__state ..."], "id": "ti"}
+      ]},
+      {"arrow": ["se.left", "rq.right"]},
+      {"column": "kstack", "x": 558, "y": -18, "w": 192, "cells": [
+        {"h": 84, "label": ["guard page", "(not mapped)"], "fill": "gap"},
+        {"h": 64, "label": "struct pt_regs", "fill": "orange"},
+        {"h": 28},
+        {"h": 52, "label": "call frame", "line": "dashed"},
+        {"h": 40, "label": "..."},
+        {"h": 96, "fields": [{"label": "saved x30 (lr)", "w": 168, "line": "dashed"}, {"label": "saved x29 (fp)", "w": 168, "id": "fp", "line": "dashed"}]},
+        {"h": 52, "label": "unused"},
+        {"h": 64, "label": "STACK_END_MAGIC", "id": "end"}
+      ]},
+      {"text": ["vmalloc adds", "a guard page"], "x": 420, "y": 10, "role": "note", "id": "guard"},
+      {"arrow": [{"at": "guard.right", "dy": 4}, "kstack.left@0.1"]},
+      {"text": "task_pt_regs()", "x": 416, "y": 130, "role": "note", "id": "regs"},
+      {"arrow": ["regs.right", "kstack|2.left"]},
+      {"text": "x29 (fp)", "x": 436, "y": 315, "role": "note", "id": "x29"},
+      {"arrow": ["x29.right", "fp.left"], "dash": true},
+      {"arrow": ["stackp.right", "end.left@0.3"]},
+      {"text": "task->stack", "x": 483, "y": 368, "anchor": "middle", "role": "note"},
+      {"text": "sp_el0", "x": 552, "y": 442.8, "anchor": "end", "role": "note", "id": "sp"},
+      {"arrow": ["sp.left", "ti.right@0.7"], "label": {"text": "current", "side": "below"}},
+      {"line": ["kstack.top@1", [790, -18]]},
+      {"line": ["kstack.bottom@1", [790, 462]]},
+      {"dimension": [[780, -18], [780, 462]], "label": ["THREAD_SIZE", "+ guard page"]},
+      {"text": ["set_task_stack_end_magic() writes", "0x57ac6e9d to the lowest word"], "x": 654, "y": 530, "anchor": "middle", "role": "note", "id": "magic"},
+      {"arrow": ["magic.top", "end.bottom"]}
+    ]
+  },
+  {
+    "id": "pmd-index",
+    "label": "pmd_index(addr) on x86-64 with four levels: shifting the address right by PMD_SHIFT (21) drops the PTE index and the page offset, and masking with PTRS_PER_PMD - 1 keeps the 9-bit PMD index",
+    "items": [
+      {"text": "PMD_SHIFT = 21", "x": 236, "y": 18, "anchor": "end", "id": "shift"},
+      {"arrow": [{"at": "shift.right", "dy": 4}, [376, 62]]},
+      {"row": "addr", "x": 0, "y": 80, "h": 52, "cells": [
+        {"w": 100, "label": ["sign", "63-48"]},
+        {"w": 92, "label": ["PGD", "47-39"]},
+        {"w": 92, "label": ["PUD", "38-30"]},
+        {"w": 92, "label": ["PMD", "29-21"], "fill": "purple", "id": "high"},
+        {"w": 92, "label": ["PTE", "20-12"]},
+        {"w": 102, "label": ["offset", "11-0"]}
+      ]},
+      {"line": [[376, 60], [376, 140]], "weight": "marker", "tone": "red"},
+      {"text": "unsigned long addr", "x": 0, "y": 160, "role": "note"},
+      {"arrow": ["high.bottom@0.25", "low.top"]},
+      {"text": "addr >> PMD_SHIFT", "x": 300, "y": 218},
+      {"row": "shifted", "x": 194, "y": 256, "h": 52, "cells": [
+        {"w": 100, "label": ["0", "63-43"], "fill": "gap"},
+        {"w": 100, "label": ["sign", "42-27"]},
+        {"w": 92, "label": ["PGD", "26-18"]},
+        {"w": 92, "label": ["PUD", "17-9"]},
+        {"w": 92, "label": ["PMD", "8-0"], "fill": "purple", "id": "low"}
+      ]},
+      {"arrow": ["low.bottom", "pmd.top"], "label": {"text": "& (PTRS_PER_PMD - 1)", "side": "left"}},
+      {"row": "index", "x": 194, "y": 412, "h": 52, "cells": [
+        {"w": 384, "label": ["0", "63-9"], "fill": "gap"},
+        {"w": 92, "label": ["PMD", "8-0"], "fill": "purple", "id": "pmd"}
+      ]},
+      {"text": "pmd_index(addr), 0 to 511", "x": 624, "y": 500, "anchor": "middle", "role": "note", "id": "result"},
+      {"arrow": ["result.top", "pmd.bottom"]}
+    ]
+  },
+  {
+    "id": "bitmap-word",
+    "label": "test_bit(70, addr) on a 64-bit kernel: BIT_WORD(70) selects addr[1] and BIT_MASK(70) selects bit 6 of that word",
+    "items": [
+      {"text": "BIT_WORD(nr) = 70 / 64 = 1", "x": 321, "y": 24, "anchor": "middle", "id": "word"},
+      {"arrow": ["word.bottom", "w1.top"]},
+      {"text": "unsigned long *addr", "x": 120, "y": 104, "role": "note"},
+      {"row": "addr", "x": 120, "y": 120, "h": 54, "cells": [
+        {"w": 134, "label": ["addr[0]", "bits 0-63"]},
+        {"w": 134, "label": ["addr[1]", "bits 64-127"], "id": "w1"},
+        {"w": 134, "label": ["addr[2]", "bits 128-191"]},
+        {"w": 134, "label": ["addr[3]", "bits 192-255"]}
+      ]},
+      {"box": "bit", "x": 281, "y": 174, "w": 80, "h": 30, "label": "bit 6", "fill": "purple"},
+      {"text": "BIT_MASK(nr) = 1UL << 6", "x": 321, "y": 262, "anchor": "middle", "id": "mask"},
+      {"arrow": ["mask.top", "bit.bottom"]},
+      {"text": "nr = 70", "x": 40, "y": 262, "anchor": "middle", "id": "nr"},
+      {"arrow": ["nr.right", "mask.left"], "label": {"text": "nr % 64", "side": "below"}},
+      {"arrow": ["nr.top", [40, 24], "word.left"], "label": {"text": "nr / 64", "segment": 1, "side": "below"}},
+      {"text": ["test_bit(nr, addr) reads", "(addr[1] >> 6) & 1"], "x": 321, "y": 320, "anchor": "middle", "role": "note"}
+    ]
+  }
+]

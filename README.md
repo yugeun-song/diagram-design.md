@@ -7,6 +7,7 @@ Diagrams as code for [vmfault.dev](https://vmfault.dev) posts and slide decks. E
 | [memory-layout](forms/memory-layout/) | JSON | stack frames, pointer chains, address spaces |
 | [memory-table](forms/memory-table/) | JSON | struct layouts, packet headers, register bitfields |
 | [struct-chain](forms/struct-chain/) | JSON | intrusive lists: structures linked through an embedded member, and `container_of` |
+| [canvas](forms/canvas/) | JSON | free figures on coordinates: a structure and the memory it points into, bit fields shifted and masked, bitmap words, structures with field boxes |
 | [mermaid-flowchart](forms/mermaid-flowchart/) | Mermaid | pipelines, decisions, state machines |
 | [mermaid-sequence](forms/mermaid-sequence/) | Mermaid | syscalls, handshakes, RPC |
 
@@ -14,7 +15,7 @@ Each folder holds `prompt.md` (how to write the source, for a person or a model)
 
 ## Form
 
-All five share the form of the memory-layout figure. The form, the stroke weights and the layout are the design and stay fixed.
+All six share the form of the memory-layout figure. The form, the stroke weights and the layout are the design and stay fixed.
 
 - Strokes: ink lines 2 wide, box borders 1.6 wide, marker lines 2.4, radius-12 bends on arrows while boxes keep square corners, dashes 6 on 4, in the code-block frame.
 - Boxes: about 2.3 times as wide as tall, the longest label filling about 60 to 70 % of the width; opaque area and gap fills. A memory-layout row takes its height from the column width, and `h` scales it.
@@ -42,7 +43,7 @@ Colors are not part of the form. Each comes from a role variable of the active t
 
 ## Posts
 
-The blog mounts this repository as its `diagrams` submodule. A post writes the source in a fenced block (` ```memory-layout `, ` ```memory-table `, ` ```struct-chain ` or ` ```mermaid `). The build draws the three JSON forms as SVG and fails on an invalid spec; the page draws Mermaid.
+The blog mounts this repository as its `diagrams` submodule. A post writes the source in a fenced block (` ```memory-layout `, ` ```memory-table `, ` ```struct-chain `, ` ```canvas ` or ` ```mermaid `). The build draws the four JSON forms as SVG and fails on an invalid spec; the page draws Mermaid.
 
 ## Commands
 
