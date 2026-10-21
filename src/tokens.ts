@@ -20,18 +20,28 @@ export function loadTokens(): Tokens {
 }
 
 export function readBlogTokens(blogDir: string): Tokens {
-  const themes: Record<string, Theme> = {};
+  const declared: Record<string, Map<string, string>> = {};
   const dir = join(blogDir, 'styles/themes');
   for (const file of readdirSync(dir).filter((name) => name.endsWith('.css')).sort()) {
     const css = readFileSync(join(dir, file), 'utf8');
     for (const [, name, body] of css.matchAll(/\[data-theme="([^"]+)"\]\s*\{([^}]*)\}/g)) {
-      const vars = new Map([...body.matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
-      themes[name] = Object.fromEntries(VARS.map((v) => {
-        const value = vars.get(v);
-        if (!value || !/^#[0-9a-f]{6}$/i.test(value)) throw new Error(`${file}: --${v} must be a #rrggbb color, got ${value}`);
-        return [v, value.toLowerCase()];
-      }));
+      const vars = (declared[name] ??= new Map());
+      for (const m of body.matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) vars.set(m[1], m[2].trim());
     }
+  }
+  const themes: Record<string, Theme> = {};
+  for (const [name, vars] of Object.entries(declared)) {
+    const resolve = (v: string, seen: string[]): string | undefined => {
+      const ref = /^var\(--([\w-]+)\)$/.exec(vars.get(v) ?? '');
+      if (!ref) return vars.get(v);
+      if (seen.includes(ref[1])) throw new Error(`${name}: --${seen[0]} refers to itself through --${seen.join(', --')}`);
+      return resolve(ref[1], [...seen, ref[1]]);
+    };
+    themes[name] = Object.fromEntries(VARS.map((v) => {
+      const value = resolve(v, [v]);
+      if (!value || !/^#[0-9a-f]{6}$/i.test(value)) throw new Error(`${name}: --${v} must resolve to a #rrggbb color, got ${value}`);
+      return [v, value.toLowerCase()];
+    }));
   }
   const base = readFileSync(join(blogDir, 'styles/base.css'), 'utf8');
   const stroke = Number(/--diagram-stroke:\s*([\d.]+)/.exec(base)?.[1]);

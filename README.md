@@ -25,18 +25,18 @@ All five share the form of the memory-layout figure. The form, the stroke weight
 
 ## Colors
 
-Colors are not part of the form. Each comes from a role variable of the active theme and can be changed freely. The default is clean-light, the left half of each mockup:
+Colors are not part of the form. Each comes from a role variable of the active theme and can be changed freely. In the blog the role variables point into the palette families that `build/palette.py` writes to `styles/themes/palette.css`; `tokens.json` stores what they resolve to. The default is clean-light, the left half of each mockup:
 
 | Role | Variable | clean-light |
 |---|---|---|
 | frame | `--code-bg`, `--code-border` | `#f6f8fa`, `#d0d7de` |
 | strokes, labels, `accent` nodes | `--diagram-ink` | `#1a1a1a` |
-| regions, participants, nodes, untoned link cells | `--diagram-area` | `#b9e3c6` |
+| regions, participants, nodes, untoned link cells | `--diagram-area` | `#b3e4cd` |
 | gaps, padding, `muted` nodes | `--diagram-gap` | `#eef0f3` |
-| tones (memory-layout `tone`, `title`, `spans`, `code`; struct-chain `tones`, `code`); red also for untoned markers, `alt` frames and `danger` nodes | `--diagram-red`, `--diagram-orange`, `--diagram-blue`, `--diagram-purple` | `#d81e5b`, `#cb5300`, `#007f7f`, `#7637c8` |
-| struct-chain link cells of a toned `link` | `--diagram-red-wash`, `--diagram-orange-wash`, `--diagram-blue-wash`, `--diagram-purple-wash` | `#ffd7dc`, `#ffdaca`, `#b0f1f0`, `#e6ddff` |
+| tones (memory-layout `tone`, `title`, `spans`, `code`; struct-chain `tones`, `code`); red also for untoned markers, `alt` frames and `danger` nodes | `--diagram-red`, `--diagram-orange`, `--diagram-blue`, `--diagram-purple` | `#c42551`, `#fd7e14`, `#1971c2`, `#7950f2` |
+| struct-chain link cells of a toned `link` | `--diagram-red-wash`, `--diagram-orange-wash`, `--diagram-blue-wash`, `--diagram-purple-wash` | `#ffd8db`, `#fddbc8`, `#cfe6ff`, `#e1dfff` |
 | headers, padding labels, region and field notes, `⋮` | `--text-secondary` | `#4a4a4a` |
-| Mermaid notes | `--box-warn-bg`, `--box-warn-border` | `#fff7d6`, `#ef8200` |
+| Mermaid notes | `--box-warn-bg`, `--box-warn-border` | `#f4e0c2`, `#fd7e14` |
 
 `tokens.json` holds the other themes' values, except the note colors, which only the blog's styles define.
 
