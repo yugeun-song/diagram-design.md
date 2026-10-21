@@ -203,7 +203,7 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
     const left = sx(left0), center = left + box / 2;
     rows.forEach((row, i) => {
       if (row.kind === 'link') cellsAt(left, box);
-      else shapes.push({ kind: 'rect', x: left, y: tops[i], w: box, h: heights[i], fill: row.kind === 'pad' ? 'diagram-gap' : 'bg-base' });
+      else shapes.push({ kind: 'rect', x: left, y: tops[i], w: box, h: heights[i], fill: row.kind === 'pad' ? 'diagram-gap' : 'diagram-area' });
     });
     tops.slice(1).forEach((top) => line(left, top, left + box, top));
     shapes.push({ kind: 'outline', x: left, y: TOP, w: box, h: round(bottom - TOP), stroke: ink });

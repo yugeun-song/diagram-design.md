@@ -3,11 +3,11 @@
   <path d="M 480 186 H 530" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
   <path d="M 128 186 H 178" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
   <path d="M 656 186 H 674 Q 686 186 686 198 V 374 Q 686 386 674 386 H 24 Q 12 386 12 374 V 198 Q 12 186 24 186 H 34" fill="none" style="stroke:var(--diagram-red);stroke-width:var(--diagram-stroke)"/>
-  <rect x="192" y="48" width="112" height="116" style="fill:var(--bg-base)"/>
+  <rect x="192" y="48" width="112" height="116" style="fill:var(--diagram-area)"/>
   <rect x="192" y="164" width="112" height="44" style="fill:var(--diagram-purple-wash)"/>
   <rect x="192" y="208" width="112" height="44" style="fill:var(--diagram-purple-wash)"/>
   <line x1="192" y1="208" x2="304" y2="208" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
-  <rect x="192" y="252" width="112" height="68" style="fill:var(--bg-base)"/>
+  <rect x="192" y="252" width="112" height="68" style="fill:var(--diagram-area)"/>
   <rect x="192" y="320" width="112" height="34" style="fill:var(--diagram-gap)"/>
   <line x1="192" y1="164" x2="304" y2="164" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
   <line x1="192" y1="252" x2="304" y2="252" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
@@ -28,11 +28,11 @@
   <path d="M 167 153.29 L 174 160.29 L 181 153.29" fill="none" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
   <text x="162" y="102" font-size="15" text-anchor="end" style="fill:var(--diagram-blue)">offsetof</text>
   <text x="162" y="123" font-size="12" text-anchor="end" style="fill:var(--diagram-blue)">= 0x100</text>
-  <rect x="368" y="48" width="112" height="116" style="fill:var(--bg-base)"/>
+  <rect x="368" y="48" width="112" height="116" style="fill:var(--diagram-area)"/>
   <rect x="368" y="164" width="112" height="44" style="fill:var(--diagram-purple-wash)"/>
   <rect x="368" y="208" width="112" height="44" style="fill:var(--diagram-purple-wash)"/>
   <line x1="368" y1="208" x2="480" y2="208" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
-  <rect x="368" y="252" width="112" height="68" style="fill:var(--bg-base)"/>
+  <rect x="368" y="252" width="112" height="68" style="fill:var(--diagram-area)"/>
   <rect x="368" y="320" width="112" height="34" style="fill:var(--diagram-gap)"/>
   <line x1="368" y1="164" x2="480" y2="164" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
   <line x1="368" y1="252" x2="480" y2="252" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
@@ -53,11 +53,11 @@
   <path d="M 343 153.29 L 350 160.29 L 357 153.29" fill="none" style="stroke:var(--diagram-blue);stroke-width:var(--diagram-stroke)"/>
   <path d="M 363 186 L 351 180 L 351 192 Z" style="fill:var(--diagram-red)"/>
   <text x="336" y="206" font-size="14" text-anchor="middle" style="fill:var(--diagram-red)">next</text>
-  <rect x="544" y="48" width="112" height="116" style="fill:var(--bg-base)"/>
+  <rect x="544" y="48" width="112" height="116" style="fill:var(--diagram-area)"/>
   <rect x="544" y="164" width="112" height="44" style="fill:var(--diagram-purple-wash)"/>
   <rect x="544" y="208" width="112" height="44" style="fill:var(--diagram-purple-wash)"/>
   <line x1="544" y1="208" x2="656" y2="208" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
-  <rect x="544" y="252" width="112" height="68" style="fill:var(--bg-base)"/>
+  <rect x="544" y="252" width="112" height="68" style="fill:var(--diagram-area)"/>
   <rect x="544" y="320" width="112" height="34" style="fill:var(--diagram-gap)"/>
   <line x1="544" y1="164" x2="656" y2="164" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
   <line x1="544" y1="252" x2="656" y2="252" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
