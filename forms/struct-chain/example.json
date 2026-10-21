@@ -9,7 +9,7 @@
     {"name": "users[1]", "values": {"username": "\"bob\"", "age": "30"}},
     {"name": "users[2]", "values": {"username": "\"carol\"", "age": "40"}}
   ],
-  "tones": {"node": "orange", "link": "purple", "walk": "red", "offset": "blue"},
+  "tones": {"link": "purple", "walk": "red", "offset": "blue"},
   "code": [
     ["list_for_each(", ["pos", "red"], ", ", ["&user_info_list", "purple"], ")"],
     ["    ", ["user", "blue"], " = container_of(", ["pos", "red"], ", ", ["struct user_info", "orange"], ", ", ["list", "purple"], ");"]

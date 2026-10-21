@@ -203,7 +203,7 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
     const left = sx(left0), center = left + box / 2;
     rows.forEach((row, i) => {
       if (row.kind === 'link') cellsAt(left, box);
-      else shapes.push({ kind: 'rect', x: left, y: tops[i], w: box, h: heights[i], fill: row.kind === 'pad' ? 'diagram-gap' : 'diagram-area' });
+      else shapes.push({ kind: 'rect', x: left, y: tops[i], w: box, h: heights[i], fill: row.kind === 'pad' ? 'diagram-gap' : 'bg-base' });
     });
     tops.slice(1).forEach((top) => line(left, top, left + box, top));
     shapes.push({ kind: 'outline', x: left, y: TOP, w: box, h: round(bottom - TOP), stroke: ink });
@@ -233,12 +233,12 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
 
   let after = bottom;
   if (head) {
-    const hx = sx(headX), mark = paint(tones.link, ink);
+    const hx = sx(headX);
     cellsAt(hx, headW);
     shapes.push({ kind: 'outline', x: hx, y: linkTop, w: headW, h: cells.length * profile.cell, stroke: ink });
     cellText(hx + headW / 2);
-    text(hx + headW / 2, linkBottom + 24, head.name, SIZE, true, 'middle', mark);
-    if (head.sub) text(hx + headW / 2, linkBottom + 43, head.sub, profile.sub, false, 'middle', mark);
+    text(hx + headW / 2, linkBottom + 24, head.name, SIZE, true, 'middle', ink);
+    if (head.sub) text(hx + headW / 2, linkBottom + 43, head.sub, profile.sub, false, 'middle', ink);
     arrow(round(hx + headW), sx(xs[0]));
     const l = sx(MARGIN), r = sx(lastRight + WRAP), start = sx(lastRight);
     const yb = round(Math.max(bottom + LOOP, linkBottom + (head.sub ? 43 : 24) + 24));
