@@ -4,7 +4,7 @@ A byte or bit layout drawn as a grid in the memory-layout style, with offsets on
 
 ## Prompt
 
-Write the layout below as one JSON object. The tool computes the rows, column spans, offsets and headers. Colors follow the theme, clean-light by default, and can be changed freely to suit any theme. The shapes, stroke weights and layout stay fixed.
+Write the layout below as one JSON object. The tool computes the rows, column spans, offsets and headers. Colors follow the theme, light by default, and can be changed freely to suit any theme. The shapes, stroke weights and layout stay fixed.
 
 - `label`: one sentence that says what the table shows. It becomes the `aria-label`.
 - `unit`: `"byte"` or `"bit"`.
@@ -15,7 +15,7 @@ Write the layout below as one JSON object. The tool computes the rows, column sp
 - Optional: `cols` (units per row, default 8 bytes or 32 bits), `"order": "desc"` to number bits from the top, `base` (hex offset of the first row), `id`.
 - Each column must fit its number in the ruler: up to 36 bit columns, and about 24 byte columns, fewer with long offsets. Sizes stay below 2^53, and offsets within 64 bits.
 - Keep names short. A field that crosses a row boundary repeats its name on each row.
-- A field that fills more than four whole rows folds: its first and last rows stay, one `⋮` row stands for the rows between, and the offsets still count every byte.
+- A field that fills more than four whole rows folds: its first and last rows stay, one `...` row stands for the rows between, and the offsets still count every byte.
 - The tool draws every stroke and join. Do not edit the SVG it writes: its strokes meet on center lines or under a covering stroke, its corners are single mitered paths, and nothing touches edge to edge, so no seam, notch or hairline gap shows at any zoom.
 
 Output only the JSON.

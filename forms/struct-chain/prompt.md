@@ -4,7 +4,7 @@ Structures side by side, linked through a member each one embeds, such as a `str
 
 ## Prompt
 
-Write the chain below as one JSON object. The tool computes the boxes, the offsets, the arrows and the ring back to the head. Colors follow the theme, clean-light by default, and can be changed freely to suit any theme. The shapes, stroke weights and layout stay fixed.
+Write the chain below as one JSON object. The tool computes the boxes, the offsets, the arrows and the ring back to the head. Colors follow the theme, light by default, and can be changed freely to suit any theme. The shapes, stroke weights and layout stay fixed.
 
 - `label`: one sentence that says what the diagram shows. It becomes the `aria-label`.
 - `id`: a short kebab-case name for exported files.

@@ -10,24 +10,24 @@ Diagrams as code for [vmfault.dev](https://vmfault.dev) posts and slide decks. E
 | [mermaid-flowchart](forms/mermaid-flowchart/) | Mermaid | pipelines, decisions, state machines |
 | [mermaid-sequence](forms/mermaid-sequence/) | Mermaid | syscalls, handshakes, RPC |
 
-Each folder holds `prompt.md` (how to write the source, for a person or a model), `example.*` and `mockup.png` (clean-light left, spaceduck right).
+Each folder holds `prompt.md` (how to write the source, for a person or a model), `example.*` and `mockup.png` (light left, dark right).
 
 ## Form
 
 All five share the form of the memory-layout figure. The form, the stroke weights and the layout are the design and stay fixed.
 
-- Strokes: ink lines 2 wide, box borders 1.6 wide, radius-12 bends, in the code-block frame.
-- Boxes: roomy, labels filling at most about 60 % of the width, opaque area and gap fills.
-- Text: bold labels in the code font. Code lines are set like the page's code blocks: regular weight, 13.4 units on a 22.1-unit step.
+- Strokes: ink lines 2 wide, box borders 1.6 wide, marker lines 2.4, radius-12 bends on arrows while boxes keep square corners, dashes 6 on 4, in the code-block frame.
+- Boxes: about 2.3 times as wide as tall, the longest label filling about 60 to 70 % of the width; opaque area and gap fills. A memory-layout row takes its height from the column width, and `h` scales it.
+- Text: bold labels in the code font, in one style inside every box: a second line keeps the size and color, and an omitted region reads `...`. The blog renders the 15-unit label at the size of its code text. Code lines are set like the page's code blocks: regular weight, 13.4 units on a 22.1-unit step.
 - Arrowheads: a pointer ends in a 12-unit triangle 5 units short of the line or box it points at, a dimension line in an open right angle 1.5 units short of its extension line, so neither touches it.
 - Joins: no seams, notches or hairline gaps at any zoom, since anti-aliasing shows each. A stroke ends on the center line of the shape it meets or under it, never on its edge; a corner is one mitered path. A reference line (outline, separator, extension line) is painted over the bracket or shaft that touches it, which rests on its edge. No gap is narrower than 1 unit, and two fills meet only under a stroke. `lintJoins` (`src/joins.ts`) finds each of these, and the tests run it on every example.
 - Mermaid: the blog's script holds arrowheads at the same distance and routes flowchart edges orthogonally, straight when the boxes line up, otherwise with one bend between ranks, entering a box at least 16 units from its corners. It starts sequence messages at the lifeline's center, squares frame dashes so their corners close, and clears the lifelines behind frame conditions and message labels.
 
 ## Colors
 
-Colors are not part of the form. Each comes from a role variable of the active theme and can be changed freely. In the blog the role variables point into the palette families that `build/palette.py` writes to `styles/themes/palette.css`; `tokens.json` stores what they resolve to. The default is clean-light, the left half of each mockup:
+Colors are not part of the form. Each comes from a role variable of the active theme and can be changed freely. In the blog the role variables point into the palette families that `build/palette.py` writes to `styles/themes/palette.css`; `tokens.json` stores what they resolve to. The default is light, the left half of each mockup:
 
-| Role | Variable | clean-light |
+| Role | Variable | light |
 |---|---|---|
 | frame | `--code-bg`, `--code-border` | `#f6f8fa`, `#d0d7de` |
 | strokes, labels, `accent` nodes | `--diagram-ink` | `#1a1a1a` |

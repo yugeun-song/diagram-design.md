@@ -4,16 +4,16 @@ export type Anchor = 'start' | 'middle' | 'end';
 
 export type ProfileName = 'blog' | 'slide';
 
-export type Weight = 'border' | 'stroke';
+export type Weight = 'border' | 'stroke' | 'marker';
 
 export type Corners = [boolean, boolean, boolean, boolean];
 
 export type Shape =
   | { kind: 'rect'; x: number; y: number; w: number; h: number; fill: Paint; corners?: Corners }
-  | { kind: 'outline'; x: number; y: number; w: number; h: number; stroke: Paint; rounded?: boolean }
-  | { kind: 'line'; x1: number; y1: number; x2: number; y2: number; stroke: Paint; weight?: Weight }
+  | { kind: 'outline'; x: number; y: number; w: number; h: number; stroke: Paint; rounded?: boolean; dash?: boolean }
+  | { kind: 'line'; x1: number; y1: number; x2: number; y2: number; stroke: Paint; weight?: Weight; dash?: boolean }
   | { kind: 'path'; d: string; fill: Paint; stroke?: never }
-  | { kind: 'path'; d: string; stroke: Paint; fill?: never; weight?: Weight }
+  | { kind: 'path'; d: string; stroke: Paint; fill?: never; weight?: Weight; dash?: boolean }
   | { kind: 'text'; x: number; y: number; text: string; size: number; bold?: boolean; anchor: Anchor; fill: Paint }
   | { kind: 'runs'; x: number; y: number; runs: Array<{ text: string; fill: Paint }>; size: number; code?: boolean; anchor: Anchor };
 
@@ -34,7 +34,9 @@ export interface StaticOptions {
 
 export const FONT = 'code-mono';
 export const CODE_SIZE = 13.4, CODE_STEP = 22.1;
-export const BORDER = 1.6, STROKE = 2;
+export const LABEL = 15, NOTE = 12, TITLE = 15, LINE_STEP = 20;
+export const BORDER = 1.6, STROKE = 2, MARKER = 2.4;
+export const DASH = '6 4';
 export const CORNER = 8;
 const ADVANCE = 0.6, HANGUL_ADVANCE = 0.864;
 const HANGUL = /([ᄀ-ᇿ㄰-㆏가-힣]+)/;
@@ -100,17 +102,19 @@ const rounded = (s: { corners?: Corners }) => !!s.corners?.some(Boolean);
 
 const space = (s: string) => (/ {2}|^ | $/.test(s) ? ' xml:space="preserve"' : '');
 const weight = (s: { code?: boolean }) => (s.code ? ' font-weight="400"' : '');
+const dash = (s: { dash?: boolean }) => (s.dash ? ` stroke-dasharray="${DASH}"` : '');
 const fill = (name: Paint) => `style="fill:var(--${name})"`;
 const stroke = (name: Paint, weight: Weight) => `style="stroke:var(--${name});stroke-width:var(--diagram-${weight})"`;
 const lineWeight = (s: Shape): Weight => (s.kind === 'outline' ? 'border' : s.kind === 'line' ? s.weight ?? 'border' : s.kind === 'path' && !s.fill ? s.weight ?? 'stroke' : 'stroke');
+export const weightOf = (weight: Weight): number => (weight === 'border' ? BORDER : weight === 'marker' ? MARKER : STROKE);
 
 export function toWeb(scene: Scene): string {
   const body = scene.shapes.map((s) => {
     switch (s.kind) {
       case 'rect': return rounded(s) ? `<path d="${cornerPath(s.x, s.y, s.w, s.h, s.corners!)}" ${fill(s.fill)}/>` : `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" ${fill(s.fill)}/>`;
-      case 'outline': return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}"${s.rounded ? ` rx="${CORNER}"` : ''} fill="none" ${stroke(s.stroke, 'border')}/>`;
-      case 'line': return `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" ${stroke(s.stroke, lineWeight(s))}/>`;
-      case 'path': return s.fill ? `<path d="${s.d}" ${fill(s.fill)}/>` : `<path d="${s.d}" fill="none" ${stroke(s.stroke, lineWeight(s))}/>`;
+      case 'outline': return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}"${s.rounded ? ` rx="${CORNER}"` : ''} fill="none"${dash(s)} ${stroke(s.stroke, 'border')}/>`;
+      case 'line': return `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}"${dash(s)} ${stroke(s.stroke, lineWeight(s))}/>`;
+      case 'path': return s.fill ? `<path d="${s.d}" ${fill(s.fill)}/>` : `<path d="${s.d}" fill="none"${dash(s)} ${stroke(s.stroke, lineWeight(s))}/>`;
       case 'text': return `<text x="${s.x}" y="${s.y}" font-size="${s.size}" text-anchor="${s.anchor}"${space(s.text)} ${fill(s.fill)}>${esc(s.text)}</text>`;
       case 'runs': return `<text x="${s.x}" y="${s.y}" font-size="${s.size}"${weight(s)} text-anchor="${s.anchor}" xml:space="preserve">${s.runs.map((r) => `<tspan ${fill(r.fill)}>${esc(r.text)}</tspan>`).join('')}</text>`;
     }
@@ -122,7 +126,7 @@ export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: S
   const scale = options.scale ?? 1;
   const unit = options.unit ?? 'px';
   const paint = (name: Paint) => color(tokens, theme, name);
-  const width = (weight: Weight) => (weight === 'border' ? tokens.border : tokens.stroke);
+  const width = (weight: Weight) => (weight === 'border' ? tokens.border : weight === 'marker' ? tokens.marker : tokens.stroke);
   const family = (name: string) => tokens.fonts[name] ?? name;
   const pad = scene.frame ?? 0;
   const [vx, vy, vw, vh] = [round((scene.x ?? 0) - pad), -pad, round(scene.width + 2 * pad), round(scene.height + 2 * pad)];
@@ -134,13 +138,13 @@ export function toStatic(scene: Scene, tokens: Tokens, theme: string, options: S
         out.push(rounded(s) ? `<path d="${cornerPath(s.x, s.y, s.w, s.h, s.corners!)}" fill="${paint(s.fill)}"/>` : `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="${paint(s.fill)}"/>`);
         break;
       case 'outline':
-        out.push(`<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}"${s.rounded ? ` rx="${CORNER}"` : ''} fill="none" stroke="${paint(s.stroke)}" stroke-width="${width('border')}"/>`);
+        out.push(`<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}"${s.rounded ? ` rx="${CORNER}"` : ''} fill="none" stroke="${paint(s.stroke)}" stroke-width="${width('border')}"${dash(s)}/>`);
         break;
       case 'line':
-        out.push(`<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="${paint(s.stroke)}" stroke-width="${width(lineWeight(s))}"/>`);
+        out.push(`<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="${paint(s.stroke)}" stroke-width="${width(lineWeight(s))}"${dash(s)}/>`);
         break;
       case 'path':
-        out.push(s.fill ? `<path d="${s.d}" fill="${paint(s.fill)}"/>` : `<path d="${s.d}" fill="none" stroke="${paint(s.stroke)}" stroke-width="${width(lineWeight(s))}"/>`);
+        out.push(s.fill ? `<path d="${s.d}" fill="${paint(s.fill)}"/>` : `<path d="${s.d}" fill="none" stroke="${paint(s.stroke)}" stroke-width="${width(lineWeight(s))}"${dash(s)}/>`);
         break;
       case 'text': {
         const runs = s.text.split(HANGUL).filter(Boolean);

@@ -183,9 +183,9 @@ function place(cell: Cell, w: number, p: Profile): Placed {
     const top = -((chars.length - 1) * step) / 2 + p.stack * 0.35;
     return { lines: chars.map((ch, i) => ({ text: ch, size: p.stack, bold, fill, dy: top + i * step })), height: chars.length * step + 16 };
   };
-  if (cell.kind === 'gap') return { lines: [{ text: '⋮', size: 26, bold: true, fill: 'text-secondary', dy: 10 }], height: 0 };
+  if (cell.kind === 'gap') return { lines: [{ text: '...', size: SIZE, bold: true, fill: 'diagram-ink', dy: 5 }], height: 0 };
   if (cell.kind === 'pad') {
-    return textWidth(cell.text, p.sub) <= w - 6 ? { lines: [{ text: cell.text, size: p.sub, bold: false, fill: 'text-secondary', dy: 4 }], height: 0 } : { lines: [], height: 0 };
+    return textWidth(cell.text, SIZE) <= w - 12 ? { lines: [{ text: cell.text, size: SIZE, bold: true, fill: 'diagram-ink', dy: 5 }], height: 0 } : { lines: [], height: 0 };
   }
   if (cell.kind === 'other') {
     if (textWidth(cell.text, p.word) <= w - 12) return { lines: [{ text: cell.text, size: p.word, bold: false, fill: 'diagram-ink', dy: 5 }], height: 0 };
@@ -193,9 +193,9 @@ function place(cell: Cell, w: number, p: Profile): Placed {
   }
   const match = /^(.*?)\s*(\([^()]*\))$/.exec(cell.text);
   const [name, type] = match && match[1] ? [match[1], match[2]] : [cell.text, ''];
-  if (textWidth(name, SIZE) <= w - 12 && (!type || textWidth(type, p.sub) <= w - 8)) {
+  if (textWidth(name, SIZE) <= w - 12 && (!type || textWidth(type, SIZE) <= w - 12)) {
     return type
-      ? { lines: [{ text: name, size: SIZE, bold: true, fill: 'diagram-ink', dy: -6 }, { text: type, size: p.sub, bold: false, fill: 'text-secondary', dy: 15 }], height: 0 }
+      ? { lines: [{ text: name, size: SIZE, bold: true, fill: 'diagram-ink', dy: -5 }, { text: type, size: SIZE, bold: true, fill: 'diagram-ink', dy: 15 }], height: 0 }
       : { lines: [{ text: name, size: SIZE, bold: true, fill: 'diagram-ink', dy: 5 }], height: 0 };
   }
   if (textWidth(cell.text, p.stack) <= w - 6) return { lines: [{ text: cell.text, size: p.stack, bold: true, fill: 'diagram-ink', dy: 4 }], height: 0 };

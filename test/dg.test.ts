@@ -65,8 +65,10 @@ test('a pointer into a sized region lands in proportion', () => {
     regions: [{ id: 'buf', word: 'buffer', start: '0x1000', size: '0x100' }, { value: '0x1080', start: '0x800', to: 'buf' }],
   });
   const paths = scene.shapes.filter((shape) => shape.kind === 'path').map((shape) => shape.d);
-  assert.ok(paths.some((d) => d.endsWith('Q 512 114 500 114 H 494')));
-  assert.ok(paths.includes('M 485 114 L 497 108 L 497 120 Z'));
+  const target = scene.shapes.find((shape) => shape.kind === 'rect') as { y: number; h: number };
+  const head = round(target.y + target.h / 2);
+  assert.ok(paths.some((d) => d.endsWith(`Q 512 ${head} 500 ${head} H 494`)));
+  assert.ok(paths.includes(`M 485 ${head} L 497 ${round(head - 6)} L 497 ${round(head + 6)} Z`));
 });
 
 test('tones, spans, a title and code lines take theme roles', () => {
@@ -85,9 +87,9 @@ test('tones, spans, a title and code lines take theme roles', () => {
   assert.match(svg, /<tspan style="fill:var\(--diagram-orange\)">type: struct s<\/tspan><tspan style="fill:var\(--diagram-ink\)"> \(s\[0\]\)<\/tspan>/);
   assert.match(svg, /<line x1="500" y1="[\d.]+" x2="500" y2="[\d.]+" style="stroke:var\(--diagram-purple\);stroke-width:var\(--diagram-stroke\)/);
   assert.match(svg, /<path d="M 493 [\d.]+ L 500 [\d.]+ L 507 [\d.]+" fill="none" style="stroke:var\(--diagram-purple\)/);
-  assert.match(svg, /font-size="12" text-anchor="middle" style="fill:var\(--text-secondary\)">\(b, \+0x008\)<\/text>/);
-  assert.match(svg, /<rect x="220" y="76" width="260" height="[\d.]+" fill="none" style="stroke:var\(--diagram-ink\);stroke-width:var\(--diagram-border\)"\/>/);
-  assert.match(svg, /<line x1="208" y1="[\d.]+" x2="220" y2="[\d.]+" style="stroke:var\(--diagram-ink\);stroke-width:var\(--diagram-border\)"\/>/);
+  assert.match(svg, /font-size="15" text-anchor="middle" style="fill:var\(--diagram-ink\)">\(b, \+0x008\)<\/text>/);
+  assert.match(svg, /<rect x="320" y="76" width="160" height="[\d.]+" fill="none" style="stroke:var\(--diagram-ink\);stroke-width:var\(--diagram-border\)"\/>/);
+  assert.match(svg, /<line x1="308" y1="[\d.]+" x2="320" y2="[\d.]+" style="stroke:var\(--diagram-ink\);stroke-width:var\(--diagram-border\)"\/>/);
   assert.match(svg, /style="fill:var\(--diagram-purple\)">member: b<\/text>/);
   assert.match(svg, /style="fill:var\(--diagram-red\)">ptr: p<\/text>/);
   assert.match(svg, /<tspan style="fill:var\(--diagram-red\)">p<\/tspan><tspan style="fill:var\(--diagram-ink\)"> - 0x8 = <\/tspan><tspan style="fill:var\(--diagram-blue\)">0x1000<\/tspan>/);
@@ -117,13 +119,13 @@ test('a memory layout frames only what it draws', () => {
   assert.ok(spanned.width > bare.width);
   const axisOf = (scene: ReturnType<typeof memoryLayout.layout>) => scene.shapes.find((s) => s.kind === 'text' && s.text === 'high')!;
   const long = memoryLayout.layout({ label: 'x', regions: [{ word: 'a', start: '0xffff800083fcbc38' }, { word: 'b', start: '0xffff800083fcbc30' }] });
-  assert.equal((axisOf(long) as { x: number }).x, 8.8);
-  assert.equal((axisOf(bare) as { x: number }).x, 126.4);
+  assert.equal((axisOf(long) as { x: number }).x, 108.8);
+  assert.equal((axisOf(bare) as { x: number }).x, 226.4);
   const column = (scene: ReturnType<typeof memoryLayout.layout>) => scene.shapes.find((s) => s.kind === 'outline') as { x: number; w: number };
-  assert.equal(column(bare).w, 260);
+  assert.equal(column(bare).w, 160);
   const padded = memoryLayout.layout({ label: 'x', regions: [{ word: '00 00 00 00 00 00 00', start: '0x8' }, { word: 'b', start: '0x0' }] });
-  assert.deepEqual([column(padded).x, column(padded).w], [180, 300]);
-  assert.equal((axisOf(padded) as { x: number }).x, round(166 - textWidth('0x8', 14) - 46));
+  assert.deepEqual([column(padded).x, column(padded).w], [222, 258]);
+  assert.equal((axisOf(padded) as { x: number }).x, round(208 - textWidth('0x8', 14) - 46));
 });
 
 test('the struct chain example renders the reference svg', () => {
@@ -197,7 +199,7 @@ test('invalid specs name the problem', () => {
   assert.throws(() => memoryLayout.layout(spec({ start: '0x20' })), /start: must be lower/);
   assert.throws(() => memoryLayout.layout(spec({ value: '0x18' })), /give the target a size/);
   assert.throws(() => memoryLayout.layout(spec({ colour: 'red' })), /unknown field "colour"/);
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'w', start: '0x20', h: 30 }, { value: '0x20', start: '0x10', to: 'a', h: 30 }] }), /needs 24; raise h/);
+  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'w', start: '0x20', h: 0.45 }, { value: '0x20', start: '0x10', to: 'a', h: 0.45 }] }), /needs 24; raise h/);
   assert.throws(() => memoryTable.grid({ label: 'x', unit: 'byte', fields: [['a', 3]] }), /add \{"pad": 5\}/);
 
   const chain = (patch: object): structChain.StructChain => ({ ...chainSpec, ...patch });
@@ -230,7 +232,7 @@ test('review regressions stay fixed', () => {
     { id: 'buf', word: 'buffer', start: '0x1000', size: '0x100' },
     { value: '0x1080', start: '0x800', to: 'buf' },
   ] });
-  assert.ok(sized.shapes.some((shape) => shape.kind === 'path' && shape.d === 'M 485 190 L 497 184 L 497 196 Z'));
+  assert.ok(sized.shapes.some((shape) => shape.kind === 'path' && shape.d === 'M 485 180.36 L 497 174.36 L 497 186.36 Z'));
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'a', h: '50' as unknown as number, start: '0x20' }] }), /h: must be a positive number/);
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ value: 4096 as unknown as string }] }), /must be a non-empty string/);
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a\nb' }] }), /control character/);
@@ -288,9 +290,9 @@ test('limits are checked before anything is drawn', () => {
   assert.throws(() => memoryLayout.layout(titled('type: struct task_struct (the current task)')), /runs into the "high" label/);
   assert.doesNotThrow(() => memoryLayout.layout(titled('type: struct task_struct')));
 
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'tiny', h: 0.001, start: '0x10' }] }), /h: 0.001 is too short for the row's text; raise h to 30/);
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a', sub: 'b', h: 40 }] }), /raise h to 44/);
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ value: '0x1', h: 30 }] }, memoryLayout.PROFILES.slide), /raise h to 40/);
+  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'tiny', h: 0.001, start: '0x10' }] }), /h: 0.001 makes the row [\d.]+ units tall, too short for its text; raise h to [\d.]+/);
+  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a', sub: 'b', h: 0.6 }] }), /raise h to 0.64/);
+  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ value: '0x1', h: 0.5 }] }, memoryLayout.PROFILES.slide), /raise h to 0.58/);
   assert.doesNotThrow(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a', h: 30 }, { word: 'b', sub: 'c', h: 44 }] }));
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ gap: true, sub: 'b' }] }), /a gap draws no text/);
 
@@ -307,7 +309,7 @@ test('limits are checked before anything is drawn', () => {
   assert.equal(memoryLayout.layout(noted(1)).height, memoryLayout.layout({ ...noted(1), spans: undefined }).height);
   const crowded: memoryLayout.MemoryLayout = { ...noted(7), regions: [{ id: 'b', word: 'b', start: '0x10' }, { id: 'a', word: 'a', start: '0x0' }], code: undefined };
   assert.doesNotThrow(() => memoryLayout.layout(crowded));
-  assert.throws(() => memoryLayout.layout({ ...crowded, title: ['type: struct b'.padEnd(40, '.')] }), /rise into the title or past the top/);
+  assert.throws(() => memoryLayout.layout({ ...crowded, title: ['type: struct b'.padEnd(28, '.')] }), /rise into the title or past the top/);
 
   const chain = structChain.layout({ ...chainSpec, fields: [['toString', 8], ['list', 16], ['__proto__', 8]], nodes: [{ name: 'a', values: {} }, { name: 'b' }], head: undefined });
   assert.ok(chain.shapes.some((s) => s.kind === 'text' && s.text === 'toString'));

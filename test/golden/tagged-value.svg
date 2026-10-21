@@ -35,14 +35,14 @@
   <text x="50" y="185" font-size="14" text-anchor="end" style="fill:var(--diagram-ink)">0x10</text>
   <line x1="52" y1="248" x2="64" y2="248" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
   <text x="50" y="253" font-size="14" text-anchor="end" style="fill:var(--diagram-ink)">0x18</text>
-  <text x="102.75" y="72" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">tag</text>
-  <text x="102.75" y="93" font-size="12" text-anchor="middle" style="fill:var(--text-secondary)">(char)</text>
-  <text x="257.75" y="82" font-size="12" text-anchor="middle" style="fill:var(--text-secondary)">pad</text>
-  <text x="529" y="72" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">count</text>
-  <text x="529" y="93" font-size="12" text-anchor="middle" style="fill:var(--text-secondary)">(int)</text>
-  <text x="141.5" y="140" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">kind</text>
-  <text x="141.5" y="161" font-size="12" text-anchor="middle" style="fill:var(--text-secondary)">(short)</text>
-  <text x="451.5" y="150" font-size="12" text-anchor="middle" style="fill:var(--text-secondary)">pad</text>
-  <text x="374" y="208" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">value</text>
-  <text x="374" y="229" font-size="12" text-anchor="middle" style="fill:var(--text-secondary)">(double)</text>
+  <text x="102.75" y="73" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">tag</text>
+  <text x="102.75" y="93" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">(char)</text>
+  <text x="257.75" y="83" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">pad</text>
+  <text x="529" y="73" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">count</text>
+  <text x="529" y="93" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">(int)</text>
+  <text x="141.5" y="141" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">kind</text>
+  <text x="141.5" y="161" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">(short)</text>
+  <text x="451.5" y="151" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">pad</text>
+  <text x="374" y="209" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">value</text>
+  <text x="374" y="229" font-size="15" text-anchor="middle" style="fill:var(--diagram-ink)">(double)</text>
 </svg>

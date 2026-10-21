@@ -1,4 +1,4 @@
-import { BORDER, STROKE, type Scene, type Shape } from './scene.ts';
+import { BORDER, type Scene, type Shape, type Weight, weightOf } from './scene.ts';
 
 type Point = [number, number];
 
@@ -55,7 +55,7 @@ function trace(d: string): { points: Point[]; closed: boolean } {
 }
 
 function piece(shape: Shape, index: number): Piece | null {
-  const half = (weight: 'border' | 'stroke' | undefined, fallback: 'border' | 'stroke') => ((weight ?? fallback) === 'border' ? BORDER : STROKE) / 2;
+  const half = (weight: Weight | undefined, fallback: Weight) => weightOf(weight ?? fallback) / 2;
   switch (shape.kind) {
     case 'rect': {
       const { x, y, w, h } = shape;

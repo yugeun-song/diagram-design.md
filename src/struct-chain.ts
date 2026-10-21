@@ -48,7 +48,7 @@ export const PROFILES: Record<ProfileName, Profile> = {
   slide: { base: 48, step: 2, max: 64, cell: 28, pad: 20, sub: 12, frame: 12 },
 };
 
-const WIDTH = 700, MARGIN = 10, LABEL = 34, TOP = 48, SIZE = 15, VALUE = 14, CELL = 14, ARROW = 14;
+const WIDTH = 700, MARGIN = 10, LABEL = 34, TOP = 48, SIZE = 15, CELL = 14, ARROW = 14;
 const BOX = 108, HEAD_BOX = 80, INSET = 20, GAP = 64, RADIUS = 12;
 const ENTRY = 24, WRAP = 30, LOOP = 32, ARROW_LABEL = 20;
 const DIM_X = 18, DIM_BAR = 10, DIM_LABEL = 12, CODE_TOP = 48;
@@ -158,7 +158,7 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
   const values = spec.nodes.flatMap((node) => Object.values(node.values ?? {}));
   const inner = Math.max(
     ...rows.filter((row) => row.kind === 'field').map((row) => textWidth(row.name, SIZE)),
-    ...values.map((value) => textWidth(value, VALUE)),
+    ...values.map((value) => textWidth(value, SIZE)),
     ...cells.map((cell) => textWidth(cell, CELL)),
   );
   const box = Math.max(BOX, Math.ceil(inner + 2 * INSET), ...spec.nodes.map((node) => Math.ceil(textWidth(node.name, SIZE))));
@@ -212,13 +212,13 @@ export function layout(spec: StructChain, profile: Profile = PROFILES.blog): Sce
       const middle = tops[i] + heights[i] / 2;
       if (row.kind === 'link') return cellText(center);
       if (row.kind === 'pad') {
-        if (heights[i] >= 20) text(center, middle + 4, 'padding', profile.sub, false, 'middle', 'text-secondary');
+        if (heights[i] >= 26) text(center, middle + 5, 'padding', SIZE, true, 'middle', ink);
         return;
       }
       const value = node.values && Object.hasOwn(node.values, row.name) ? node.values[row.name] : undefined;
       if (value === undefined) return text(center, middle + 5, row.name, SIZE, true, 'middle', ink);
       text(center, middle - 5, row.name, SIZE, true, 'middle', ink);
-      text(center, middle + 15, value, VALUE, false, 'middle', ink);
+      text(center, middle + 15, value, SIZE, true, 'middle', ink);
     });
     if (offset) {
       const dx = round(left - DIM_X);

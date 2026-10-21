@@ -1,5 +1,5 @@
 import { arrowhead, dimension, DIMENSION_MIN, shaftEnd, triangle } from './arrow.ts';
-import { BORDER, checkText, CODE_SIZE, CODE_STEP, FONT, round, STROKE, textWidth, tighten, type ProfileName, type Scene, type Shape } from './scene.ts';
+import { BORDER, checkText, CODE_SIZE, CODE_STEP, FONT, LINE_STEP, round, STROKE, textWidth, tighten, type ProfileName, type Scene, type Shape } from './scene.ts';
 import { checkTone, paint, pieces as tonePieces, type Piece, type Run, type Tone } from './tone.ts';
 import type { Paint } from './tokens.ts';
 
@@ -47,17 +47,17 @@ export interface Profile {
 }
 
 export const PROFILES: Record<ProfileName, Profile> = {
-  blog: { value: 84, word: 76, gap: 52, wordSize: 15, subSize: 12, frame: 24 },
-  slide: { value: 64, word: 56, gap: 36, wordSize: 15, subSize: 12, frame: 12 },
+  blog: { value: 1, word: 1, gap: 0.6, wordSize: 15, subSize: 12, frame: 24 },
+  slide: { value: 0.75, word: 0.75, gap: 0.45, wordSize: 15, subSize: 12, frame: 12 },
 };
 
 const WIDTH = 700, EDGE = 8, TOP = 76, AXIS = 32, LEFT = 220, RIGHT = 480, MID = 350, ADDR = 206;
 const RUN = 20, RADIUS = 12, LANE = 24, SIZE = 15, ARROW = 14, ADDRESS = 14;
-const INSIDE = RIGHT - LEFT - 32, OUTSIDE = ADDR - AXIS - 16, AXIS_GAP = 46, FILL = 0.6;
+const INSIDE = RIGHT - LEFT - 32, OUTSIDE = ADDR - AXIS - 16, AXIS_GAP = 46, FILL = 0.7;
 const SPAN_X = RIGHT + 20, SPAN_BAR = 10, SPAN_BEND = 6, SPAN_LABEL = 14, SEAM = 0.5;
 const LABEL_GAP = 8, CAP = 12, TITLE_FOOT = TOP - 21;
 // A row keeps its text and the marker over its start clear of the rows beside it.
-const ROW_MIN = 30, SUB_ROW_MIN = 44;
+const ROW_MIN = 30, SUB_ROW_MIN = 44, ASPECT = 2.3, MIN_COLUMN = 160;
 const TITLE_ROOM = 560, CODE_ROOM = WIDTH - 32, CODE_TOP = 64;
 const SPEC_KEYS = new Set(['id', 'label', 'title', 'regions', 'spans', 'code']);
 const KEYS = new Set(['id', 'value', 'word', 'gap', 'sub', 'start', 'marker', 'tone', 'to', 'size', 'h']);
@@ -110,7 +110,7 @@ export function validate(spec: MemoryLayout): void {
       ids.add(region.id);
     }
     const text: Array<[string | undefined, number, number, string]> = [
-      [region.value, SIZE, INSIDE, 'value'], [region.word, PROFILES.slide.wordSize, INSIDE, 'word'], [region.sub, PROFILES.slide.subSize, INSIDE, 'sub'],
+      [region.value, SIZE, INSIDE, 'value'], [region.word, PROFILES.slide.wordSize, INSIDE, 'word'], [region.sub, SIZE, INSIDE, 'sub'],
       [region.start, ADDRESS, OUTSIDE, 'start'], [region.marker, SIZE, OUTSIDE, 'marker'],
     ];
     for (const [body, size, room, key] of text) if (body !== undefined && textWidth(body, size) > room) throw new Error(`${where}.${key}: "${body}" is too long for its place`);
@@ -180,25 +180,26 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   const runs = (x: number, y: number, list: Piece[], code = false) =>
     shapes.push({ kind: 'runs', x, y, size: code ? CODE_SIZE : SIZE, code, anchor: 'middle', runs: list.map((p) => ({ text: p.text, fill: paint(p.tone, 'diagram-ink') })) });
 
+  const titleWidth = spec.title === undefined ? 0 : textWidth(pieces(spec.title, 'title', TITLE_ROOM).map((p) => p.text).join(''), SIZE);
+  const inside = Math.max(0, ...spec.regions.flatMap((r) => [
+    r.value === undefined ? 0 : textWidth(r.value, SIZE),
+    r.word === undefined ? 0 : textWidth(r.word, profile.wordSize),
+    r.sub === undefined ? 0 : textWidth(r.sub, SIZE),
+  ]));
+  const column = Math.floor(RIGHT - Math.max(MIN_COLUMN, inside / FILL)), mid = (column + RIGHT) / 2, addr = column - (LEFT - ADDR);
+  const unit = (RIGHT - column) / ASPECT;
+
   let y = TOP;
   const rows = spec.regions.map((region, i) => {
     const k = kind(region);
-    const h = round(region.h === undefined ? profile[k] : (region.h * profile[k]) / PROFILES.blog[k]);
+    const h = round(unit * profile[k] * (region.h ?? 1));
     const least = region.sub === undefined ? ROW_MIN : SUB_ROW_MIN;
-    if (h < least) throw new Error(`${name(region, i)}.h: ${region.h} is too short for the row's text; raise h to ${Math.ceil((least * PROFILES.blog[k]) / profile[k])}`);
+    if (h < least) throw new Error(`${name(region, i)}.h: ${region.h ?? 1} makes the row ${h} units tall, too short for its text; raise h to ${Math.ceil((least / (unit * profile[k])) * 100) / 100}`);
     const row = { region, top: y, bottom: round(y + h), center: round(y + h / 2) };
     y = row.bottom;
     return row;
   });
   const bottom = y;
-
-  const titleWidth = spec.title === undefined ? 0 : textWidth(pieces(spec.title, 'title', TITLE_ROOM).map((p) => p.text).join(''), SIZE);
-  const inside = Math.max(0, ...spec.regions.flatMap((r) => [
-    r.value === undefined ? 0 : textWidth(r.value, SIZE),
-    r.word === undefined ? 0 : textWidth(r.word, profile.wordSize),
-    r.sub === undefined ? 0 : textWidth(r.sub, profile.subSize),
-  ]));
-  const column = Math.floor(Math.min(LEFT, RIGHT - inside / FILL)), mid = (column + RIGHT) / 2, addr = column - (LEFT - ADDR);
   const widest = Math.max(0, ...spec.regions.flatMap((r) => [r.start === undefined ? 0 : textWidth(r.start, ADDRESS), r.marker === undefined ? 0 : textWidth(r.marker, SIZE)]));
   const axis = round(addr - widest - AXIS_GAP);
   const high = textWidth('high', SIZE);
@@ -308,13 +309,11 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   for (const row of rows) {
     const { region, center } = row;
     if (region.gap) {
-      text(mid, round(center + 10), '⋮', 26, true, 'middle', 'text-secondary');
+      text(mid, round(center + 5), '...', SIZE, true, 'middle');
       continue;
     }
-    const isValue = region.value !== undefined;
-    const baseline = round(region.sub !== undefined ? center - 6 : center + 5);
-    text(mid, baseline, isValue ? region.value! : region.word!, isValue ? SIZE : profile.wordSize, true, 'middle');
-    if (region.sub !== undefined) text(mid, round(baseline + 21), region.sub, profile.subSize, false, 'middle', 'text-secondary');
+    const lines = [region.value ?? region.word!, ...(region.sub === undefined ? [] : [region.sub])];
+    lines.forEach((body, j) => text(mid, round(center + 5 + (j - (lines.length - 1) / 2) * LINE_STEP), body, SIZE, true, 'middle'));
   }
 
   const ticks = new Set(spans.filter((s) => s.span.shape !== 'bracket').flatMap((s) => [s.top, s.bottom]));

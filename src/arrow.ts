@@ -2,8 +2,9 @@ import { BORDER, round, STROKE, type Shape } from './scene.ts';
 import type { Paint } from './tokens.ts';
 
 export const HEAD = 12, TIP = 5;
-const POINTER_OVERLAP = 3, OPEN = 7, DIMENSION_GAP = 1.5;
-const DIMENSION_TIP = BORDER / 2 + DIMENSION_GAP + (STROKE / 2) * Math.SQRT2;
+export const POINTER_OVERLAP = 3;
+const OPEN = 7, DIMENSION_GAP = 1.5;
+export const DIMENSION_TIP = BORDER / 2 + DIMENSION_GAP + (STROKE / 2) * Math.SQRT2;
 export const DIMENSION_MIN = 2 * (OPEN + DIMENSION_TIP) + 8;
 
 export type Toward = 'up' | 'down' | 'left' | 'right';
@@ -26,6 +27,12 @@ export function chevron(tip: number, across: number, toward: Toward, stroke: Pai
   const c = round(across), a = round(across - OPEN), b = round(across + OPEN);
   const d = toward === 'up' || toward === 'down' ? `M ${a} ${base} L ${c} ${t} L ${b} ${base}` : `M ${base} ${a} L ${t} ${c} L ${base} ${b}`;
   return { kind: 'path', d, stroke };
+}
+
+export function head(x: number, y: number, angle: number, fill: Paint): Shape {
+  const ux = Math.cos(angle), uy = Math.sin(angle);
+  const bx = x - ux * HEAD, by = y - uy * HEAD, px = -uy * (HEAD / 2), py = ux * (HEAD / 2);
+  return { kind: 'path', d: `M ${round(x)} ${round(y)} L ${round(bx + px)} ${round(by + py)} L ${round(bx - px)} ${round(by - py)} Z`, fill };
 }
 
 export function dimension(edge: number, x: number, bar: number, top: number, end: number, stroke: Paint): Shape[] {
