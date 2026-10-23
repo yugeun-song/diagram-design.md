@@ -6,6 +6,7 @@ import * as canvas from './src/canvas.ts';
 import * as memoryLayout from './src/memory-layout.ts';
 import * as memoryTable from './src/memory-table.ts';
 import * as structChain from './src/struct-chain.ts';
+import * as textTable from './src/text-table.ts';
 import { lintMermaid } from './src/mermaid.ts';
 import { compose, mermaidPNGs, staticPNGs } from './src/png.ts';
 import { lintStatic, toStatic, toWeb, type ProfileName, type Scene } from './src/scene.ts';
@@ -21,7 +22,7 @@ const USAGE = `usage:
 const SLIDE = { width: 880, height: 460, main: 18, minor: 14, max: 24 };
 const ID = /^[a-z0-9][a-z0-9-]*$/;
 
-type Spec = memoryLayout.MemoryLayout | memoryTable.MemoryTable | structChain.StructChain | canvas.Canvas;
+type Spec = memoryLayout.MemoryLayout | memoryTable.MemoryTable | structChain.StructChain | canvas.Canvas | textTable.TextTable;
 interface Item { id: string; spec?: Spec; mermaid?: string }
 
 class UsageError extends Error {}
@@ -65,6 +66,7 @@ const isProfile = (value: string): value is ProfileName => Object.hasOwn(memoryL
 
 function scene(spec: Spec, profile: ProfileName): Scene {
   if (canvas.isCanvas(spec)) return canvas.layout(spec, canvas.PROFILES[profile]);
+  if (textTable.isTextTable(spec)) return textTable.layout(spec, textTable.PROFILES[profile]);
   if (isLayout(spec)) return memoryLayout.layout(spec, memoryLayout.PROFILES[profile]);
   if (isChain(spec)) return structChain.layout(spec, structChain.PROFILES[profile]);
   return memoryTable.layout(memoryTable.grid(spec as memoryTable.MemoryTable), memoryTable.PROFILES[profile]);

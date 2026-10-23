@@ -9,6 +9,7 @@ import { lintJoins } from '../src/joins.ts';
 import { lintMermaid } from '../src/mermaid.ts';
 import { corners, lintStatic, round, textWidth, toStatic, toWeb, type Scene } from '../src/scene.ts';
 import * as structChain from '../src/struct-chain.ts';
+import * as textTable from '../src/text-table.ts';
 import { loadTokens, readBlogTokens } from '../src/tokens.ts';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -16,6 +17,7 @@ const layoutSpec: memoryLayout.MemoryLayout = JSON.parse(read('../forms/memory-l
 const tableSpecs: memoryTable.MemoryTable[] = JSON.parse(read('../forms/memory-table/example.json'));
 const chainSpec: structChain.StructChain = JSON.parse(read('../forms/struct-chain/example.json'));
 const canvasSpecs: canvas.Canvas[] = JSON.parse(read('../forms/canvas/example.json'));
+const textSpec: textTable.TextTable = JSON.parse(read('../forms/text-table/example.json'));
 const tokens = loadTokens();
 
 test('the memory layout example renders the reference svg', () => {
@@ -188,6 +190,7 @@ test('strokes join without seams, notches or hairline gaps', () => {
     memoryLayout.layout(spans),
     ...tableSpecs.map((spec) => memoryTable.layout(memoryTable.grid(spec))),
     structChain.layout(chainSpec),
+    textTable.layout(textSpec),
   ];
   for (const scene of scenes) assert.deepEqual(lintJoins(scene), [], scene.label);
 });
@@ -351,4 +354,47 @@ test('invalid canvas specs name the problem', () => {
   assert.throws(() => canvas.layout({ label: 'x', items: [box, { dimension: [[0, 0], [100, 100]] }] }), /must share x or y/);
   assert.throws(() => canvas.layout({ label: 'x', items: [box, { arrow: ['a.right', [110, 20]] }] }), /needs 21/);
   assert.throws(() => canvas.layout({ label: 'x', items: [box, { box: 'a', x: 0, y: 60, w: 100, h: 40 }] }), /duplicate id "a"/);
+});
+
+test('the text table example renders the reference svg and keeps every line inside its column', () => {
+  assert.equal(toWeb(textTable.layout(textSpec)) + '\n', read('golden/web-image-terms.svg'));
+  for (const profile of ['blog', 'slide'] as const) {
+    const scene = textTable.layout(textSpec, textTable.PROFILES[profile]);
+    const xs = [16, ...scene.shapes.flatMap((s) => (s.kind === 'line' && s.x1 === s.x2 ? [s.x1] : [])), 684];
+    const texts = scene.shapes.filter((s) => s.kind === 'text');
+    assert.equal(texts.filter((t) => t.text === textSpec.columns[0]).length, 1);
+    for (const t of texts) {
+      const c = xs.findIndex((x) => x + 12 === t.x);
+      assert.ok(c >= 0 && c < xs.length - 1, `"${t.text}" starts at ${t.x}, off the column padding`);
+      assert.ok(textWidth(t.text, t.size) <= xs[c + 1] - xs[c] - 24, `"${t.text}" overflows column ${c + 1}`);
+    }
+    assert.deepEqual(lintJoins(scene), [], profile);
+    for (const theme of Object.keys(tokens.themes)) assert.deepEqual(lintStatic(toStatic(scene, tokens, theme)), [], `${profile} ${theme}`);
+  }
+});
+
+test('a text table sizes its columns from the text and breaks a long word at its separators', () => {
+  const lines = (scene: Scene) => scene.shapes.flatMap((s) => (s.kind === 'text' ? [s.text] : []));
+  const small = textTable.layout({ label: 'x', columns: ['key', 'value'], rows: [['a', 'b'], ['', ['one', 'two']]] });
+  assert.ok(small.width < 700);
+  assert.deepEqual(lines(small), ['key', 'value', 'a', 'b', 'one', 'two']);
+  const split = textTable.layout({ label: 'x', columns: ['file', 'note'], widths: [3, 7], rows: [['apple-touch-icon.png', 'favicon']] });
+  assert.ok(split.shapes.some((s) => s.kind === 'line' && s.x1 === 216 && s.x2 === 216));
+  assert.deepEqual(lines(split), ['file', 'note', 'apple-touch-icon.', 'png', 'favicon']);
+  const call = textTable.layout({ label: 'x', columns: ['a', 'b'], widths: [1, 4], rows: [['favicon.svg(vector)', 'x']] });
+  assert.deepEqual(lines(call).slice(2, 4), ['favicon.svg', '(vector)']);
+});
+
+test('invalid text tables name the problem', () => {
+  const spec = (patch: object): textTable.TextTable => ({ label: 'x', columns: ['a', 'b'], rows: [['1', '2']], ...patch });
+  assert.throws(() => textTable.layout(spec({ colour: 'red' })), /unknown field "colour"/);
+  assert.throws(() => textTable.layout(spec({ columns: [] })), /columns: must list 1 to 8 headers/);
+  assert.throws(() => textTable.layout(spec({ columns: ['a', ' '] })), /columns\[1\]: must be a non-empty string/);
+  assert.throws(() => textTable.layout(spec({ rows: [['1']] })), /rows\[0\]: has 1 cells, the columns are 2/);
+  assert.throws(() => textTable.layout(spec({ rows: [['1', 2]] })), /rows\[0\]\[1\]: must be a string or a list of strings/);
+  assert.throws(() => textTable.layout(spec({ rows: [['1', []]] })), /a list needs at least one line/);
+  assert.throws(() => textTable.layout(spec({ rows: [['1', 'a\nb']] })), /control character/);
+  assert.throws(() => textTable.layout(spec({ widths: [1] })), /widths: must list one positive number per column \(2\)/);
+  assert.throws(() => textTable.layout(spec({ widths: [1, 0] })), /widths/);
+  assert.throws(() => textTable.layout(spec({ widths: [1, 100] })), /cannot hold a character/);
 });

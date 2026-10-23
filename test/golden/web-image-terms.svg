@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="mem-diagram" viewBox="0 0 700 921" style="--diagram-width:700" font-family="code-mono, hangul-sans, monospace" font-weight="700" role="img" aria-label="The image files a website serves, where each one shows up, and which of them this site has">
+  <rect x="16" y="16" width="668" height="39" style="fill:var(--diagram-area)"/>
+  <rect x="16" y="55" width="668" height="850" style="fill:var(--diagram-gap)"/>
+  <rect x="16" y="16" width="668" height="889" fill="none" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="16" y1="55" x2="684" y2="55" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="16" y1="174" x2="684" y2="174" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="16" y1="253" x2="684" y2="253" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="16" y1="332" x2="684" y2="332" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="16" y1="411" x2="684" y2="411" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="16" y1="510" x2="684" y2="510" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="16" y1="629" x2="684" y2="629" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="16" y1="708" x2="684" y2="708" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="16" y1="767" x2="684" y2="767" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="16" y1="826" x2="684" y2="826" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="167" y1="16" x2="167" y2="905" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="353" y1="16" x2="353" y2="905" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="469" y1="16" x2="469" y2="905" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <line x1="621" y1="16" x2="621" y2="905" style="stroke:var(--diagram-ink);stroke-width:var(--diagram-border)"/>
+  <text x="28" y="40.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">용어</text>
+  <text x="179" y="40.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">무엇인가</text>
+  <text x="365" y="40.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">어디에 보이나</text>
+  <text x="481" y="40.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">이 사이트 파일</text>
+  <text x="633" y="40.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">상태</text>
+  <text x="28" y="119.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">favicon</text>
+  <text x="179" y="109.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">사이트를 나타내는 작은</text>
+  <text x="179" y="129.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">아이콘</text>
+  <text x="365" y="99.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">브라우저 탭,</text>
+  <text x="365" y="119.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">북마크, 방문</text>
+  <text x="365" y="139.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">기록</text>
+  <text x="481" y="79.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">favicon.svg</text>
+  <text x="481" y="99.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">(벡터),</text>
+  <text x="481" y="119.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">favicon.ico</text>
+  <text x="481" y="139.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">(16~256px 7장</text>
+  <text x="481" y="159.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">묶음)</text>
+  <text x="633" y="109.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">다시</text>
+  <text x="633" y="129.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">그림</text>
+  <text x="28" y="208.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">apple-touch-</text>
+  <text x="28" y="228.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">icon</text>
+  <text x="179" y="198.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">iPhone·iPad에서 &quot;홈</text>
+  <text x="179" y="218.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">화면에 추가&quot;할 때 쓰는</text>
+  <text x="179" y="238.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">아이콘</text>
+  <text x="365" y="218.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">iOS 홈 화면</text>
+  <text x="481" y="198.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">apple-touch-</text>
+  <text x="481" y="218.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">icon.png</text>
+  <text x="481" y="238.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">180×180</text>
+  <text x="633" y="208.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">다시</text>
+  <text x="633" y="228.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">그림</text>
+  <text x="28" y="287.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">web app</text>
+  <text x="28" y="307.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">manifest</text>
+  <text x="179" y="287.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">사이트 이름, 색, 아이콘</text>
+  <text x="179" y="307.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">목록을 담은 JSON</text>
+  <text x="365" y="277.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">Android·</text>
+  <text x="365" y="297.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">데스크톱의</text>
+  <text x="365" y="317.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">&quot;앱 설치&quot;</text>
+  <text x="481" y="287.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">site.</text>
+  <text x="481" y="307.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">webmanifest</text>
+  <text x="633" y="297.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">갱신</text>
+  <text x="28" y="366.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">manifest icon</text>
+  <text x="28" y="386.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">(PWA icon)</text>
+  <text x="179" y="376.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">설치된 앱의 아이콘</text>
+  <text x="365" y="356.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">Android 홈</text>
+  <text x="365" y="376.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">화면, 설치 앱</text>
+  <text x="365" y="396.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">목록</text>
+  <text x="481" y="366.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">icon-192.png,</text>
+  <text x="481" y="386.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">icon-512.png</text>
+  <text x="633" y="366.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">다시</text>
+  <text x="633" y="386.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">그림</text>
+  <text x="28" y="465.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">maskable icon</text>
+  <text x="179" y="435.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">Android가 원이나 둥근</text>
+  <text x="179" y="455.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">사각형으로 잘라 써도</text>
+  <text x="179" y="475.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">되도록 안쪽 여백(safe</text>
+  <text x="179" y="495.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">zone)을 둔 아이콘</text>
+  <text x="365" y="455.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">Android 홈</text>
+  <text x="365" y="475.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">화면</text>
+  <text x="481" y="435.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">icon-maskable-</text>
+  <text x="481" y="455.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">192.png,</text>
+  <text x="481" y="475.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">icon-maskable-</text>
+  <text x="481" y="495.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">512.png</text>
+  <text x="633" y="455.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">192</text>
+  <text x="633" y="475.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">추가</text>
+  <text x="28" y="564.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">OG image (Open</text>
+  <text x="28" y="584.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">Graph)</text>
+  <text x="179" y="554.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">흔히 &quot;썸네일&quot;, &quot;링크</text>
+  <text x="179" y="574.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">미리보기 이미지&quot;라고</text>
+  <text x="179" y="594.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">부르는 그림</text>
+  <text x="365" y="534.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">카카오톡,</text>
+  <text x="365" y="554.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">Slack,</text>
+  <text x="365" y="574.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">Discord, X</text>
+  <text x="365" y="594.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">등에 링크를</text>
+  <text x="365" y="614.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">붙였을 때</text>
+  <text x="481" y="554.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">og-default.png</text>
+  <text x="481" y="574.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">2400×1260,</text>
+  <text x="481" y="594.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">글마다 og.png</text>
+  <text x="633" y="554.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">기본</text>
+  <text x="633" y="574.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">+</text>
+  <text x="633" y="594.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">글별</text>
+  <text x="28" y="663.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">Twitter/X card</text>
+  <text x="28" y="683.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">image</text>
+  <text x="179" y="653.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">X 전용 미리보기 설정.</text>
+  <text x="179" y="673.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">이 사이트는 OG</text>
+  <text x="179" y="693.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">image를 그대로 씀</text>
+  <text x="365" y="673.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">X</text>
+  <text x="481" y="673.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">OG image와 같음</text>
+  <text x="633" y="673.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">있음</text>
+  <text x="28" y="742.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">JSON-LD image</text>
+  <text x="179" y="732.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">검색엔진에 알려 주는</text>
+  <text x="179" y="752.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">글의 대표 이미지</text>
+  <text x="365" y="732.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">Google 검색</text>
+  <text x="365" y="752.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">결과</text>
+  <text x="481" y="732.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">글마다 자기</text>
+  <text x="481" y="752.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">og.png를 씀</text>
+  <text x="633" y="742.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">있음</text>
+  <text x="28" y="801.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">theme-color</text>
+  <text x="179" y="791.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">이미지가 아니라, 모바일</text>
+  <text x="179" y="811.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">브라우저 주소창의 색</text>
+  <text x="365" y="791.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">모바일</text>
+  <text x="365" y="811.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">브라우저 상단</text>
+  <text x="481" y="791.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">&lt;meta&gt;와</text>
+  <text x="481" y="811.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">manifest</text>
+  <text x="633" y="801.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">있음</text>
+  <text x="28" y="850.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">mask-icon,</text>
+  <text x="28" y="870.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">browserconfig.</text>
+  <text x="28" y="890.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">xml</text>
+  <text x="179" y="860.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">예전 Safari 고정 탭과</text>
+  <text x="179" y="880.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">구형 Windows 타일용</text>
+  <text x="365" y="870.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">구형 브라우저</text>
+  <text x="481" y="870.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">없음</text>
+  <text x="633" y="860.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">만들지</text>
+  <text x="633" y="880.75" font-size="15" text-anchor="start" style="fill:var(--diagram-ink)">않음</text>
+</svg>

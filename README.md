@@ -8,6 +8,7 @@ Diagrams as code for [vmfault.dev](https://vmfault.dev) posts and slide decks. E
 | [memory-table](forms/memory-table/) | JSON | struct layouts, packet headers, register bitfields |
 | [struct-chain](forms/struct-chain/) | JSON | intrusive lists: structures linked through an embedded member, and `container_of` |
 | [canvas](forms/canvas/) | JSON | free figures on coordinates: a structure and the memory it points into, bit fields shifted and masked, bitmap words, structures with field boxes |
+| [text-table](forms/text-table/) | JSON | terms, comparisons and checklists: short prose in rows and columns |
 | [mermaid-flowchart](forms/mermaid-flowchart/) | Mermaid | pipelines, decisions, state machines |
 | [mermaid-sequence](forms/mermaid-sequence/) | Mermaid | syscalls, handshakes, RPC |
 
@@ -15,7 +16,7 @@ Each folder holds `prompt.md` (how to write the source, for a person or a model)
 
 ## Form
 
-All six share the form of the memory-layout figure. The form, the stroke weights and the layout are the design and stay fixed.
+All seven share the form of the memory-layout figure. The form, the stroke weights and the layout are the design and stay fixed.
 
 - Strokes: ink lines 2 wide, box borders 1.6 wide, marker lines 2.4, radius-12 bends on arrows while boxes keep square corners, dashes 6 on 4, in the code-block frame.
 - Boxes: about 2.3 times as wide as tall, the longest label filling about 60 to 70 % of the width; opaque area and gap fills. A memory-layout row takes its height from the column width, and `h` scales it.
@@ -32,8 +33,8 @@ Colors are not part of the form. Each comes from a role variable of the active t
 |---|---|---|
 | frame | `--code-bg`, `--code-border` | `#f6f8fa`, `#d0d7de` |
 | strokes, labels, `accent` nodes | `--diagram-ink` | `#1a1a1a` |
-| regions, participants, nodes, untoned link cells | `--diagram-area` | `#b3e4cd` |
-| gaps, padding (memory-layout `"fill": "gap"`), `muted` nodes | `--diagram-gap` | `#eef0f3` |
+| regions, participants, nodes, untoned link cells, text-table headers | `--diagram-area` | `#b3e4cd` |
+| gaps, padding (memory-layout `"fill": "gap"`), `muted` nodes, text-table cells | `--diagram-gap` | `#eef0f3` |
 | tones (memory-layout `tone`, `title`, `spans`, `code`; struct-chain `tones`, `code`); red also for untoned markers, `alt` frames and `danger` nodes | `--diagram-red`, `--diagram-orange`, `--diagram-blue`, `--diagram-purple` | `#c42551`, `#fd7e14`, `#1971c2`, `#7950f2` |
 | struct-chain link cells of a toned `link`, memory-layout regions with a tone `fill` | `--diagram-red-wash`, `--diagram-orange-wash`, `--diagram-blue-wash`, `--diagram-purple-wash` | `#ffd8db`, `#fddbc8`, `#cfe6ff`, `#e1dfff` |
 | headers, padding labels, region and field notes, `⋮` | `--text-secondary` | `#4a4a4a` |
@@ -43,7 +44,7 @@ Colors are not part of the form. Each comes from a role variable of the active t
 
 ## Posts
 
-The blog mounts this repository as its `diagrams` submodule. A post writes the source in a fenced block (` ```memory-layout `, ` ```memory-table `, ` ```struct-chain `, ` ```canvas ` or ` ```mermaid `). The build draws the four JSON forms as SVG and fails on an invalid spec; the page draws Mermaid.
+The blog mounts this repository as its `diagrams` submodule. A post writes the source in a fenced block (` ```memory-layout `, ` ```memory-table `, ` ```struct-chain `, ` ```canvas `, ` ```text-table ` or ` ```mermaid `). The build draws the five JSON forms as SVG and fails on an invalid spec; the page draws Mermaid.
 
 ## Commands
 
