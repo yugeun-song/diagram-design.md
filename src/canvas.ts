@@ -55,7 +55,7 @@ const KEYS: Record<(typeof KINDS)[number], Set<string>> = {
 const CELL_KEYS = new Set(['w', 'h', 'label', 'id', 'fill', 'line', 'fields']);
 const FIELD_KEYS = new Set(['label', 'id', 'w', 'fill', 'line']);
 const SPEC_KEYS = new Set(['id', 'label', 'title', 'items']);
-const FILLS = new Set(['plain', 'area', 'gap', 'red', 'orange', 'blue', 'purple']);
+const FILLS = new Set(['plain', 'area', 'gap', 'red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'purple']);
 const STROKES = new Set(['solid', 'dashed', 'none']);
 const SIDES = new Set(['above', 'below', 'left', 'right']);
 

@@ -35,8 +35,8 @@ Colors are not part of the form. Each comes from a role variable of the active t
 | strokes, labels, `accent` nodes | `--diagram-ink` | `#1a1a1a` |
 | regions, participants, nodes, untoned link cells, text-table headers | `--diagram-area` | `#b3e4cd` |
 | gaps, padding (memory-layout `"fill": "gap"`), `muted` nodes, text-table cells | `--diagram-gap` | `#eef0f3` |
-| tones (memory-layout `tone`, `title`, `spans`, `code`; struct-chain `tones`, `code`); red also for untoned markers, `alt` frames and `danger` nodes | `--diagram-red`, `--diagram-orange`, `--diagram-blue`, `--diagram-purple` | `#c42551`, `#fd7e14`, `#1971c2`, `#7950f2` |
-| struct-chain link cells of a toned `link`, memory-layout regions with a tone `fill` | `--diagram-red-wash`, `--diagram-orange-wash`, `--diagram-blue-wash`, `--diagram-purple-wash` | `#ffd8db`, `#fddbc8`, `#cfe6ff`, `#e1dfff` |
+| tones (memory-layout `tone`, `title`, `spans`, `code`; struct-chain `tones`, `code`); red also for untoned markers, `alt` frames and `danger` nodes | `--diagram-red`, `--diagram-orange`, `--diagram-yellow`, `--diagram-green`, `--diagram-blue`, `--diagram-indigo`, `--diagram-purple` | `#c42551`, `#fd7e14`, `#7e6b03`, `#12b886`, `#1971c2`, `#4c6ef5`, `#7950f2` |
+| struct-chain link cells of a toned `link`, memory-layout regions with a tone `fill` | `--diagram-red-wash`, `--diagram-orange-wash`, `--diagram-yellow-wash`, `--diagram-green-wash`, `--diagram-blue-wash`, `--diagram-indigo-wash`, `--diagram-purple-wash` | `#ffd8d7`, `#fddbc8`, `#ebe4c2`, `#c8eddb`, `#cfe6ff`, `#d8e3ff`, `#e1dfff` |
 | headers, padding labels, region and field notes, `⋮` | `--text-secondary` | `#4a4a4a` |
 | Mermaid notes | `--box-warn-bg`, `--box-warn-border` | `#f4e0c2`, `#fd7e14` |
 

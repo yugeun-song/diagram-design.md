@@ -1,7 +1,7 @@
 import { checkText, textWidth } from './scene.ts';
 import type { Paint } from './tokens.ts';
 
-export type Tone = 'red' | 'orange' | 'blue' | 'purple';
+export type Tone = 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'indigo' | 'purple';
 export type Run = string | [string, Tone];
 export interface Piece { text: string; tone?: Tone }
 
@@ -9,14 +9,20 @@ export interface Piece { text: string; tone?: Tone }
 export const TONES: Record<Tone, Paint> = {
   red: 'diagram-red',
   orange: 'diagram-orange',
+  yellow: 'diagram-yellow',
+  green: 'diagram-green',
   blue: 'diagram-blue',
+  indigo: 'diagram-indigo',
   purple: 'diagram-purple',
 };
 
 export const WASHES: Record<Tone, Paint> = {
   red: 'diagram-red-wash',
   orange: 'diagram-orange-wash',
+  yellow: 'diagram-yellow-wash',
+  green: 'diagram-green-wash',
   blue: 'diagram-blue-wash',
+  indigo: 'diagram-indigo-wash',
   purple: 'diagram-purple-wash',
 };
 

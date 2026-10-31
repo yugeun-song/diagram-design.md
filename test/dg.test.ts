@@ -214,7 +214,7 @@ test('invalid specs name the problem', () => {
   assert.throws(() => structChain.layout(chain({ fields: [['a', 8], ['a', 8], ['list', 16]] })), /"a" is used twice/);
   assert.throws(() => structChain.layout(chain({ fields: [{ pad: 8 }, ['list', 16]], nodes: [{ name: 'a' }] }), structChain.PROFILES.slide), /too short for the offsetof dimension/);
   assert.throws(() => structChain.layout(chain({ tones: { edge: 'red' } })), /tones: unknown field "edge"/);
-  assert.throws(() => structChain.layout(chain({ tones: { walk: 'green' } })), /unknown tone "green"/);
+  assert.throws(() => structChain.layout(chain({ tones: { walk: 'teal' } })), /unknown tone "teal"/);
   assert.throws(() => structChain.layout(chain({ nodes: [...chainSpec.nodes, { name: 'users[3]' }] })), /4 structures need \d+ units, past 700/);
   assert.throws(() => structChain.layout(chain({ head: { name: 'h', next: 'x' } })), /head: unknown field "next"/);
 });
@@ -302,7 +302,7 @@ test('limits are checked before anything is drawn', () => {
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ gap: true, sub: 'b' }] }), /a gap draws no text/);
   const filled = toWeb(memoryLayout.layout({ label: 'x', regions: [{ word: 'a', fill: 'purple' }, { word: 'b', fill: 'gap' }, { word: 'c' }] }));
   assert.deepEqual([...filled.matchAll(/<rect [^>]*style="fill:var\(--([\w-]+)\)"/g)].map((m) => m[1]), ['diagram-purple-wash', 'diagram-gap', 'diagram-area']);
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a', fill: 'green' as 'gap' }] }), /fill: must be "area", "gap" or a tone/);
+  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a', fill: 'teal' as 'gap' }] }), /fill: must be "area", "gap" or a tone/);
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ gap: true, fill: 'area' }] }), /a gap takes the gap fill/);
 
   const noted = (n: number): memoryLayout.MemoryLayout => ({
