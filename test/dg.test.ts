@@ -195,6 +195,15 @@ test('strokes join without seams, notches or hairline gaps', () => {
   for (const scene of scenes) assert.deepEqual(lintJoins(scene), [], scene.label);
 });
 
+test('a toned memory-table field fills with its wash and folds only with its own tone', () => {
+  const g = memoryTable.grid({ label: 'tag', unit: 'bit', cols: 16, fields: [['EtherType', 16, 'purple'], ['VID', 12], ['DEI', 1, 'red'], ['PCP', 3]] });
+  const fills = memoryTable.layout(g).shapes.flatMap((s) => (s.kind === 'rect' ? [s.fill] : []));
+  assert.deepEqual(fills, ['diagram-purple-wash', 'diagram-area', 'diagram-red-wash', 'diagram-area']);
+  const tones = (fields: memoryTable.Field[]) => memoryTable.grid({ label: 'buf', unit: 'byte', fields }).rows.map((r) => r.cells[0].tone);
+  assert.deepEqual(tones([['buf', 48, 'blue'], ['buf', 48]]), ['blue', undefined, 'blue', undefined, undefined, undefined]);
+  assert.deepEqual(tones([['buf', 48, 'blue'], ['buf', 48, 'blue']]), ['blue', undefined, 'blue']);
+});
+
 test('invalid specs name the problem', () => {
   const spec = (patch: object): memoryLayout.MemoryLayout => ({
     label: 'x',
@@ -206,6 +215,7 @@ test('invalid specs name the problem', () => {
   assert.throws(() => memoryLayout.layout(spec({ colour: 'red' })), /unknown field "colour"/);
   assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'w', start: '0x20', h: 0.45 }, { value: '0x20', start: '0x10', to: 'a', h: 0.45 }] }), /needs 24; raise h/);
   assert.throws(() => memoryTable.grid({ label: 'x', unit: 'byte', fields: [['a', 3]] }), /add \{"pad": 5\}/);
+  assert.throws(() => memoryTable.grid({ label: 'x', unit: 'bit', cols: 4, fields: [['a', 4, 'teal' as 'red']] }), /unknown tone "teal"/);
 
   const chain = (patch: object): structChain.StructChain => ({ ...chainSpec, ...patch });
   assert.throws(() => structChain.layout(chain({ link: { field: 'node', cells: ['next'] } })), /"node" is not one of the fields/);

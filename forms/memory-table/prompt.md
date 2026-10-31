@@ -10,6 +10,7 @@ Write the layout below as one JSON object. The tool computes the rows, column sp
 - `unit`: `"byte"` or `"bit"`.
 - `fields`: in order from the lowest offset.
   - `["name", size]` is a field. Name a C field `name (type)`, as in `["count (int)", 4]`; the type is drawn as a note under the name. A bit field takes the name alone.
+  - `["name", size, tone]` fills the field with the tone's pale wash: `red`, `orange`, `yellow`, `green`, `blue`, `indigo` or `purple`. Without a tone a field takes the area fill.
   - `{"pad": n}` is padding. Pad the last row to its end.
   - `{"other": "text", "size": n}` is any other cell.
 - Optional: `cols` (units per row, default 8 bytes or 32 bits), `"order": "desc"` to number bits from the top, `base` (hex offset of the first row), `id`.

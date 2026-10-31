@@ -1,7 +1,8 @@
 import { checkText, FONT, round, textWidth, tighten, type ProfileName, type Scene, type Shape } from './scene.ts';
 import type { Paint } from './tokens.ts';
+import { checkTone, WASHES, type Tone } from './tone.ts';
 
-export type Field = [string, number] | { pad: number } | { other: string; size: number };
+export type Field = [string, number] | [string, number, Tone] | { pad: number } | { other: string; size: number };
 
 export interface MemoryTable {
   id?: string;
@@ -19,6 +20,7 @@ export interface Cell {
   text: string;
   span: number;
   kind: Kind;
+  tone?: Tone;
 }
 
 export interface Grid {
@@ -56,18 +58,19 @@ const FOLD = 4;
 // Identical whole rows are kept as one run with a count, so a huge field costs no more than a small one.
 interface Run { first: number; count: number; cells: Cell[] }
 
-function field(value: unknown, i: number): [string, number, Kind] {
+function field(value: unknown, i: number): [string, number, Kind, Tone | undefined] {
   const where = `fields[${i}]`;
   const keys = value && typeof value === 'object' && !Array.isArray(value) ? Object.keys(value).sort().join(',') : '';
-  let text: unknown, size: unknown, kind: Kind;
-  if (Array.isArray(value) && value.length === 2) [text, size, kind] = [value[0], value[1], 'field'];
+  let text: unknown, size: unknown, kind: Kind, tone: unknown;
+  if (Array.isArray(value) && (value.length === 2 || value.length === 3)) [text, size, kind, tone] = [value[0], value[1], 'field', value[2]];
   else if (keys === 'pad') [text, size, kind] = ['pad', (value as { pad: number }).pad, 'pad'];
   else if (keys === 'other,size') [text, size, kind] = [(value as { other: string }).other, (value as { size: number }).size, 'other'];
-  else throw new Error(`${where}: expected ["name", size], {"pad": n} or {"other": "text", "size": n}`);
+  else throw new Error(`${where}: expected ["name", size], ["name", size, tone], {"pad": n} or {"other": "text", "size": n}`);
   if (typeof text !== 'string' || !text.trim()) throw new Error(`${where}: the name must be a non-empty string`);
   if (!Number.isSafeInteger(size) || (size as number) < 1) throw new Error(`${where}: the size must be a positive integer below 2^53`);
   checkText(text, where);
-  return [text.trim(), size as number, kind];
+  checkTone(tone, `${where}[2]`);
+  return [text.trim(), size as number, kind, tone as Tone | undefined];
 }
 
 export function grid(spec: MemoryTable): Grid {
@@ -92,18 +95,19 @@ export function grid(spec: MemoryTable): Grid {
   const close = (count: number, list: Cell[]) => {
     const run = { first: rows, count, cells: desc ? list.reverse() : list };
     const last = runs.at(-1);
-    if (last && whole(last) && whole(run) && last.cells[0].text === run.cells[0].text && last.cells[0].kind === run.cells[0].kind) last.count += count;
+    if (last && whole(last) && whole(run) && last.cells[0].text === run.cells[0].text && last.cells[0].kind === run.cells[0].kind && last.cells[0].tone === run.cells[0].tone) last.count += count;
     else runs.push(run);
     rows += count;
   };
   spec.fields.forEach((value, i) => {
-    const [text, size, kind] = field(value, i);
+    const [text, size, kind, tone] = field(value, i);
+    const cell = (span: number): Cell => (tone ? { text, span, kind, tone } : { text, span, kind });
     if (size > Number.MAX_SAFE_INTEGER - total) throw new Error(`fields[${i}]: the sizes add up past 2^53`);
     total += size;
     let left = size;
     if (used > 0) {
       const span = Math.min(left, cols - used);
-      cells.push({ text, span, kind });
+      cells.push(cell(span));
       used += span;
       left -= span;
       if (used < cols) return;
@@ -112,9 +116,9 @@ export function grid(spec: MemoryTable): Grid {
       used = 0;
     }
     const count = Math.floor(left / cols);
-    if (count) close(count, [{ text, span: cols, kind }]);
+    if (count) close(count, [cell(cols)]);
     left -= count * cols;
-    if (left) [cells, used] = [[{ text, span: left, kind }], left];
+    if (left) [cells, used] = [[cell(left)], left];
   });
   if (used > 0) throw new Error(`fields end ${used} ${spec.unit}s into the last row; add {"pad": ${cols - used}}`);
   if (bytes && base + BigInt(rows) * BigInt(cols) > SPACE) throw new Error('fields: the table runs past the 64-bit address space');
@@ -231,7 +235,7 @@ export function layout(g: Grid, p: Profile = PROFILES.blog): Scene {
   let y = TOP;
   const tops = heights.map((h) => { const top = y; y = round(y + h); return top; });
   const bottom = y;
-  placed.forEach((cells, r) => cells.forEach((c) => shapes.push({ kind: 'rect', x: c.x, y: tops[r], w: c.w, h: heights[r], fill: c.cell.kind === 'pad' || c.cell.kind === 'gap' ? 'diagram-gap' : 'diagram-area' })));
+  placed.forEach((cells, r) => cells.forEach((c) => shapes.push({ kind: 'rect', x: c.x, y: tops[r], w: c.w, h: heights[r], fill: c.cell.kind === 'pad' || c.cell.kind === 'gap' ? 'diagram-gap' : c.cell.tone ? WASHES[c.cell.tone] : 'diagram-area' })));
   shapes.push({ kind: 'outline', x: left, y: TOP, w: round(right - left), h: round(bottom - TOP), stroke: 'diagram-ink' });
   tops.slice(1).forEach((top) => shapes.push({ kind: 'line', x1: left, y1: top, x2: right, y2: top, stroke: 'diagram-ink' }));
   placed.forEach((cells, r) => cells.slice(1).forEach((c) => shapes.push({ kind: 'line', x1: c.x, y1: tops[r], x2: c.x, y2: round(tops[r] + heights[r]), stroke: 'diagram-ink' })));
