@@ -9,6 +9,7 @@ import { lintJoins } from '../src/joins.ts';
 import {
   corners,
   lintStatic,
+  required,
   round,
   textWidth,
   toStatic,
@@ -21,21 +22,21 @@ import { loadTokens, readBlogTokens } from '../src/tokens.ts';
 
 const read = (path: string) =>
   readFileSync(new URL(path, import.meta.url), 'utf8');
-const layoutSpec: memoryLayout.MemoryLayout = JSON.parse(
+const layoutSpec = JSON.parse(
   read('../forms/memory-layout/example.json'),
-);
-const tableSpecs: memoryTable.MemoryTable[] = JSON.parse(
+) as memoryLayout.MemoryLayout;
+const tableSpecs = JSON.parse(
   read('../forms/memory-table/example.json'),
-);
-const chainSpec: structChain.StructChain = JSON.parse(
+) as memoryTable.MemoryTable[];
+const chainSpec = JSON.parse(
   read('../forms/struct-chain/example.json'),
-);
-const canvasSpecs: canvas.Canvas[] = JSON.parse(
+) as structChain.StructChain;
+const canvasSpecs = JSON.parse(
   read('../forms/canvas/example.json'),
-);
-const textSpec: textTable.TextTable = JSON.parse(
+) as canvas.Canvas[];
+const textSpec = JSON.parse(
   read('../forms/text-table/example.json'),
-);
+) as textTable.TextTable;
 const tokens = loadTokens();
 
 test('the memory layout example renders the reference svg', () => {
@@ -160,6 +161,7 @@ test('a pointer into a sized region lands in proportion', () => {
 });
 
 test('tones, spans, a title and code lines take theme roles', () => {
+  const teal: unknown = 'teal';
   const spec: memoryLayout.MemoryLayout = {
     label: 'a struct whose member a span names',
     title: [['type: struct s', 'orange'], ' (s[0])'],
@@ -243,7 +245,7 @@ test('tones, spans, a title and code lines take theme roles', () => {
     () =>
       memoryLayout.layout({
         ...spec,
-        code: [[['p', 'teal' as memoryLayout.Tone]]],
+        code: [[['p', teal as memoryLayout.Tone]]],
       }),
     /unknown tone "teal"/,
   );
@@ -255,10 +257,11 @@ test('tones, spans, a title and code lines take theme roles', () => {
       }),
     /colors the marker; add one/,
   );
+  const span = required(spec.spans?.[0], 'the span');
   const bracket = toWeb(
     memoryLayout.layout({
       ...spec,
-      spans: [{ ...spec.spans![0], shape: 'bracket' }],
+      spans: [{ ...span, shape: 'bracket' }],
     }),
   );
   assert.match(
@@ -269,14 +272,14 @@ test('tones, spans, a title and code lines take theme roles', () => {
     () =>
       memoryLayout.layout({
         ...spec,
-        spans: [{ ...spec.spans![0], shape: 'arc' as 'bracket' }],
+        spans: [{ ...span, shape: 'arc' as 'bracket' }],
       }),
     /must be "dimension" or "bracket"/,
   );
   const lines = toWeb(
     memoryLayout.layout({
       ...spec,
-      spans: [{ ...spec.spans![0], sub: ['struct s', '(s[0])'] }],
+      spans: [{ ...span, sub: ['struct s', '(s[0])'] }],
     }),
   );
   assert.match(lines, /style="fill:var\(--diagram-purple\)">struct s<\/text>/);
@@ -285,15 +288,14 @@ test('tones, spans, a title and code lines take theme roles', () => {
     /style="fill:var\(--diagram-purple\)">\(s\[0\]\)<\/text>/,
   );
   assert.throws(
-    () =>
-      memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: [] }] }),
+    () => memoryLayout.layout({ ...spec, spans: [{ ...span, sub: [] }] }),
     /must be a non-empty string or a list of them/,
   );
   assert.throws(
     () =>
       memoryLayout.layout({
         ...spec,
-        spans: [{ ...spec.spans![0], sub: 'x'.repeat(40) }],
+        spans: [{ ...span, sub: 'x'.repeat(40) }],
       }),
     /split it into lines/,
   );
@@ -325,7 +327,10 @@ test('a memory layout frames only what it draws', () => {
   assert.equal(spanned.x, bare.x);
   assert.ok(spanned.width > bare.width);
   const axisOf = (scene: ReturnType<typeof memoryLayout.layout>) =>
-    scene.shapes.find((s) => s.kind === 'text' && s.text === 'high')!;
+    required(
+      scene.shapes.find((s) => s.kind === 'text' && s.text === 'high'),
+      'the high label',
+    );
   const long = memoryLayout.layout({
     label: 'x',
     regions: [
@@ -1062,10 +1067,13 @@ test('limits are checked before anything is drawn', () => {
       s.kind === 'text' && s.text.startsWith('line') ? [s.y] : [],
     ),
   );
-  const code = tall.shapes.find((s) => s.kind === 'runs')!;
+  const code = required(
+    tall.shapes.find((s) => s.kind === 'runs'),
+    'the code lines',
+  );
   assert.ok(
-    code.kind === 'runs' && code.y >= lowest + 40 && tall.height >= code.y + 20,
-    `${lowest} ${code.kind === 'runs' && code.y} ${tall.height}`,
+    code.y >= lowest + 40 && tall.height >= code.y + 20,
+    `${lowest} ${code.y} ${tall.height}`,
   );
   assert.equal(
     memoryLayout.layout(noted(1)).height,

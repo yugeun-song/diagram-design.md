@@ -35,7 +35,7 @@ function trace(d: string): { points: Point[]; closed: boolean } {
     x = 0,
     y = 0;
   const push = (p: Point) => {
-    const last = points[points.length - 1];
+    const last = points.at(-1);
     if (!last || Math.hypot(last[0] - p[0], last[1] - p[1]) > 1e-6)
       points.push(p);
   };

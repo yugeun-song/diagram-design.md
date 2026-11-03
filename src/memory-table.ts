@@ -1,5 +1,7 @@
 import {
   checkText,
+  isList,
+  isRecord,
   FONT,
   round,
   textWidth,
@@ -101,7 +103,7 @@ function field(
       ? Object.keys(value).sort().join(',')
       : '';
   let text: unknown, size: unknown, kind: Kind, tone: unknown;
-  if (Array.isArray(value) && (value.length === 2 || value.length === 3))
+  if (isList(value) && (value.length === 2 || value.length === 3))
     [text, size, kind, tone] = [value[0], value[1], 'field', value[2]];
   else if (keys === 'pad')
     [text, size, kind] = ['pad', (value as { pad: number }).pad, 'pad'];
@@ -125,16 +127,17 @@ function field(
 }
 
 export function grid(spec: MemoryTable): Grid {
-  if (!spec || typeof spec !== 'object' || Array.isArray(spec))
-    throw new Error('the spec must be a JSON object');
+  if (!isRecord(spec)) throw new Error('the spec must be a JSON object');
   for (const key of Object.keys(spec))
     if (!KEYS.has(key)) throw new Error(`unknown field "${key}"`);
   if (typeof spec.label !== 'string' || !spec.label.trim())
     throw new Error('label: required');
   checkText(spec.label, 'label');
-  if (spec.unit !== 'byte' && spec.unit !== 'bit')
+  const unit: unknown = spec.unit,
+    order: unknown = spec.order;
+  if (unit !== 'byte' && unit !== 'bit')
     throw new Error('unit: must be "byte" or "bit"');
-  if (spec.order !== undefined && spec.order !== 'asc' && spec.order !== 'desc')
+  if (order !== undefined && order !== 'asc' && order !== 'desc')
     throw new Error('order: must be "asc" or "desc"');
   if (!Array.isArray(spec.fields) || !spec.fields.length)
     throw new Error('fields: required');
@@ -249,7 +252,7 @@ function decode(s: string): string {
       (match, dec?: string, hex?: string, entity?: string) => {
         if (entity)
           return Object.hasOwn(ENTITIES, entity) ? ENTITIES[entity] : match;
-        const code = dec ? Number(dec) : parseInt(hex!, 16);
+        const code = dec ? Number(dec) : parseInt(hex ?? '', 16);
         return code <= 0x10ffff ? String.fromCodePoint(code) : match;
       },
     )
@@ -259,9 +262,10 @@ function decode(s: string): string {
 export function parseTable(html: string): Grid {
   const open = /^<table\b([^>]*)>/i.exec(html)?.[1] ?? '';
   const named = /\baria-label=(?:"([^"]*)"|'([^']*)')/i.exec(open);
+  const double: string | undefined = named?.[1];
   const label = decode(
     named
-      ? (named[1] ?? named[2])
+      ? (double ?? named[2])
       : (/<caption\b[^>]*>([\s\S]*?)<\/caption>/i.exec(html)?.[1] ?? ''),
   );
   if (!label)
@@ -328,7 +332,7 @@ interface Placed {
 
 function place(cell: Cell, w: number, p: Profile): Placed {
   const stack = (text: string, bold: boolean, fill: Paint): Placed => {
-    const chars = [...text.replace(/\s+/g, '')];
+    const chars = Array.from(text.replace(/\s+/g, ''));
     const step = p.stack + 2;
     const top = -((chars.length - 1) * step) / 2 + p.stack * 0.35;
     return {
@@ -525,31 +529,27 @@ export function layout(g: Grid, p: Profile = PROFILES.blog): Scene {
     h: round(bottom - TOP),
     stroke: 'diagram-ink',
   });
-  tops
-    .slice(1)
-    .forEach((top) =>
+  tops.slice(1).forEach((top) =>
+    shapes.push({
+      kind: 'line',
+      x1: left,
+      y1: top,
+      x2: right,
+      y2: top,
+      stroke: 'diagram-ink',
+    }),
+  );
+  placed.forEach((cells, r) =>
+    cells.slice(1).forEach((c) =>
       shapes.push({
         kind: 'line',
-        x1: left,
-        y1: top,
-        x2: right,
-        y2: top,
+        x1: c.x,
+        y1: tops[r],
+        x2: c.x,
+        y2: round(tops[r] + heights[r]),
         stroke: 'diagram-ink',
       }),
-    );
-  placed.forEach((cells, r) =>
-    cells
-      .slice(1)
-      .forEach((c) =>
-        shapes.push({
-          kind: 'line',
-          x1: c.x,
-          y1: tops[r],
-          x2: c.x,
-          y2: round(tops[r] + heights[r]),
-          stroke: 'diagram-ink',
-        }),
-      ),
+    ),
   );
   if (offsets) {
     [...tops, bottom].forEach((at, i) => {

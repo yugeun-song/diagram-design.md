@@ -7,11 +7,14 @@ import {
 } from './arrow.ts';
 import {
   BORDER,
+  checkObject,
   checkText,
   CODE_SIZE,
   CODE_STEP,
   FONT,
+  isRecord,
   LINE_STEP,
+  required,
   round,
   STROKE,
   textWidth,
@@ -164,17 +167,19 @@ const pieces = (
 const notes = (span: Span): string[] =>
   span.sub === undefined ? [] : Array.isArray(span.sub) ? span.sub : [span.sub];
 
-function upper(spec: MemoryLayout, t: number): bigint | null {
+function upper(spec: MemoryLayout, t: number): bigint | undefined {
   const target = spec.regions[t];
   if (target.size !== undefined)
-    return BigInt(target.start!) + BigInt(target.size);
-  const above = spec.regions[t - 1];
-  return above?.start !== undefined ? BigInt(above.start) : null;
+    return (
+      BigInt(required(target.start, `${name(target, t)}.start`)) +
+      BigInt(target.size)
+    );
+  const above = t > 0 ? spec.regions[t - 1] : undefined;
+  return above?.start !== undefined ? BigInt(above.start) : undefined;
 }
 
 function validate(spec: MemoryLayout): void {
-  if (!spec || typeof spec !== 'object' || Array.isArray(spec))
-    throw new Error('the spec must be a JSON object');
+  if (!isRecord(spec)) throw new Error('the spec must be a JSON object');
   for (const key of Object.keys(spec))
     if (!SPEC_KEYS.has(key)) throw new Error(`unknown field "${key}"`);
   if (typeof spec.label !== 'string' || !spec.label.trim())
@@ -185,8 +190,7 @@ function validate(spec: MemoryLayout): void {
   const ids = new Set<string>();
   let previous: bigint | null = null;
   spec.regions.forEach((region, i) => {
-    if (!region || typeof region !== 'object' || Array.isArray(region))
-      throw new Error(`regions[${i}]: must be an object`);
+    checkObject(region, `regions[${i}]`);
     const where = name(region, i);
     for (const key of Object.keys(region))
       if (!KEYS.has(key)) throw new Error(`${where}: unknown field "${key}"`);
@@ -197,7 +201,8 @@ function validate(spec: MemoryLayout): void {
         throw new Error(`${where}.${key}: must be a non-empty string`);
       checkText(value, `${where}.${key}`);
     }
-    if (region.gap !== undefined && region.gap !== true)
+    const gap: unknown = region.gap;
+    if (gap !== undefined && gap !== true)
       throw new Error(`${where}.gap: must be true`);
     const kinds = [
       region.value !== undefined,
@@ -231,7 +236,7 @@ function validate(spec: MemoryLayout): void {
     )
       throw new Error(`${where}.h: must be a positive number`);
     for (const key of ['start', 'size'] as const) {
-      if (region[key] !== undefined && !HEX.test(region[key]!))
+      if (region[key] !== undefined && !HEX.test(region[key]))
         throw new Error(
           `${where}.${key}: "${region[key]}" is not a hex number such as 0x1000`,
         );
@@ -270,27 +275,28 @@ function validate(spec: MemoryLayout): void {
   });
   spec.regions.forEach((region, i) => {
     const where = name(region, i);
-    const above = spec.regions[i - 1];
+    const above = i > 0 ? spec.regions[i - 1] : undefined;
     if (
       region.size !== undefined &&
       above?.start !== undefined &&
-      BigInt(region.start!) + BigInt(region.size) > BigInt(above.start)
+      BigInt(required(region.start, `${where}.start`)) + BigInt(region.size) >
+        BigInt(above.start)
     )
       throw new Error(`${where}.size: runs into the region above`);
     if (region.to === undefined) return;
     const t = spec.regions.findIndex(
       (r) => r.id !== undefined && r.id === region.to,
     );
-    const target = spec.regions[t];
     if (t === -1)
       throw new Error(`${where}.to: "${region.to}" is not a region id`);
+    const target = spec.regions[t];
     if (target.start === undefined)
       throw new Error(`${where}.to: the target "${region.to}" has no start`);
-    const value = BigInt(region.value!),
+    const value = BigInt(required(region.value, `${where}.value`)),
       start = BigInt(target.start);
     if (value === start) return;
     const end = upper(spec, t);
-    if (end === null)
+    if (end === undefined)
       throw new Error(
         `${where}.value: lies above the start of "${region.to}"; give the target a size or the region above it a start`,
       );
@@ -312,8 +318,7 @@ function validate(spec: MemoryLayout): void {
     throw new Error('spans: must be a non-empty list');
   spec.spans.forEach((span, i) => {
     const where = `spans[${i}]`;
-    if (!span || typeof span !== 'object' || Array.isArray(span))
-      throw new Error(`${where}: must be an object`);
+    checkObject(span, where);
     for (const key of Object.keys(span))
       if (!SPAN_KEYS.has(key))
         throw new Error(`${where}: unknown field "${key}"`);
@@ -334,11 +339,8 @@ function validate(spec: MemoryLayout): void {
     }
     checkText(span.label, `${where}.label`);
     checkTone(span.tone, `${where}.tone`);
-    if (
-      span.shape !== undefined &&
-      span.shape !== 'dimension' &&
-      span.shape !== 'bracket'
-    )
+    const shape: unknown = span.shape;
+    if (shape !== undefined && shape !== 'dimension' && shape !== 'bracket')
       throw new Error(`${where}.shape: must be "dimension" or "bracket"`);
     const f = spec.regions.findIndex((r) => r.id === span.from),
       t = spec.regions.findIndex((r) => r.id === span.to);
@@ -458,9 +460,14 @@ export function layout(
     if (source.to === undefined) return;
     const t = spec.regions.findIndex((r) => r.id === source.to);
     const target = rows[t];
-    const value = BigInt(source.value!),
-      start = BigInt(target.region.start!);
-    const end = value === start ? null : upper(spec, t)!;
+    const value = BigInt(required(source.value, `${name(source, i)}.value`)),
+      start = BigInt(
+        required(target.region.start, `${name(target.region, t)}.start`),
+      );
+    const end =
+      value === start
+        ? null
+        : required(upper(spec, t), `the end of ${name(target.region, t)}`);
     const head =
       end === null
         ? target.bottom
@@ -678,7 +685,7 @@ export function layout(
       continue;
     }
     const lines = [
-      region.value ?? region.word!,
+      required(region.value ?? region.word, 'a region value or word'),
       ...(region.sub === undefined ? [] : [region.sub]),
     ];
     lines.forEach((body, j) =>

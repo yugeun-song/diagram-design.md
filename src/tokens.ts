@@ -50,13 +50,13 @@ export function readBlogTokens(blogDir: string): Tokens {
     .filter((name) => name.endsWith('.css'))
     .sort()) {
     const css = readFileSync(join(dir, file), 'utf8');
-    for (const [, selector, body] of css.matchAll(
-      /(:root|\[data-theme="[^"]+"\])\s*\{([^}]*)\}/g,
+    for (const match of css.matchAll(
+      /(?::root|\[data-theme="([^"]+)"\])\s*\{([^}]*)\}/g,
     )) {
+      const theme = match.at(1);
+      const body = match[2];
       const vars =
-        selector === ':root'
-          ? shared
-          : (declared[/"([^"]+)"/.exec(selector)![1]] ??= new Map());
+        theme === undefined ? shared : (declared[theme] ??= new Map());
       for (const m of body.matchAll(/--([\w-]+)\s*:\s*([^;]+);/g))
         vars.set(
           m[1],
@@ -110,7 +110,9 @@ export function readBlogTokens(blogDir: string): Tokens {
 }
 
 export function color(tokens: Tokens, theme: string, name: Paint): string {
-  const value = tokens.themes[theme]?.[name];
+  const value = Object.hasOwn(tokens.themes, theme)
+    ? tokens.themes[theme][name]
+    : undefined;
   if (!value) throw new Error(`unknown theme or token: ${theme} --${name}`);
   return value;
 }

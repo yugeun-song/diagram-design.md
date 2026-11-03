@@ -1,4 +1,4 @@
-import { checkText, textWidth } from './scene.ts';
+import { checkText, isList, textWidth } from './scene.ts';
 import type { Paint } from './tokens.ts';
 
 export type Tone =
@@ -41,7 +41,7 @@ export const paint = (tone: Tone | undefined, fallback: Paint): Paint =>
 export function checkTone(value: unknown, where: string): void {
   if (value !== undefined && !isTone(value))
     throw new Error(
-      `${where}: unknown tone "${String(value)}"; use ${Object.keys(TONES).join(', ')}`,
+      `${where}: unknown tone ${JSON.stringify(value)}; use ${Object.keys(TONES).join(', ')}`,
     );
 }
 
@@ -58,7 +58,7 @@ export function pieces(
     const [text, tone] =
       typeof run === 'string'
         ? [run, undefined]
-        : Array.isArray(run) && run.length === 2
+        : isList(run) && run.length === 2
           ? [run[0], run[1]]
           : [undefined, undefined];
     if (typeof text !== 'string' || !text)

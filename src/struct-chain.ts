@@ -4,6 +4,8 @@ import {
   CODE_SIZE,
   CODE_STEP,
   FONT,
+  isList,
+  isRecord,
   round,
   textWidth,
   tighten,
@@ -105,8 +107,11 @@ interface Row {
   kind: 'field' | 'pad' | 'link';
 }
 
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === 'object' && !Array.isArray(value);
+function bytes(value: unknown, where: string): number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1)
+    throw new Error(`${where}: the size must be a positive integer`);
+  return value;
+}
 
 function word(value: unknown, where: string): string {
   if (typeof value !== 'string' || !value.trim())
@@ -126,11 +131,11 @@ function only(
 }
 
 function parse(spec: StructChain): { rows: Row[]; at: number } {
-  if (!isObject(spec)) throw new Error('the spec must be a JSON object');
+  if (!isRecord(spec)) throw new Error('the spec must be a JSON object');
   for (const key of Object.keys(spec))
     if (!SPEC_KEYS.has(key)) throw new Error(`unknown field "${key}"`);
   word(spec.label, 'label');
-  if (!isObject(spec.link))
+  if (!isRecord(spec.link))
     throw new Error(
       'link: required, such as {"field": "list", "cells": ["next", "prev"]}',
     );
@@ -149,23 +154,21 @@ function parse(spec: StructChain): { rows: Row[]; at: number } {
   const rows = spec.fields.map((value: unknown, i): Row => {
     const where = `fields[${i}]`;
     let row: Row;
-    if (isObject(value) && Object.keys(value).join() === 'pad') {
-      row = { name: 'pad', size: value.pad as number, offset, kind: 'pad' };
-    } else if (Array.isArray(value) && value.length === 2) {
+    if (isRecord(value) && Object.keys(value).join() === 'pad') {
+      row = { name: 'pad', size: bytes(value.pad, where), offset, kind: 'pad' };
+    } else if (isList(value) && value.length === 2) {
       const name = word(value[0], `${where}[0]`);
       if (names.has(name)) throw new Error(`${where}: "${name}" is used twice`);
       names.add(name);
       row = {
         name,
-        size: value[1],
+        size: bytes(value[1], where),
         offset,
         kind: name === field ? 'link' : 'field',
       };
     } else {
       throw new Error(`${where}: expected ["name", size] or {"pad": n}`);
     }
-    if (!Number.isInteger(row.size) || row.size < 1)
-      throw new Error(`${where}: the size must be a positive integer`);
     offset += row.size;
     return row;
   });
@@ -176,11 +179,11 @@ function parse(spec: StructChain): { rows: Row[]; at: number } {
     throw new Error('nodes: required');
   spec.nodes.forEach((node: unknown, i) => {
     const where = `nodes[${i}]`;
-    if (!isObject(node)) throw new Error(`${where}: must be an object`);
+    if (!isRecord(node)) throw new Error(`${where}: must be an object`);
     only(node, ['name', 'values'], where);
     word(node.name, `${where}.name`);
     if (node.values === undefined) return;
-    if (!isObject(node.values))
+    if (!isRecord(node.values))
       throw new Error(`${where}.values: must map field names to values`);
     for (const [name, value] of Object.entries(node.values)) {
       if (!rows.some((row) => row.kind === 'field' && row.name === name))
@@ -191,14 +194,14 @@ function parse(spec: StructChain): { rows: Row[]; at: number } {
     }
   });
   if (spec.head !== undefined) {
-    if (!isObject(spec.head))
+    if (!isRecord(spec.head))
       throw new Error('head: must be {"name": "...", "sub": "..."}');
     only(spec.head, ['name', 'sub'], 'head');
     word(spec.head.name, 'head.name');
     if (spec.head.sub !== undefined) word(spec.head.sub, 'head.sub');
   }
   if (spec.tones !== undefined) {
-    if (!isObject(spec.tones))
+    if (!isRecord(spec.tones))
       throw new Error('tones: must map roles to tones');
     only(spec.tones, ROLES, 'tones');
     for (const role of ROLES) checkTone(spec.tones[role], `tones.${role}`);
@@ -433,7 +436,10 @@ export function layout(
     );
     rows.forEach((row, i) => {
       const middle = tops[i] + heights[i] / 2;
-      if (row.kind === 'link') return cellText(center);
+      if (row.kind === 'link') {
+        cellText(center);
+        return;
+      }
       if (row.kind === 'pad') {
         if (heights[i] >= 26)
           text(center, middle + 5, 'padding', SIZE, true, 'middle', ink);
@@ -443,8 +449,10 @@ export function layout(
         node.values && Object.hasOwn(node.values, row.name)
           ? node.values[row.name]
           : undefined;
-      if (value === undefined)
-        return text(center, middle + 5, row.name, SIZE, true, 'middle', ink);
+      if (value === undefined) {
+        text(center, middle + 5, row.name, SIZE, true, 'middle', ink);
+        return;
+      }
       text(center, middle - 5, row.name, SIZE, true, 'middle', ink);
       text(center, middle + 15, value, SIZE, true, 'middle', ink);
     });

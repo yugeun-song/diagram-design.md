@@ -1,8 +1,10 @@
 import {
   checkText,
   FONT,
+  isRecord,
   LABEL,
   LINE_STEP,
+  prefixSums,
   round,
   textWidth,
   tighten,
@@ -60,8 +62,7 @@ function cell(value: unknown, where: string): string[] {
 }
 
 function validate(spec: TextTable): string[][][] {
-  if (!spec || typeof spec !== 'object' || Array.isArray(spec))
-    throw new Error('the spec must be a JSON object');
+  if (!isRecord(spec)) throw new Error('the spec must be a JSON object');
   for (const key of Object.keys(spec))
     if (!KEYS.has(key)) throw new Error(`unknown field "${key}"`);
   if (typeof spec.label !== 'string' || !spec.label.trim())
@@ -129,7 +130,9 @@ function pack(pieces: string[], room: number): string[] {
 const breakWord = (word: string, room: number) =>
   pack(
     segments(word).flatMap((segment) =>
-      textWidth(segment, LABEL) > room ? pack([...segment], room) : [segment],
+      textWidth(segment, LABEL) > room
+        ? pack(Array.from(segment), room)
+        : [segment],
     ),
     room,
   );
@@ -144,7 +147,7 @@ function wrap(line: string, room: number): { lines: string[]; breaks: number } {
       if (current) out.push(current);
       const pieces = breakWord(word, room);
       out.push(...pieces.slice(0, -1));
-      current = pieces.at(-1)!;
+      current = pieces[pieces.length - 1];
       breaks += pieces.length - 1;
       continue;
     }
@@ -278,10 +281,7 @@ export function layout(spec: TextTable, p: Profile = PROFILES.blog): Scene {
     throw new Error(
       `a column ${Math.min(...widths)} units wide cannot hold a character; widen it or use fewer columns`,
     );
-  const xs = widths.reduce<number[]>(
-    (acc, w) => [...acc, acc.at(-1)! + w],
-    [MARGIN],
-  );
+  const xs = prefixSums(MARGIN, widths);
   const lines = table.map((row) =>
     row.map((value, c) =>
       value.flatMap((line) => (line ? wrap(line, room[c]).lines : [])),
@@ -293,13 +293,10 @@ export function layout(spec: TextTable, p: Profile = PROFILES.blog): Scene {
       LABEL +
       2 * PAD_Y,
   );
-  const tops = heights.reduce<number[]>(
-    (acc, h) => [...acc, acc.at(-1)! + h],
-    [TOP],
-  );
+  const tops = prefixSums(TOP, heights);
   const left = xs[0],
-    right = xs.at(-1)!,
-    bottom = tops.at(-1)!;
+    right = xs[xs.length - 1],
+    bottom = tops[tops.length - 1];
   const shapes: Shape[] = [
     {
       kind: 'rect',

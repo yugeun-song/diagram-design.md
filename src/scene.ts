@@ -101,8 +101,38 @@ const ADVANCE = 0.6,
 const HANGUL = /([ᄀ-ᇿ㄰-㆏가-힣]+)/;
 const HANGUL_CHAR = /[ᄀ-ᇿ㄰-㆏가-힣]/;
 
+// Specs arrive as parsed JSON, so checks read them as unknown before trusting their types.
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+export const isList = (value: unknown): value is readonly unknown[] =>
+  Array.isArray(value);
+
+/** Checks without narrowing, so a value that already has a declared type keeps its fields. */
+export function checkObject(value: unknown, where: string): void {
+  if (!isRecord(value)) throw new Error(`${where}: must be an object`);
+}
+
+/** Running totals: start, then start plus each size in turn. A loop, since spreading in reduce is quadratic. */
+export function prefixSums(start: number, sizes: readonly number[]): number[] {
+  const out = [start];
+  for (const size of sizes) out.push(out[out.length - 1] + size);
+  return out;
+}
+
+/** The value, or an error naming what is missing where a checked spec promised it. */
+export function required<T>(value: T | undefined, what: string): T {
+  if (value === undefined) throw new Error(`${what} is missing`);
+  return value;
+}
+
+const isControl = (char: string) => {
+  const code = char.codePointAt(0) ?? 0;
+  return code < 0x20 || (code >= 0x7f && code <= 0x9f);
+};
+
 export function checkText(text: string, where: string): void {
-  if (/[\u0000-\u001f\u007f-\u009f]/.test(text))
+  if (Array.from(text).some(isControl))
     throw new Error(`${where}: contains a control character or a line break`);
   if (/[\ufffe\uffff]|\p{Cs}/u.test(text))
     throw new Error(
@@ -200,7 +230,8 @@ function cornerPath(
   );
 }
 
-const rounded = (s: { corners?: Corners }) => !!s.corners?.some(Boolean);
+const roundedCorners = (s: { corners?: Corners }) =>
+  s.corners?.some(Boolean) ? s.corners : undefined;
 
 const space = (s: string) =>
   / {2}|^ | $/.test(s) ? ' xml:space="preserve"' : '';
@@ -225,10 +256,12 @@ export const weightOf = (weight: Weight): number =>
 export function toWeb(scene: Scene): string {
   const body = scene.shapes.map((s) => {
     switch (s.kind) {
-      case 'rect':
-        return rounded(s)
-          ? `<path d="${cornerPath(s.x, s.y, s.w, s.h, s.corners!)}" ${fill(s.fill)}/>`
+      case 'rect': {
+        const corners = roundedCorners(s);
+        return corners
+          ? `<path d="${cornerPath(s.x, s.y, s.w, s.h, corners)}" ${fill(s.fill)}/>`
           : `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" ${fill(s.fill)}/>`;
+      }
       case 'outline':
         return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}"${s.rounded ? ` rx="${CORNER}"` : ''} fill="none"${dash(s)} ${stroke(s.stroke, 'border')}/>`;
       case 'line':
@@ -276,13 +309,15 @@ export function toStatic(
     );
   for (const s of scene.shapes) {
     switch (s.kind) {
-      case 'rect':
+      case 'rect': {
+        const corners = roundedCorners(s);
         out.push(
-          rounded(s)
-            ? `<path d="${cornerPath(s.x, s.y, s.w, s.h, s.corners!)}" fill="${paint(s.fill)}"/>`
+          corners
+            ? `<path d="${cornerPath(s.x, s.y, s.w, s.h, corners)}" fill="${paint(s.fill)}"/>`
             : `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="${paint(s.fill)}"/>`,
         );
         break;
+      }
       case 'outline':
         out.push(
           `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}"${s.rounded ? ` rx="${CORNER}"` : ''} fill="none" stroke="${paint(s.stroke)}" stroke-width="${width('border')}"${dash(s)}/>`,

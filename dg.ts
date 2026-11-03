@@ -9,6 +9,7 @@ import * as structChain from './src/struct-chain.ts';
 import * as textTable from './src/text-table.ts';
 import { compose, staticPNGs } from './src/png.ts';
 import {
+  isRecord,
   lintStatic,
   toStatic,
   toWeb,
@@ -76,28 +77,26 @@ function load(file: string): Item[] {
   } catch (error) {
     throw new Error(`${file}: ${messageOf(error)}`, { cause: error });
   }
-  const specs = (Array.isArray(parsed) ? parsed : [parsed]) as Spec[];
-  const items: Item[] = specs.map((spec, i) => ({
-    id: spec?.id ?? (specs.length > 1 ? `${name}-${i + 1}` : name),
-    spec,
-  }));
+  const specs: unknown[] = Array.isArray(parsed) ? parsed : [parsed];
   const seen = new Set<string>();
-  for (const item of items) {
-    if (typeof item.id !== 'string' || !ID.test(item.id))
+  return specs.map((spec, i) => {
+    const named = isRecord(spec) ? spec.id : undefined;
+    const id = named ?? (specs.length > 1 ? `${name}-${i + 1}` : name);
+    if (typeof id !== 'string' || !ID.test(id))
       throw new Error(
-        `${file}: id "${item.id}" must be kebab-case, such as frame-chain`,
+        `${file}: id ${JSON.stringify(id)} must be kebab-case, such as frame-chain`,
       );
-    if (seen.has(item.id))
-      throw new Error(`${file}: id "${item.id}" is used twice`);
-    seen.add(item.id);
-  }
-  return items;
+    if (seen.has(id)) throw new Error(`${file}: id "${id}" is used twice`);
+    seen.add(id);
+    // Each form's layout checks its spec field by field.
+    return { id, spec: spec as Spec };
+  });
 }
 
-const isLayout = (spec: Spec): spec is memoryLayout.MemoryLayout =>
-  !!spec && typeof spec === 'object' && 'regions' in spec;
-const isChain = (spec: Spec): spec is structChain.StructChain =>
-  !!spec && typeof spec === 'object' && 'nodes' in spec;
+const isLayout = (spec: unknown): spec is memoryLayout.MemoryLayout =>
+  isRecord(spec) && 'regions' in spec;
+const isChain = (spec: unknown): spec is structChain.StructChain =>
+  isRecord(spec) && 'nodes' in spec;
 
 const isProfile = (value: string): value is ProfileName =>
   Object.hasOwn(memoryLayout.PROFILES, value);
@@ -112,7 +111,7 @@ function scene(spec: Spec, profile: ProfileName): Scene {
   if (isChain(spec))
     return structChain.layout(spec, structChain.PROFILES[profile]);
   return memoryTable.layout(
-    memoryTable.grid(spec as memoryTable.MemoryTable),
+    memoryTable.grid(spec),
     memoryTable.PROFILES[profile],
   );
 }
@@ -152,7 +151,7 @@ function fit(s: Scene): { scale: number; problems: string[] } {
 async function slide(file: string): Promise<void> {
   const tokens = loadTokens();
   const names = themes(tokens, values.theme ?? 'clean-light,spaceduck');
-  const out = resolve(values.out!);
+  const out = resolve(values.out);
   let failed = false;
   for (const item of load(file)) {
     const s = scene(item.spec, 'slide');
@@ -171,7 +170,7 @@ async function slide(file: string): Promise<void> {
       const lint = lintStatic(svg);
       if (lint.length) throw new Error(`${item.id}: ${lint.join(', ')}`);
     }
-    const pngs = await staticPNGs(svgs, values.blog!, tokens);
+    const pngs = await staticPNGs(svgs, values.blog, tokens);
     mkdirSync(out, { recursive: true });
     names.forEach((theme, i) => {
       writeFileSync(join(out, `${item.id}.${theme}.svg`), svgs[i]);
@@ -195,7 +194,7 @@ async function mockup(dir: string): Promise<void> {
     columns.push(
       await staticPNGs(
         items.map((item) => toStatic(scene(item.spec, 'blog'), tokens, theme)),
-        values.blog!,
+        values.blog,
         tokens,
       ),
     );
@@ -238,7 +237,7 @@ function check(files: string[]): void {
 }
 
 function tokensCommand(): void {
-  const fresh = readBlogTokens(values.blog!);
+  const fresh = readBlogTokens(values.blog);
   const text = JSON.stringify(fresh, null, 2) + '\n';
   if (values.check) {
     const current = existsSync(TOKENS_FILE)

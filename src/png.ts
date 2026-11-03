@@ -41,7 +41,10 @@ function serve(
         res.end(pages[path]);
         return;
       }
-      if (base === null) return reply(res, 404);
+      if (base === null) {
+        reply(res, 404);
+        return;
+      }
       const file = normalize(
         join(base, path.endsWith('/') ? path + 'index.html' : path),
       );
@@ -49,8 +52,10 @@ function serve(
         !file.startsWith(base + sep) ||
         !existsSync(file) ||
         !statSync(file).isFile()
-      )
-        return reply(res, 404);
+      ) {
+        reply(res, 404);
+        return;
+      }
       res.writeHead(200, {
         'content-type': TYPES[extname(file)] ?? 'application/octet-stream',
       });

@@ -10,10 +10,15 @@ import {
   type Toward,
 } from './arrow.ts';
 import {
+  checkObject,
   checkText,
   FONT,
+  isList,
+  isRecord,
   LABEL,
   LINE_STEP,
+  prefixSums,
+  required,
   round,
   textWidth,
   tighten,
@@ -209,7 +214,11 @@ const FILLS = new Set([
 const STROKES = new Set(['solid', 'dashed', 'none']);
 const SIDES = new Set(['above', 'below', 'left', 'right']);
 
-const kindOf = (item: Item) => KINDS.find((kind) => Object.hasOwn(item, kind))!;
+const kindOf = (item: Item) =>
+  required(
+    KINDS.find((kind) => Object.hasOwn(item, kind)),
+    'the item kind',
+  );
 const nameOf = (item: Item, i: number) => {
   const kind = kindOf(item);
   const id =
@@ -254,8 +263,7 @@ function choice(value: unknown, allowed: Set<string>, where: string): void {
 }
 
 function keys(value: unknown, allowed: Set<string>, where: string): void {
-  if (!value || typeof value !== 'object' || Array.isArray(value))
-    throw new Error(`${where}: must be an object`);
+  if (!isRecord(value)) throw new Error(`${where}: must be an object`);
   for (const key of Object.keys(value))
     if (!allowed.has(key)) throw new Error(`${where}: unknown field "${key}"`);
 }
@@ -279,8 +287,7 @@ function point(value: unknown, where: string): void {
 }
 
 function validate(spec: Canvas): void {
-  if (!spec || typeof spec !== 'object' || Array.isArray(spec))
-    throw new Error('the spec must be a JSON object');
+  if (!isRecord(spec)) throw new Error('the spec must be a JSON object');
   for (const key of Object.keys(spec))
     if (!SPEC_KEYS.has(key)) throw new Error(`unknown field "${key}"`);
   if (typeof spec.label !== 'string' || !spec.label.trim())
@@ -322,8 +329,7 @@ function validate(spec: Canvas): void {
   };
   spec.items.forEach((item, i) => {
     const where = `items[${i}]`;
-    if (!item || typeof item !== 'object' || Array.isArray(item))
-      throw new Error(`${where}: must be an object`);
+    checkObject(item, where);
     const kinds = KINDS.filter((kind) => Object.hasOwn(item, kind));
     if (kinds.length !== 1)
       throw new Error(`${where}: needs exactly one of ${KINDS.join(', ')}`);
@@ -441,9 +447,10 @@ function validate(spec: Canvas): void {
       }
     } else {
       const dim = item as Dimension;
-      if (!Array.isArray(dim.dimension) || dim.dimension.length !== 2)
+      const ends: unknown = dim.dimension;
+      if (!isList(ends) || ends.length !== 2)
         throw new Error(`${here}.dimension: needs exactly 2 points`);
-      dim.dimension.forEach((p, k) => point(p, `${here}.dimension[${k}]`));
+      ends.forEach((p, k) => point(p, `${here}.dimension[${k}]`));
       label(dim.label, `${here}.label`);
       choice(dim.side, SIDES, `${here}.side`);
       checkTone(dim.tone, `${here}.tone`);
@@ -669,32 +676,30 @@ export function layout(spec: Canvas, profile: Profile = PROFILES.blog): Scene {
       area(r, item.fill);
       outline(r, item.line);
     }
-    if (item.fields) {
+    const { fields } = item;
+    if (fields) {
       const title =
         item.title ?? (typeof item.label === 'string' ? item.label : undefined);
       if (title !== undefined) {
         fitLines([title], { ...r, h: TITLE_BASE + PAD_Y }, `${where}.title`);
         write(r.x + r.w / 2, r.y + TITLE_BASE, title, LABEL, 'middle', ink);
       }
-      fieldRects(
-        r,
-        title !== undefined,
-        item.fields,
-        `${where}.fields`,
-      ).forEach((f, k) => {
-        const field = item.fields![k];
-        if (field.id) rects.set(field.id, f);
-        area(f, field.fill);
-        outline(f, field.line);
-        block(
-          f.x + f.w / 2,
-          f.y + f.h / 2,
-          [field.label],
-          LABEL,
-          'middle',
-          ink,
-        );
-      });
+      fieldRects(r, title !== undefined, fields, `${where}.fields`).forEach(
+        (f, k) => {
+          const field = fields[k];
+          if (field.id) rects.set(field.id, f);
+          area(f, field.fill);
+          outline(f, field.line);
+          block(
+            f.x + f.w / 2,
+            f.y + f.h / 2,
+            [field.label],
+            LABEL,
+            'middle',
+            ink,
+          );
+        },
+      );
       return;
     }
     const lines = linesOf(item.label);
@@ -721,31 +726,29 @@ export function layout(spec: Canvas, profile: Profile = PROFILES.blog): Scene {
     if (!dashed.some(Boolean) || dashed.every(Boolean)) {
       outline(r, dashed[0] ? 'dashed' : 'solid');
       const dash = dashed[0] ? { dash: true } : {};
-      cuts
-        .slice(1, -1)
-        .forEach((c) =>
-          strokes.push(
-            vertical
-              ? {
-                  kind: 'line',
-                  x1: round(r.x),
-                  y1: round(c),
-                  x2: round(r.x + r.w),
-                  y2: round(c),
-                  stroke: ink,
-                  ...dash,
-                }
-              : {
-                  kind: 'line',
-                  x1: round(c),
-                  y1: round(r.y),
-                  x2: round(c),
-                  y2: round(r.y + r.h),
-                  stroke: ink,
-                  ...dash,
-                },
-          ),
-        );
+      cuts.slice(1, -1).forEach((c) =>
+        strokes.push(
+          vertical
+            ? {
+                kind: 'line',
+                x1: round(r.x),
+                y1: round(c),
+                x2: round(r.x + r.w),
+                y2: round(c),
+                stroke: ink,
+                ...dash,
+              }
+            : {
+                kind: 'line',
+                x1: round(c),
+                y1: round(r.y),
+                x2: round(c),
+                y2: round(r.y + r.h),
+                stroke: ink,
+                ...dash,
+              },
+        ),
+      );
       return;
     }
     const segments: Array<{ from: XY; to: XY; dash: boolean }> = [];
@@ -874,21 +877,21 @@ export function layout(spec: Canvas, profile: Profile = PROFILES.blog): Scene {
       placed.push(() => boxed(r, box, where));
     } else if (kind === 'row') {
       const row = item as Row;
-      const xs = row.cells.reduce(
-        (acc, cell) => [...acc, acc[acc.length - 1] + cell.w!],
-        [row.x],
+      const ws = row.cells.map((cell, k) =>
+        required(cell.w, `${where}.cells[${k}].w`),
       );
+      const xs = prefixSums(row.x, ws);
       const r = { x: row.x, y: row.y, w: xs[xs.length - 1] - row.x, h: row.h };
       rects.set(row.row, r);
       rows.set(row.row, { xs, y: row.y, h: row.h });
       row.cells.forEach(
         (cell, k) =>
           cell.id &&
-          rects.set(cell.id, { x: xs[k], y: row.y, w: cell.w!, h: row.h }),
+          rects.set(cell.id, { x: xs[k], y: row.y, w: ws[k], h: row.h }),
       );
       placed.push(() => {
         row.cells.forEach((cell, k) => {
-          const c = { x: xs[k], y: row.y, w: cell.w!, h: row.h };
+          const c = { x: xs[k], y: row.y, w: ws[k], h: row.h };
           area(c, cell.fill);
           if (cell.fields) boxed(c, cell, `${where}.cells[${k}]`, false);
           else {
@@ -906,10 +909,10 @@ export function layout(spec: Canvas, profile: Profile = PROFILES.blog): Scene {
       });
     } else if (kind === 'column') {
       const column = item as Column;
-      const ys = column.cells.reduce(
-        (acc, cell) => [...acc, acc[acc.length - 1] + cell.h!],
-        [column.y],
+      const hs = column.cells.map((cell, k) =>
+        required(cell.h, `${where}.cells[${k}].h`),
       );
+      const ys = prefixSums(column.y, hs);
       const r = {
         x: column.x,
         y: column.y,
@@ -925,12 +928,12 @@ export function layout(spec: Canvas, profile: Profile = PROFILES.blog): Scene {
             x: column.x,
             y: ys[k],
             w: column.w,
-            h: cell.h!,
+            h: hs[k],
           }),
       );
       placed.push(() => {
         column.cells.forEach((cell, k) => {
-          const c = { x: column.x, y: ys[k], w: column.w, h: cell.h! };
+          const c = { x: column.x, y: ys[k], w: column.w, h: hs[k] };
           area(c, cell.fill);
           if (cell.fields) boxed(c, cell, `${where}.cells[${k}]`, false);
           else {
@@ -994,7 +997,9 @@ export function layout(spec: Canvas, profile: Profile = PROFILES.blog): Scene {
       throw new Error(
         `${where}: "${ref}" is not a reference such as "box.right", "box.top@0.25", "row|2.bottom" or "column|1.left"`,
       );
-    const [, id, k, side, t] = m;
+    const [, id, , side] = m;
+    const k = m.at(2),
+      t = m.at(4);
     const f = t === undefined ? 0.5 : Number(t);
     if (!(f >= 0 && f <= 1))
       throw new Error(
