@@ -67,4 +67,4 @@ Node 26 runs `dg.ts` as is; only the checks under Test need `npm install`. A JSO
 
 ## Test
 
-`npm test` runs the tests (the `tokens.json` drift test only with the blog checked out next to this repo), `npm run typecheck` checks `dg.ts`, `src/` and `test/` in strict mode, and `npm run lint` runs ESLint and Prettier; `npm run format` applies them. The blog's `npm run typecheck` covers `src/` too.
+`npm test` runs the tests (the `tokens.json` drift test only with the blog checked out next to this repo), `npm run typecheck` checks `dg.ts`, `src/` and `test/` in strict mode, and `npm run lint` runs ESLint and Prettier; `npm run format` applies them. The blog's `npm run typecheck` covers `src/` too. `.github/workflows/test.yml`, run by hand, repeats these checks on Linux, Windows and macOS and starts the headless browser on each.

@@ -1,0 +1,40 @@
+name: Test on Linux, Windows and macOS
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: node dg.ts check forms/*/example.json
+      - run: node dg.ts render forms/canvas/example.json --flavor static --theme spaceduck > canvas.svg
+      # The headless browser that slide and mockup draw with, found where each system installs it.
+      - run: >-
+          node --input-type=module -e "const { Chrome } = await import('./src/chrome.ts');
+          const chrome = new Chrome();
+          try { const page = await chrome.open('data:text/html,<p>ok</p>', 400);
+          const text = await page.eval('return document.body.textContent');
+          if (text !== 'ok') throw new Error('page read ' + text); console.log('chrome ok'); }
+          finally { await chrome.close(); }"
