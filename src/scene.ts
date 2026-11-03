@@ -147,6 +147,26 @@ export const esc = (s: string) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
+const ENTITIES: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: '\u00a0',
+};
+
+/** Decodes numeric references and the named ones HTML text commonly holds; any other stays as written. */
+export const decodeEntities = (s: string) =>
+  s.replace(
+    /&(?:#(\d{1,7})|#x([0-9a-f]{1,6})|([a-z]+));/gi,
+    (match, dec?: string, hex?: string, name?: string) => {
+      if (name) return Object.hasOwn(ENTITIES, name) ? ENTITIES[name] : match;
+      const code = dec ? Number(dec) : parseInt(hex ?? '', 16);
+      return code <= 0x10ffff ? String.fromCodePoint(code) : match;
+    },
+  );
+
 export const round = (n: number) => Math.round(n * 100) / 100;
 
 function pathXs(d: string): number[] {

@@ -9,6 +9,7 @@ import * as memoryTable from '../src/memory-table.ts';
 import { lintJoins } from '../src/joins.ts';
 import {
   corners,
+  decodeEntities,
   isList,
   lintStatic,
   required,
@@ -122,6 +123,15 @@ test('the memory table examples render the reference svg, and a raw table gives 
     );
     assert.deepEqual(parsed, g);
   }
+});
+
+test('entity references decode once, and unknown or out-of-range ones stay as written', () => {
+  assert.equal(
+    decodeEntities(
+      '&lt;a&gt; &#x26; &#38; &amp;amp; &bogus; &#x110000; &nbsp;',
+    ),
+    '<a> & & &amp; &bogus; &#x110000; \u00a0',
+  );
 });
 
 test('static svgs use presentation attributes only', () => {

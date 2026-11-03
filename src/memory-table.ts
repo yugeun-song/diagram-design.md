@@ -1,8 +1,9 @@
 import {
   checkText,
+  decodeEntities,
+  FONT,
   isList,
   isRecord,
-  FONT,
   round,
   textWidth,
   tighten,
@@ -235,29 +236,7 @@ export function grid(spec: MemoryTable): Grid {
   };
 }
 
-const ENTITIES: Record<string, string> = {
-  amp: '&',
-  lt: '<',
-  gt: '>',
-  quot: '"',
-  apos: "'",
-  nbsp: '\u00a0',
-};
-
-function decode(s: string): string {
-  return s
-    .replace(/<[^>]*>/g, '')
-    .replace(
-      /&(?:#(\d{1,7})|#x([0-9a-f]{1,6})|([a-z]+));/gi,
-      (match, dec?: string, hex?: string, entity?: string) => {
-        if (entity)
-          return Object.hasOwn(ENTITIES, entity) ? ENTITIES[entity] : match;
-        const code = dec ? Number(dec) : parseInt(hex ?? '', 16);
-        return code <= 0x10ffff ? String.fromCodePoint(code) : match;
-      },
-    )
-    .trim();
-}
+const decode = (s: string) => decodeEntities(s.replace(/<[^>]*>/g, '')).trim();
 
 export function parseTable(html: string): Grid {
   const open = /^<table\b([^>]*)>/i.exec(html)?.[1] ?? '';
