@@ -14,7 +14,7 @@ Each folder holds `prompt.md` (how to write the source, for a person or a model)
 
 ## Form
 
-All seven share the form of the memory-layout figure. The form, the stroke weights and the layout are the design and stay fixed.
+All five share the form of the memory-layout figure. The form, the stroke weights and the layout are the design and stay fixed.
 
 - Strokes: ink lines 2 wide, box borders 1.6 wide, marker lines 2.4, radius-12 bends on arrows while boxes keep square corners, dashes 6 on 4, in the code-block frame.
 - Boxes: about 2.3 times as wide as tall, the longest label filling about 60 to 70 % of the width; opaque area and gap fills. A memory-layout row takes its height from the column width, and `h` scales it.
