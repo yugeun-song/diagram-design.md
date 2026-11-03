@@ -1,6 +1,34 @@
-import { arrowhead, dimension, DIMENSION_MIN, shaftEnd, triangle } from './arrow.ts';
-import { BORDER, checkText, CODE_SIZE, CODE_STEP, FONT, LINE_STEP, round, STROKE, textWidth, tighten, type ProfileName, type Scene, type Shape } from './scene.ts';
-import { checkTone, paint, pieces as tonePieces, WASHES, type Piece, type Run, type Tone } from './tone.ts';
+import {
+  arrowhead,
+  dimension,
+  DIMENSION_MIN,
+  shaftEnd,
+  triangle,
+} from './arrow.ts';
+import {
+  BORDER,
+  checkText,
+  CODE_SIZE,
+  CODE_STEP,
+  FONT,
+  LINE_STEP,
+  round,
+  STROKE,
+  textWidth,
+  tighten,
+  type ProfileName,
+  type Scene,
+  type Shape,
+} from './scene.ts';
+import {
+  checkTone,
+  paint,
+  pieces as tonePieces,
+  WASHES,
+  type Piece,
+  type Run,
+  type Tone,
+} from './tone.ts';
 import type { Paint } from './tokens.ts';
 
 export type { Run, Tone } from './tone.ts';
@@ -49,147 +77,344 @@ export interface Profile {
 
 export const PROFILES: Record<ProfileName, Profile> = {
   blog: { value: 1, word: 1, gap: 0.6, wordSize: 15, subSize: 12, frame: 24 },
-  slide: { value: 0.75, word: 0.75, gap: 0.45, wordSize: 15, subSize: 12, frame: 12 },
+  slide: {
+    value: 0.75,
+    word: 0.75,
+    gap: 0.45,
+    wordSize: 15,
+    subSize: 12,
+    frame: 12,
+  },
 };
 
-const WIDTH = 700, EDGE = 8, TOP = 76, AXIS = 32, LEFT = 220, RIGHT = 480, MID = 350, ADDR = 206;
-const RUN = 20, RADIUS = 12, LANE = 24, SIZE = 15, ARROW = 14, ADDRESS = 14;
-const INSIDE = RIGHT - LEFT - 32, OUTSIDE = ADDR - AXIS - 16, AXIS_GAP = 46, FILL = 0.7;
-const SPAN_X = RIGHT + 20, SPAN_BAR = 10, SPAN_BEND = 6, SPAN_LABEL = 14, SEAM = 0.5;
-const LABEL_GAP = 8, CAP = 12, TITLE_FOOT = TOP - 21;
+const WIDTH = 700,
+  EDGE = 8,
+  TOP = 76,
+  AXIS = 32,
+  LEFT = 220,
+  RIGHT = 480,
+  MID = 350,
+  ADDR = 206;
+const RUN = 20,
+  RADIUS = 12,
+  LANE = 24,
+  SIZE = 15,
+  ARROW = 14,
+  ADDRESS = 14;
+const INSIDE = RIGHT - LEFT - 32,
+  OUTSIDE = ADDR - AXIS - 16,
+  AXIS_GAP = 46,
+  FILL = 0.7;
+const SPAN_X = RIGHT + 20,
+  SPAN_BAR = 10,
+  SPAN_BEND = 6,
+  SPAN_LABEL = 14,
+  SEAM = 0.5;
+const LABEL_GAP = 8,
+  CAP = 12,
+  TITLE_FOOT = TOP - 21;
 // A row keeps its text and the marker over its start clear of the rows beside it.
-const ROW_MIN = 30, SUB_ROW_MIN = 44, ASPECT = 2.3, MIN_COLUMN = 160;
-const TITLE_ROOM = 560, CODE_ROOM = WIDTH - 32, CODE_TOP = 64;
+const ROW_MIN = 30,
+  SUB_ROW_MIN = 44,
+  ASPECT = 2.3,
+  MIN_COLUMN = 160;
+const TITLE_ROOM = 560,
+  CODE_ROOM = WIDTH - 32,
+  CODE_TOP = 64;
 const SPEC_KEYS = new Set(['id', 'label', 'title', 'regions', 'spans', 'code']);
-const KEYS = new Set(['id', 'value', 'word', 'gap', 'sub', 'start', 'marker', 'tone', 'fill', 'to', 'size', 'h']);
+const KEYS = new Set([
+  'id',
+  'value',
+  'word',
+  'gap',
+  'sub',
+  'start',
+  'marker',
+  'tone',
+  'fill',
+  'to',
+  'size',
+  'h',
+]);
 const SPAN_KEYS = new Set(['from', 'to', 'label', 'sub', 'tone', 'shape']);
-const STRINGS = ['id', 'value', 'word', 'sub', 'start', 'marker', 'to', 'size'] as const;
+const STRINGS = [
+  'id',
+  'value',
+  'word',
+  'sub',
+  'start',
+  'marker',
+  'to',
+  'size',
+] as const;
 const HEX = /^0x[0-9a-f]+$/i;
 
 type Kind = 'value' | 'word' | 'gap';
 
-const name = (region: Region, i: number) => `regions[${i}]${region.id ? ` (${region.id})` : ''}`;
-const kind = (region: Region): Kind => (region.gap ? 'gap' : region.value !== undefined ? 'value' : 'word');
-const pieces = (value: unknown, where: string, room: number, size = SIZE): Piece[] => tonePieces(value, where, room, size);
-const notes = (span: Span): string[] => (span.sub === undefined ? [] : Array.isArray(span.sub) ? span.sub : [span.sub]);
+const name = (region: Region, i: number) =>
+  `regions[${i}]${region.id ? ` (${region.id})` : ''}`;
+const kind = (region: Region): Kind =>
+  region.gap ? 'gap' : region.value !== undefined ? 'value' : 'word';
+const pieces = (
+  value: unknown,
+  where: string,
+  room: number,
+  size = SIZE,
+): Piece[] => tonePieces(value, where, room, size);
+const notes = (span: Span): string[] =>
+  span.sub === undefined ? [] : Array.isArray(span.sub) ? span.sub : [span.sub];
 
 function upper(spec: MemoryLayout, t: number): bigint | null {
   const target = spec.regions[t];
-  if (target.size !== undefined) return BigInt(target.start!) + BigInt(target.size);
+  if (target.size !== undefined)
+    return BigInt(target.start!) + BigInt(target.size);
   const above = spec.regions[t - 1];
   return above?.start !== undefined ? BigInt(above.start) : null;
 }
 
 function validate(spec: MemoryLayout): void {
-  if (!spec || typeof spec !== 'object' || Array.isArray(spec)) throw new Error('the spec must be a JSON object');
-  for (const key of Object.keys(spec)) if (!SPEC_KEYS.has(key)) throw new Error(`unknown field "${key}"`);
-  if (typeof spec.label !== 'string' || !spec.label.trim()) throw new Error('label: required');
+  if (!spec || typeof spec !== 'object' || Array.isArray(spec))
+    throw new Error('the spec must be a JSON object');
+  for (const key of Object.keys(spec))
+    if (!SPEC_KEYS.has(key)) throw new Error(`unknown field "${key}"`);
+  if (typeof spec.label !== 'string' || !spec.label.trim())
+    throw new Error('label: required');
   checkText(spec.label, 'label');
-  if (!Array.isArray(spec.regions) || !spec.regions.length) throw new Error('regions: required');
+  if (!Array.isArray(spec.regions) || !spec.regions.length)
+    throw new Error('regions: required');
   const ids = new Set<string>();
   let previous: bigint | null = null;
   spec.regions.forEach((region, i) => {
-    if (!region || typeof region !== 'object' || Array.isArray(region)) throw new Error(`regions[${i}]: must be an object`);
+    if (!region || typeof region !== 'object' || Array.isArray(region))
+      throw new Error(`regions[${i}]: must be an object`);
     const where = name(region, i);
-    for (const key of Object.keys(region)) if (!KEYS.has(key)) throw new Error(`${where}: unknown field "${key}"`);
+    for (const key of Object.keys(region))
+      if (!KEYS.has(key)) throw new Error(`${where}: unknown field "${key}"`);
     for (const key of STRINGS) {
       const value = region[key];
       if (value === undefined) continue;
-      if (typeof value !== 'string' || !value.trim()) throw new Error(`${where}.${key}: must be a non-empty string`);
+      if (typeof value !== 'string' || !value.trim())
+        throw new Error(`${where}.${key}: must be a non-empty string`);
       checkText(value, `${where}.${key}`);
     }
-    if (region.gap !== undefined && region.gap !== true) throw new Error(`${where}.gap: must be true`);
-    const kinds = [region.value !== undefined, region.word !== undefined, region.gap === true].filter(Boolean).length;
-    if (kinds !== 1) throw new Error(`${where}: needs exactly one of value, word or "gap": true`);
-    if (region.gap && region.sub !== undefined) throw new Error(`${where}.sub: a gap draws no text`);
-    if (region.fill !== undefined && region.fill !== 'area' && region.fill !== 'gap' && !Object.hasOwn(WASHES, region.fill)) throw new Error(`${where}.fill: must be "area", "gap" or a tone such as "purple"`);
-    if (region.gap && region.fill !== undefined) throw new Error(`${where}.fill: a gap takes the gap fill`);
-    if (region.h !== undefined && !(typeof region.h === 'number' && Number.isFinite(region.h) && region.h > 0)) throw new Error(`${where}.h: must be a positive number`);
+    if (region.gap !== undefined && region.gap !== true)
+      throw new Error(`${where}.gap: must be true`);
+    const kinds = [
+      region.value !== undefined,
+      region.word !== undefined,
+      region.gap === true,
+    ].filter(Boolean).length;
+    if (kinds !== 1)
+      throw new Error(
+        `${where}: needs exactly one of value, word or "gap": true`,
+      );
+    if (region.gap && region.sub !== undefined)
+      throw new Error(`${where}.sub: a gap draws no text`);
+    if (
+      region.fill !== undefined &&
+      region.fill !== 'area' &&
+      region.fill !== 'gap' &&
+      !Object.hasOwn(WASHES, region.fill)
+    )
+      throw new Error(
+        `${where}.fill: must be "area", "gap" or a tone such as "purple"`,
+      );
+    if (region.gap && region.fill !== undefined)
+      throw new Error(`${where}.fill: a gap takes the gap fill`);
+    if (
+      region.h !== undefined &&
+      !(
+        typeof region.h === 'number' &&
+        Number.isFinite(region.h) &&
+        region.h > 0
+      )
+    )
+      throw new Error(`${where}.h: must be a positive number`);
     for (const key of ['start', 'size'] as const) {
-      if (region[key] !== undefined && !HEX.test(region[key]!)) throw new Error(`${where}.${key}: "${region[key]}" is not a hex number such as 0x1000`);
+      if (region[key] !== undefined && !HEX.test(region[key]!))
+        throw new Error(
+          `${where}.${key}: "${region[key]}" is not a hex number such as 0x1000`,
+        );
     }
     if (region.id) {
       if (ids.has(region.id)) throw new Error(`${where}: duplicate id`);
       ids.add(region.id);
     }
     const text: Array<[string | undefined, number, number, string]> = [
-      [region.value, SIZE, INSIDE, 'value'], [region.word, PROFILES.slide.wordSize, INSIDE, 'word'], [region.sub, SIZE, INSIDE, 'sub'],
-      [region.start, ADDRESS, OUTSIDE, 'start'], [region.marker, SIZE, OUTSIDE, 'marker'],
+      [region.value, SIZE, INSIDE, 'value'],
+      [region.word, PROFILES.slide.wordSize, INSIDE, 'word'],
+      [region.sub, SIZE, INSIDE, 'sub'],
+      [region.start, ADDRESS, OUTSIDE, 'start'],
+      [region.marker, SIZE, OUTSIDE, 'marker'],
     ];
-    for (const [body, size, room, key] of text) if (body !== undefined && textWidth(body, size) > room) throw new Error(`${where}.${key}: "${body}" is too long for its place`);
+    for (const [body, size, room, key] of text)
+      if (body !== undefined && textWidth(body, size) > room)
+        throw new Error(`${where}.${key}: "${body}" is too long for its place`);
     if (region.start !== undefined) {
       const start = BigInt(region.start);
-      if (previous !== null && start >= previous) throw new Error(`${where}.start: must be lower than the start above it`);
+      if (previous !== null && start >= previous)
+        throw new Error(
+          `${where}.start: must be lower than the start above it`,
+        );
       previous = start;
     }
-    if (region.marker !== undefined && region.start === undefined) throw new Error(`${where}.marker: needs start`);
+    if (region.marker !== undefined && region.start === undefined)
+      throw new Error(`${where}.marker: needs start`);
     checkTone(region.tone, `${where}.tone`);
-    if (region.tone !== undefined && region.marker === undefined) throw new Error(`${where}.tone: colors the marker; add one`);
-    if (region.size !== undefined && region.start === undefined) throw new Error(`${where}.size: needs start`);
-    if (region.to !== undefined && !HEX.test(region.value ?? '')) throw new Error(`${where}.value: a pointer needs a hex value`);
+    if (region.tone !== undefined && region.marker === undefined)
+      throw new Error(`${where}.tone: colors the marker; add one`);
+    if (region.size !== undefined && region.start === undefined)
+      throw new Error(`${where}.size: needs start`);
+    if (region.to !== undefined && !HEX.test(region.value ?? ''))
+      throw new Error(`${where}.value: a pointer needs a hex value`);
   });
   spec.regions.forEach((region, i) => {
     const where = name(region, i);
     const above = spec.regions[i - 1];
-    if (region.size !== undefined && above?.start !== undefined && BigInt(region.start!) + BigInt(region.size) > BigInt(above.start)) throw new Error(`${where}.size: runs into the region above`);
+    if (
+      region.size !== undefined &&
+      above?.start !== undefined &&
+      BigInt(region.start!) + BigInt(region.size) > BigInt(above.start)
+    )
+      throw new Error(`${where}.size: runs into the region above`);
     if (region.to === undefined) return;
-    const t = spec.regions.findIndex((r) => r.id !== undefined && r.id === region.to);
+    const t = spec.regions.findIndex(
+      (r) => r.id !== undefined && r.id === region.to,
+    );
     const target = spec.regions[t];
-    if (t === -1) throw new Error(`${where}.to: "${region.to}" is not a region id`);
-    if (target.start === undefined) throw new Error(`${where}.to: the target "${region.to}" has no start`);
-    const value = BigInt(region.value!), start = BigInt(target.start);
+    if (t === -1)
+      throw new Error(`${where}.to: "${region.to}" is not a region id`);
+    if (target.start === undefined)
+      throw new Error(`${where}.to: the target "${region.to}" has no start`);
+    const value = BigInt(region.value!),
+      start = BigInt(target.start);
     if (value === start) return;
     const end = upper(spec, t);
-    if (end === null) throw new Error(`${where}.value: lies above the start of "${region.to}"; give the target a size or the region above it a start`);
-    if (value < start || value >= end) throw new Error(`${where}.value: ${region.value} is outside ${target.start}..0x${end.toString(16)}`);
+    if (end === null)
+      throw new Error(
+        `${where}.value: lies above the start of "${region.to}"; give the target a size or the region above it a start`,
+      );
+    if (value < start || value >= end)
+      throw new Error(
+        `${where}.value: ${region.value} is outside ${target.start}..0x${end.toString(16)}`,
+      );
   });
   if (spec.title !== undefined) pieces(spec.title, 'title', TITLE_ROOM);
   if (spec.code !== undefined) {
-    if (!Array.isArray(spec.code) || !spec.code.length) throw new Error('code: must be a non-empty list of lines');
-    spec.code.forEach((line, i) => pieces(line, `code[${i}]`, CODE_ROOM, CODE_SIZE));
+    if (!Array.isArray(spec.code) || !spec.code.length)
+      throw new Error('code: must be a non-empty list of lines');
+    spec.code.forEach((line, i) =>
+      pieces(line, `code[${i}]`, CODE_ROOM, CODE_SIZE),
+    );
   }
   if (spec.spans === undefined) return;
-  if (!Array.isArray(spec.spans) || !spec.spans.length) throw new Error('spans: must be a non-empty list');
+  if (!Array.isArray(spec.spans) || !spec.spans.length)
+    throw new Error('spans: must be a non-empty list');
   spec.spans.forEach((span, i) => {
     const where = `spans[${i}]`;
-    if (!span || typeof span !== 'object' || Array.isArray(span)) throw new Error(`${where}: must be an object`);
-    for (const key of Object.keys(span)) if (!SPAN_KEYS.has(key)) throw new Error(`${where}: unknown field "${key}"`);
+    if (!span || typeof span !== 'object' || Array.isArray(span))
+      throw new Error(`${where}: must be an object`);
+    for (const key of Object.keys(span))
+      if (!SPAN_KEYS.has(key))
+        throw new Error(`${where}: unknown field "${key}"`);
     for (const key of ['from', 'to', 'label'] as const) {
-      if (typeof span[key] !== 'string' || !span[key].trim()) throw new Error(`${where}.${key}: required`);
+      if (typeof span[key] !== 'string' || !span[key].trim())
+        throw new Error(`${where}.${key}: required`);
     }
     if (span.sub !== undefined) {
       const lines = notes(span);
-      if (!lines.length || lines.some((line) => typeof line !== 'string' || !line.trim())) throw new Error(`${where}.sub: must be a non-empty string or a list of them`);
+      if (
+        !lines.length ||
+        lines.some((line) => typeof line !== 'string' || !line.trim())
+      )
+        throw new Error(
+          `${where}.sub: must be a non-empty string or a list of them`,
+        );
       lines.forEach((line) => checkText(line, `${where}.sub`));
     }
     checkText(span.label, `${where}.label`);
     checkTone(span.tone, `${where}.tone`);
-    if (span.shape !== undefined && span.shape !== 'dimension' && span.shape !== 'bracket') throw new Error(`${where}.shape: must be "dimension" or "bracket"`);
-    const f = spec.regions.findIndex((r) => r.id === span.from), t = spec.regions.findIndex((r) => r.id === span.to);
-    if (f === -1) throw new Error(`${where}.from: "${span.from}" is not a region id`);
-    if (t === -1) throw new Error(`${where}.to: "${span.to}" is not a region id`);
+    if (
+      span.shape !== undefined &&
+      span.shape !== 'dimension' &&
+      span.shape !== 'bracket'
+    )
+      throw new Error(`${where}.shape: must be "dimension" or "bracket"`);
+    const f = spec.regions.findIndex((r) => r.id === span.from),
+      t = spec.regions.findIndex((r) => r.id === span.to);
+    if (f === -1)
+      throw new Error(`${where}.from: "${span.from}" is not a region id`);
+    if (t === -1)
+      throw new Error(`${where}.to: "${span.to}" is not a region id`);
     if (f > t) throw new Error(`${where}: from must be at or above to`);
   });
 }
 
-interface Arrow { index: number; name: string; tail: number; head: number; top: number; bottom: number; leg: number; label: string }
+interface Arrow {
+  index: number;
+  name: string;
+  tail: number;
+  head: number;
+  top: number;
+  bottom: number;
+  leg: number;
+  label: string;
+}
 
-export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Scene {
+export function layout(
+  spec: MemoryLayout,
+  profile: Profile = PROFILES.blog,
+): Scene {
   validate(spec);
-  const shapes: Shape[] = [], dimensions: Shape[] = [], brackets: Shape[] = [];
-  const text = (x: number, y: number, body: string, size: number, bold: boolean, anchor: 'start' | 'middle' | 'end', fill: Paint = 'diagram-ink') =>
+  const shapes: Shape[] = [],
+    dimensions: Shape[] = [],
+    brackets: Shape[] = [];
+  const text = (
+    x: number,
+    y: number,
+    body: string,
+    size: number,
+    bold: boolean,
+    anchor: 'start' | 'middle' | 'end',
+    fill: Paint = 'diagram-ink',
+  ) =>
     shapes.push({ kind: 'text', x, y, text: body, size, bold, anchor, fill });
-  const line = (x1: number, y1: number, x2: number, y2: number) => shapes.push({ kind: 'line', x1, y1, x2, y2, stroke: 'diagram-ink' });
+  const line = (x1: number, y1: number, x2: number, y2: number) =>
+    shapes.push({ kind: 'line', x1, y1, x2, y2, stroke: 'diagram-ink' });
   const runs = (x: number, y: number, list: Piece[], code = false) =>
-    shapes.push({ kind: 'runs', x, y, size: code ? CODE_SIZE : SIZE, code, anchor: 'middle', runs: list.map((p) => ({ text: p.text, fill: paint(p.tone, 'diagram-ink') })) });
+    shapes.push({
+      kind: 'runs',
+      x,
+      y,
+      size: code ? CODE_SIZE : SIZE,
+      code,
+      anchor: 'middle',
+      runs: list.map((p) => ({
+        text: p.text,
+        fill: paint(p.tone, 'diagram-ink'),
+      })),
+    });
 
-  const titleWidth = spec.title === undefined ? 0 : textWidth(pieces(spec.title, 'title', TITLE_ROOM).map((p) => p.text).join(''), SIZE);
-  const inside = Math.max(0, ...spec.regions.flatMap((r) => [
-    r.value === undefined ? 0 : textWidth(r.value, SIZE),
-    r.word === undefined ? 0 : textWidth(r.word, profile.wordSize),
-    r.sub === undefined ? 0 : textWidth(r.sub, SIZE),
-  ]));
-  const column = Math.floor(RIGHT - Math.max(MIN_COLUMN, inside / FILL)), mid = (column + RIGHT) / 2, addr = column - (LEFT - ADDR);
+  const titleWidth =
+    spec.title === undefined
+      ? 0
+      : textWidth(
+          pieces(spec.title, 'title', TITLE_ROOM)
+            .map((p) => p.text)
+            .join(''),
+          SIZE,
+        );
+  const inside = Math.max(
+    0,
+    ...spec.regions.flatMap((r) => [
+      r.value === undefined ? 0 : textWidth(r.value, SIZE),
+      r.word === undefined ? 0 : textWidth(r.word, profile.wordSize),
+      r.sub === undefined ? 0 : textWidth(r.sub, SIZE),
+    ]),
+  );
+  const column = Math.floor(RIGHT - Math.max(MIN_COLUMN, inside / FILL)),
+    mid = (column + RIGHT) / 2,
+    addr = column - (LEFT - ADDR);
   const unit = (RIGHT - column) / ASPECT;
 
   let y = TOP;
@@ -197,17 +422,35 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     const k = kind(region);
     const h = round(unit * profile[k] * (region.h ?? 1));
     const least = region.sub === undefined ? ROW_MIN : SUB_ROW_MIN;
-    if (h < least) throw new Error(`${name(region, i)}.h: ${region.h ?? 1} makes the row ${h} units tall, too short for its text; raise h to ${Math.ceil((least / (unit * profile[k])) * 100) / 100}`);
-    const row = { region, top: y, bottom: round(y + h), center: round(y + h / 2) };
+    if (h < least)
+      throw new Error(
+        `${name(region, i)}.h: ${region.h ?? 1} makes the row ${h} units tall, too short for its text; raise h to ${Math.ceil((least / (unit * profile[k])) * 100) / 100}`,
+      );
+    const row = {
+      region,
+      top: y,
+      bottom: round(y + h),
+      center: round(y + h / 2),
+    };
     y = row.bottom;
     return row;
   });
   const bottom = y;
-  const widest = Math.max(0, ...spec.regions.flatMap((r) => [r.start === undefined ? 0 : textWidth(r.start, ADDRESS), r.marker === undefined ? 0 : textWidth(r.marker, SIZE)]));
+  const widest = Math.max(
+    0,
+    ...spec.regions.flatMap((r) => [
+      r.start === undefined ? 0 : textWidth(r.start, ADDRESS),
+      r.marker === undefined ? 0 : textWidth(r.marker, SIZE),
+    ]),
+  );
   const axis = round(addr - widest - AXIS_GAP);
   const high = textWidth('high', SIZE);
-  const limit = Math.min(AXIS - high / 2, MID - titleWidth / 2) + WIDTH - 2 * EDGE;
-  if (titleWidth && mid - titleWidth / 2 < axis + high / 2 + LABEL_GAP) throw new Error('title: runs into the "high" label of the axis; shorten it');
+  const limit =
+    Math.min(AXIS - high / 2, MID - titleWidth / 2) + WIDTH - 2 * EDGE;
+  if (titleWidth && mid - titleWidth / 2 < axis + high / 2 + LABEL_GAP)
+    throw new Error(
+      'title: runs into the "high" label of the axis; shorten it',
+    );
 
   const arrows: Arrow[] = [];
   rows.forEach((row, i) => {
@@ -215,46 +458,107 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     if (source.to === undefined) return;
     const t = spec.regions.findIndex((r) => r.id === source.to);
     const target = rows[t];
-    const value = BigInt(source.value!), start = BigInt(target.region.start!);
+    const value = BigInt(source.value!),
+      start = BigInt(target.region.start!);
     const end = value === start ? null : upper(spec, t)!;
-    const head = end === null ? target.bottom : round(target.bottom - (Number(((value - start) * 10000n) / (end - start)) / 10000) * (target.bottom - target.top));
+    const head =
+      end === null
+        ? target.bottom
+        : round(
+            target.bottom -
+              (Number(((value - start) * 10000n) / (end - start)) / 10000) *
+                (target.bottom - target.top),
+          );
     const tail = row.center;
-    if (Math.abs(head - tail) < 2 * RADIUS) throw new Error(`${name(source, i)}: the arrow is ${round(Math.abs(head - tail))} units long and needs ${2 * RADIUS}; raise h`);
-    arrows.push({ index: i, name: name(source, i), tail, head, top: Math.min(tail, head), bottom: Math.max(tail, head), leg: 0, label: `*(${source.value})` });
+    if (Math.abs(head - tail) < 2 * RADIUS)
+      throw new Error(
+        `${name(source, i)}: the arrow is ${round(Math.abs(head - tail))} units long and needs ${2 * RADIUS}; raise h`,
+      );
+    arrows.push({
+      index: i,
+      name: name(source, i),
+      tail,
+      head,
+      top: Math.min(tail, head),
+      bottom: Math.max(tail, head),
+      leg: 0,
+      label: `*(${source.value})`,
+    });
   });
   const lanes: Array<Array<[number, number]>> = [];
-  for (const arrow of [...arrows].sort((a, b) => a.bottom - a.top - (b.bottom - b.top) || b.index - a.index)) {
-    let lane = lanes.findIndex((used) => used.every(([top, end]) => arrow.bottom < top || arrow.top > end));
+  for (const arrow of [...arrows].sort(
+    (a, b) => a.bottom - a.top - (b.bottom - b.top) || b.index - a.index,
+  )) {
+    let lane = lanes.findIndex((used) =>
+      used.every(([top, end]) => arrow.bottom < top || arrow.top > end),
+    );
     if (lane === -1) lane = lanes.push([]) - 1;
     lanes[lane].push([arrow.top, arrow.bottom]);
     arrow.leg = RIGHT + RUN + RADIUS + lane * LANE;
   }
   for (const a of arrows) {
     for (const b of arrows) {
-      if (b.leg < a.leg && [a.tail, a.head].some((level) => level > b.top && level < b.bottom)) throw new Error(`${a.name} and ${b.name}: the arrows cross; reorder the regions or split the diagram`);
+      if (
+        b.leg < a.leg &&
+        [a.tail, a.head].some((level) => level > b.top && level < b.bottom)
+      )
+        throw new Error(
+          `${a.name} and ${b.name}: the arrows cross; reorder the regions or split the diagram`,
+        );
     }
-    const x1 = a.leg + 8, x2 = x1 + textWidth(a.label, ARROW), level = (a.tail + a.head) / 2 + 3;
-    if (x2 > limit) throw new Error(`${a.name}: the label "${a.label}" ends at x=${Math.round(x2)}, past ${Math.round(limit)}; overlapping arrows leave no room for long labels`);
+    const x1 = a.leg + 8,
+      x2 = x1 + textWidth(a.label, ARROW),
+      level = (a.tail + a.head) / 2 + 3;
+    if (x2 > limit)
+      throw new Error(
+        `${a.name}: the label "${a.label}" ends at x=${Math.round(x2)}, past ${Math.round(limit)}; overlapping arrows leave no room for long labels`,
+      );
     for (const b of arrows) {
       if (b === a) continue;
-      const leg = b.leg > x1 && b.leg < x2 && level - ARROW < b.bottom && level + 4 > b.top;
-      const run = b.leg > x1 && [b.tail, b.head].some((l) => l > level - ARROW && l < level + 4);
-      if (leg || run) throw new Error(`${a.name}: the label "${a.label}" runs into the arrow from ${b.name}`);
+      const leg =
+        b.leg > x1 &&
+        b.leg < x2 &&
+        level - ARROW < b.bottom &&
+        level + 4 > b.top;
+      const run =
+        b.leg > x1 &&
+        [b.tail, b.head].some((l) => l > level - ARROW && l < level + 4);
+      if (leg || run)
+        throw new Error(
+          `${a.name}: the label "${a.label}" runs into the arrow from ${b.name}`,
+        );
     }
   }
 
   // A span on the right names a run of regions: a dimension line measures it, a bracket groups it.
   // Nested spans take outer lanes.
   const spans = (spec.spans ?? []).map((span) => {
-    const f = spec.regions.findIndex((r) => r.id === span.from), t = spec.regions.findIndex((r) => r.id === span.to);
-    return { span, top: rows[f].top, bottom: rows[t].bottom, center: (rows[f].top + rows[t].bottom) / 2, lane: 0, notes: notes(span), baseline: 0 };
+    const f = spec.regions.findIndex((r) => r.id === span.from),
+      t = spec.regions.findIndex((r) => r.id === span.to);
+    return {
+      span,
+      top: rows[f].top,
+      bottom: rows[t].bottom,
+      center: (rows[f].top + rows[t].bottom) / 2,
+      lane: 0,
+      notes: notes(span),
+      baseline: 0,
+    };
   });
   for (const s of spans) {
-    for (const a of arrows) if (s.top <= a.bottom && a.top <= s.bottom) throw new Error(`spans: "${s.span.label}" shares rows with the arrow from ${a.name}; split the diagram`);
+    for (const a of arrows)
+      if (s.top <= a.bottom && a.top <= s.bottom)
+        throw new Error(
+          `spans: "${s.span.label}" shares rows with the arrow from ${a.name}; split the diagram`,
+        );
   }
   const spanLanes: Array<Array<[number, number]>> = [];
-  for (const s of [...spans].sort((a, b) => a.bottom - a.top - (b.bottom - b.top))) {
-    let lane = spanLanes.findIndex((used) => used.every(([top, end]) => s.bottom <= top || s.top >= end));
+  for (const s of [...spans].sort(
+    (a, b) => a.bottom - a.top - (b.bottom - b.top),
+  )) {
+    let lane = spanLanes.findIndex((used) =>
+      used.every(([top, end]) => s.bottom <= top || s.top >= end),
+    );
     if (lane === -1) lane = spanLanes.push([]) - 1;
     spanLanes[lane].push([s.top, s.bottom]);
     s.lane = lane;
@@ -262,20 +566,35 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
   const labelX = SPAN_X + Math.max(0, spanLanes.length - 1) * LANE + SPAN_LABEL;
   const reach = (lines: string[]) => 22 + 11 * Math.max(0, lines.length - 1);
   spans.forEach((s, i) => {
-    if (s.span.shape !== 'bracket' && s.bottom - s.top < DIMENSION_MIN) throw new Error(`spans[${i}]: the regions are too short for the arrowheads; raise h`);
+    if (s.span.shape !== 'bracket' && s.bottom - s.top < DIMENSION_MIN)
+      throw new Error(
+        `spans[${i}]: the regions are too short for the arrowheads; raise h`,
+      );
     const room = limit - labelX;
-    if (textWidth(s.span.label, SIZE) > room) throw new Error(`spans[${i}].label: "${s.span.label}" is too long for its place`);
-    for (const note of s.notes) if (textWidth(note, PROFILES.slide.subSize) > room) throw new Error(`spans[${i}].sub: "${note}" is too long for its place; split it into lines`);
+    if (textWidth(s.span.label, SIZE) > room)
+      throw new Error(
+        `spans[${i}].label: "${s.span.label}" is too long for its place`,
+      );
+    for (const note of s.notes)
+      if (textWidth(note, PROFILES.slide.subSize) > room)
+        throw new Error(
+          `spans[${i}].sub: "${note}" is too long for its place; split it into lines`,
+        );
   });
   const order = [...spans].sort((a, b) => a.center - b.center);
   for (let pass = 0; pass <= order.length; ++pass) {
     let moved = false;
     for (let k = 1; k < order.length; ++k) {
-      const u = order[k - 1], l = order[k];
+      const u = order[k - 1],
+        l = order[k];
       const overlap = reach(u.notes) + reach(l.notes) - (l.center - u.center);
       if (overlap <= 0.5) continue;
-      const up = Math.max(0, u.center - reach(u.notes) - u.top), down = Math.max(0, l.bottom - reach(l.notes) - l.center);
-      if (pass === order.length || up + down < overlap) throw new Error(`spans: the labels "${u.span.label}" and "${l.span.label}" overlap; split the diagram`);
+      const up = Math.max(0, u.center - reach(u.notes) - u.top),
+        down = Math.max(0, l.bottom - reach(l.notes) - l.center);
+      if (pass === order.length || up + down < overlap)
+        throw new Error(
+          `spans: the labels "${u.span.label}" and "${l.span.label}" overlap; split the diagram`,
+        );
       const need = Math.min(overlap + LABEL_GAP, up + down);
       u.center -= (need * up) / (up + down);
       l.center += (need * down) / (up + down);
@@ -283,30 +602,72 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
     }
     if (!moved) break;
   }
-  const ceiling = titleWidth && mid + titleWidth / 2 + LABEL_GAP > labelX ? TITLE_FOOT + LABEL_GAP : 0;
+  const ceiling =
+    titleWidth && mid + titleWidth / 2 + LABEL_GAP > labelX
+      ? TITLE_FOOT + LABEL_GAP
+      : 0;
   spans.forEach((s, i) => {
-    s.baseline = round(s.notes.length ? s.center - 4 - 11 * (s.notes.length - 1) : s.center + 5);
-    if (s.baseline - CAP < ceiling) throw new Error(`spans[${i}]: "${s.span.label}" and its notes rise into the title or past the top; raise h or use fewer lines`);
+    s.baseline = round(
+      s.notes.length ? s.center - 4 - 11 * (s.notes.length - 1) : s.center + 5,
+    );
+    if (s.baseline - CAP < ceiling)
+      throw new Error(
+        `spans[${i}]: "${s.span.label}" and its notes rise into the title or past the top; raise h or use fewer lines`,
+      );
   });
-  const foot = Math.max(bottom + 24, ...spans.map((s) => s.baseline + 22 * s.notes.length));
+  const foot = Math.max(
+    bottom + 24,
+    ...spans.map((s) => s.baseline + 22 * s.notes.length),
+  );
 
-  if (spec.title !== undefined) runs(mid, TOP - 24, pieces(spec.title, 'title', TITLE_ROOM));
+  if (spec.title !== undefined)
+    runs(mid, TOP - 24, pieces(spec.title, 'title', TITLE_ROOM));
 
   text(axis, TOP - 18, 'high', SIZE, true, 'middle');
   line(axis, bottom, axis, TOP + 10);
   shapes.push(triangle(TOP + 2, axis, 'up', 'diagram-ink'));
   text(axis, round(bottom + 24), 'low', SIZE, true, 'middle');
 
-  const fillOf = (region: Region): Paint => (region.gap || region.fill === 'gap' ? 'diagram-gap' : region.fill === undefined || region.fill === 'area' ? 'diagram-area' : WASHES[region.fill]);
-  for (const row of rows) shapes.push({ kind: 'rect', x: column, y: row.top, w: RIGHT - column, h: round(row.bottom - row.top), fill: fillOf(row.region) });
-  shapes.push({ kind: 'outline', x: column, y: TOP, w: RIGHT - column, h: round(bottom - TOP), stroke: 'diagram-ink' });
-  for (const row of rows.slice(0, -1)) line(column, row.bottom, RIGHT, row.bottom);
+  const fillOf = (region: Region): Paint =>
+    region.gap || region.fill === 'gap'
+      ? 'diagram-gap'
+      : region.fill === undefined || region.fill === 'area'
+        ? 'diagram-area'
+        : WASHES[region.fill];
+  for (const row of rows)
+    shapes.push({
+      kind: 'rect',
+      x: column,
+      y: row.top,
+      w: RIGHT - column,
+      h: round(row.bottom - row.top),
+      fill: fillOf(row.region),
+    });
+  shapes.push({
+    kind: 'outline',
+    x: column,
+    y: TOP,
+    w: RIGHT - column,
+    h: round(bottom - TOP),
+    stroke: 'diagram-ink',
+  });
+  for (const row of rows.slice(0, -1))
+    line(column, row.bottom, RIGHT, row.bottom);
 
   for (const row of rows) {
     const { start, marker } = row.region;
     if (start === undefined) continue;
     line(addr + 2, row.bottom, column, row.bottom);
-    if (marker !== undefined) text(addr, round(row.bottom - 13), marker, SIZE, true, 'end', paint(row.region.tone, 'diagram-red'));
+    if (marker !== undefined)
+      text(
+        addr,
+        round(row.bottom - 13),
+        marker,
+        SIZE,
+        true,
+        'end',
+        paint(row.region.tone, 'diagram-red'),
+      );
     text(addr, round(row.bottom + 5), start, ADDRESS, false, 'end');
   }
 
@@ -316,37 +677,109 @@ export function layout(spec: MemoryLayout, profile: Profile = PROFILES.blog): Sc
       text(mid, round(center + 5), '...', SIZE, true, 'middle');
       continue;
     }
-    const lines = [region.value ?? region.word!, ...(region.sub === undefined ? [] : [region.sub])];
-    lines.forEach((body, j) => text(mid, round(center + 5 + (j - (lines.length - 1) / 2) * LINE_STEP), body, SIZE, true, 'middle'));
+    const lines = [
+      region.value ?? region.word!,
+      ...(region.sub === undefined ? [] : [region.sub]),
+    ];
+    lines.forEach((body, j) =>
+      text(
+        mid,
+        round(center + 5 + (j - (lines.length - 1) / 2) * LINE_STEP),
+        body,
+        SIZE,
+        true,
+        'middle',
+      ),
+    );
   }
 
-  const ticks = new Set(spans.filter((s) => s.span.shape !== 'bracket').flatMap((s) => [s.top, s.bottom]));
+  const ticks = new Set(
+    spans
+      .filter((s) => s.span.shape !== 'bracket')
+      .flatMap((s) => [s.top, s.bottom]),
+  );
   for (const s of spans) {
-    const x = SPAN_X + s.lane * LANE, top = s.top, end = s.bottom, stroke = paint(s.span.tone, 'diagram-ink');
+    const x = SPAN_X + s.lane * LANE,
+      top = s.top,
+      end = s.bottom,
+      stroke = paint(s.span.tone, 'diagram-ink');
     if (s.span.shape === 'bracket') {
       const arm = (y: number, inward: number) => {
-        if (!ticks.has(y)) return y === TOP || y === bottom ? y + (inward * (STROKE - BORDER)) / 2 : y;
-        brackets.push({ kind: 'line', x1: RIGHT, y1: round(y + inward * SEAM), x2: x - SPAN_BEND, y2: round(y + inward * SEAM), stroke, weight: 'border' });
+        if (!ticks.has(y))
+          return y === TOP || y === bottom
+            ? y + (inward * (STROKE - BORDER)) / 2
+            : y;
+        brackets.push({
+          kind: 'line',
+          x1: RIGHT,
+          y1: round(y + inward * SEAM),
+          x2: x - SPAN_BEND,
+          y2: round(y + inward * SEAM),
+          stroke,
+          weight: 'border',
+        });
         return y + (inward * (BORDER + STROKE)) / 2;
       };
-      const t = round(arm(top, 1)), b = round(arm(end, -1));
-      brackets.push({ kind: 'path', d: `M ${RIGHT} ${t} H ${x - SPAN_BEND} Q ${x} ${t} ${x} ${round(t + SPAN_BEND)} V ${round(b - SPAN_BEND)} Q ${x} ${b} ${x - SPAN_BEND} ${b} H ${RIGHT}`, stroke });
+      const t = round(arm(top, 1)),
+        b = round(arm(end, -1));
+      brackets.push({
+        kind: 'path',
+        d: `M ${RIGHT} ${t} H ${x - SPAN_BEND} Q ${x} ${t} ${x} ${round(t + SPAN_BEND)} V ${round(b - SPAN_BEND)} Q ${x} ${b} ${x - SPAN_BEND} ${b} H ${RIGHT}`,
+        stroke,
+      });
     } else {
       dimensions.push(...dimension(RIGHT, x, SPAN_BAR, top, end, stroke));
     }
     text(labelX, s.baseline, s.span.label, SIZE, true, 'start', stroke);
-    s.notes.forEach((note, j) => text(labelX, round(s.baseline + 22 * (j + 1)), note, profile.subSize, false, 'start', stroke));
+    s.notes.forEach((note, j) =>
+      text(
+        labelX,
+        round(s.baseline + 22 * (j + 1)),
+        note,
+        profile.subSize,
+        false,
+        'start',
+        stroke,
+      ),
+    );
   }
 
   for (const a of [...arrows].sort((p, q) => q.index - p.index)) {
     const dir = a.head < a.tail ? -1 : 1;
-    shapes.push({ kind: 'path', d: `M ${RIGHT} ${a.tail} H ${a.leg - RADIUS} Q ${a.leg} ${a.tail} ${a.leg} ${round(a.tail + dir * RADIUS)} V ${round(a.head - dir * RADIUS)} Q ${a.leg} ${a.head} ${a.leg - RADIUS} ${a.head} H ${shaftEnd(RIGHT, 'left')}`, stroke: 'diagram-ink' });
+    shapes.push({
+      kind: 'path',
+      d: `M ${RIGHT} ${a.tail} H ${a.leg - RADIUS} Q ${a.leg} ${a.tail} ${a.leg} ${round(a.tail + dir * RADIUS)} V ${round(a.head - dir * RADIUS)} Q ${a.leg} ${a.head} ${a.leg - RADIUS} ${a.head} H ${shaftEnd(RIGHT, 'left')}`,
+      stroke: 'diagram-ink',
+    });
     shapes.push(arrowhead(RIGHT, a.head, 'left', 'diagram-ink'));
-    text(a.leg + 8, round((a.tail + a.head) / 2 + 3), a.label, ARROW, true, 'start');
+    text(
+      a.leg + 8,
+      round((a.tail + a.head) / 2 + 3),
+      a.label,
+      ARROW,
+      true,
+      'start',
+    );
   }
 
-  const code = (spec.code ?? []).map((list, i) => pieces(list, `code[${i}]`, CODE_ROOM, CODE_SIZE));
-  code.forEach((list, i) => runs(mid, round(foot - 24 + CODE_TOP + i * CODE_STEP), list, true));
-  const height = code.length ? round(foot - 24 + CODE_TOP + (code.length - 1) * CODE_STEP + 24) : round(foot + 20);
-  return tighten({ width: WIDTH, height, label: spec.label, font: FONT, shapes: [...brackets, ...dimensions, ...shapes], frame: profile.frame }, EDGE);
+  const code = (spec.code ?? []).map((list, i) =>
+    pieces(list, `code[${i}]`, CODE_ROOM, CODE_SIZE),
+  );
+  code.forEach((list, i) =>
+    runs(mid, round(foot - 24 + CODE_TOP + i * CODE_STEP), list, true),
+  );
+  const height = code.length
+    ? round(foot - 24 + CODE_TOP + (code.length - 1) * CODE_STEP + 24)
+    : round(foot + 20);
+  return tighten(
+    {
+      width: WIDTH,
+      height,
+      label: spec.label,
+      font: FONT,
+      shapes: [...brackets, ...dimensions, ...shapes],
+      frame: profile.frame,
+    },
+    EDGE,
+  );
 }

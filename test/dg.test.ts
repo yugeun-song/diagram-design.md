@@ -6,33 +6,76 @@ import * as canvas from '../src/canvas.ts';
 import * as memoryLayout from '../src/memory-layout.ts';
 import * as memoryTable from '../src/memory-table.ts';
 import { lintJoins } from '../src/joins.ts';
-import { corners, lintStatic, round, textWidth, toStatic, toWeb, type Scene } from '../src/scene.ts';
+import {
+  corners,
+  lintStatic,
+  round,
+  textWidth,
+  toStatic,
+  toWeb,
+  type Scene,
+} from '../src/scene.ts';
 import * as structChain from '../src/struct-chain.ts';
 import * as textTable from '../src/text-table.ts';
 import { loadTokens, readBlogTokens } from '../src/tokens.ts';
 
-const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
-const layoutSpec: memoryLayout.MemoryLayout = JSON.parse(read('../forms/memory-layout/example.json'));
-const tableSpecs: memoryTable.MemoryTable[] = JSON.parse(read('../forms/memory-table/example.json'));
-const chainSpec: structChain.StructChain = JSON.parse(read('../forms/struct-chain/example.json'));
-const canvasSpecs: canvas.Canvas[] = JSON.parse(read('../forms/canvas/example.json'));
-const textSpec: textTable.TextTable = JSON.parse(read('../forms/text-table/example.json'));
+const read = (path: string) =>
+  readFileSync(new URL(path, import.meta.url), 'utf8');
+const layoutSpec: memoryLayout.MemoryLayout = JSON.parse(
+  read('../forms/memory-layout/example.json'),
+);
+const tableSpecs: memoryTable.MemoryTable[] = JSON.parse(
+  read('../forms/memory-table/example.json'),
+);
+const chainSpec: structChain.StructChain = JSON.parse(
+  read('../forms/struct-chain/example.json'),
+);
+const canvasSpecs: canvas.Canvas[] = JSON.parse(
+  read('../forms/canvas/example.json'),
+);
+const textSpec: textTable.TextTable = JSON.parse(
+  read('../forms/text-table/example.json'),
+);
 const tokens = loadTokens();
 
 test('the memory layout example renders the reference svg', () => {
-  assert.equal(toWeb(memoryLayout.layout(layoutSpec)) + '\n', read('golden/frame-chain.svg'));
+  assert.equal(
+    toWeb(memoryLayout.layout(layoutSpec)) + '\n',
+    read('golden/frame-chain.svg'),
+  );
 });
 
 test('a field longer than four whole rows folds to its first row, a gap row and its last row', () => {
-  const g = memoryTable.grid({ label: 'buf', unit: 'byte', fields: [['buf (char[256])', 256], ['len (int)', 4], { pad: 4 }] });
-  assert.deepEqual(g.rows.map((r) => [r.offset, r.cells.map((c) => c.kind).join(',')]), [
-    ['0x00', 'field'], ['0x08', 'gap'], ['0xf8', 'field'], ['0x100', 'field,pad'],
-  ]);
+  const g = memoryTable.grid({
+    label: 'buf',
+    unit: 'byte',
+    fields: [['buf (char[256])', 256], ['len (int)', 4], { pad: 4 }],
+  });
+  assert.deepEqual(
+    g.rows.map((r) => [r.offset, r.cells.map((c) => c.kind).join(',')]),
+    [
+      ['0x00', 'field'],
+      ['0x08', 'gap'],
+      ['0xf8', 'field'],
+      ['0x100', 'field,pad'],
+    ],
+  );
   assert.equal(g.end, '0x108');
-  const short = memoryTable.grid({ label: 'short', unit: 'byte', fields: [['buf (char[32])', 32]] });
+  const short = memoryTable.grid({
+    label: 'short',
+    unit: 'byte',
+    fields: [['buf (char[32])', 32]],
+  });
   assert.equal(short.rows.length, 4);
-  const html = `<table class="mem-layout" aria-label="buf"><tr><th>Offset</th>${g.headers.map((h) => `<th>${h}</th>`).join('')}</tr>`
-    + g.rows.map((r) => `<tr><td class="offset">${r.offset}</td>${r.cells.map((c) => `<td${c.span > 1 ? ` colspan="${c.span}"` : ''} class="${c.kind}">${c.text}</td>`).join('')}</tr>`).join('') + '</table>';
+  const html =
+    `<table class="mem-layout" aria-label="buf"><tr><th>Offset</th>${g.headers.map((h) => `<th>${h}</th>`).join('')}</tr>` +
+    g.rows
+      .map(
+        (r) =>
+          `<tr><td class="offset">${r.offset}</td>${r.cells.map((c) => `<td${c.span > 1 ? ` colspan="${c.span}"` : ''} class="${c.kind}">${c.text}</td>`).join('')}</tr>`,
+      )
+      .join('') +
+    '</table>';
   assert.deepEqual(memoryTable.parseTable(html).rows, g.rows);
 });
 
@@ -40,13 +83,40 @@ test('the memory table examples render the reference svg, and a raw table gives 
   for (const spec of tableSpecs) {
     const g = memoryTable.grid(spec);
     const { shapes } = memoryTable.layout(g);
-    assert.equal(shapes.filter((s) => s.kind === 'line' && s.y1 === 20 && s.y2 === 44).length, g.headers.length - 1);
-    assert.equal(shapes.filter((s) => s.kind === 'path' && s.stroke === 'diagram-ink' && / V 20 H [\d.]+ V 44$/.test(s.d)).length, 1);
-    assert.equal(toWeb(memoryTable.layout(g)) + '\n', read(`golden/${spec.id}.svg`));
-    const header = (g.rows[0].offset !== undefined ? '<th>Offset</th>' : '') + g.headers.map((h) => `<th>${h}</th>`).join('');
-    const rows = g.rows.map((r) => (r.offset !== undefined ? `<td class="offset">${r.offset}</td>` : '')
-      + r.cells.map((c) => `<td${c.span > 1 ? ` colspan="${c.span}"` : ''} class="${c.kind}">${c.text}</td>`).join(''));
-    const parsed = memoryTable.parseTable(`<table class="mem-layout"><caption>${spec.label}</caption><tr>${header}</tr>${rows.map((r) => `<tr>${r}</tr>`).join('')}</table>`);
+    assert.equal(
+      shapes.filter((s) => s.kind === 'line' && s.y1 === 20 && s.y2 === 44)
+        .length,
+      g.headers.length - 1,
+    );
+    assert.equal(
+      shapes.filter(
+        (s) =>
+          s.kind === 'path' &&
+          s.stroke === 'diagram-ink' &&
+          / V 20 H [\d.]+ V 44$/.test(s.d),
+      ).length,
+      1,
+    );
+    assert.equal(
+      toWeb(memoryTable.layout(g)) + '\n',
+      read(`golden/${spec.id}.svg`),
+    );
+    const header =
+      (g.rows[0].offset !== undefined ? '<th>Offset</th>' : '') +
+      g.headers.map((h) => `<th>${h}</th>`).join('');
+    const rows = g.rows.map(
+      (r) =>
+        (r.offset !== undefined ? `<td class="offset">${r.offset}</td>` : '') +
+        r.cells
+          .map(
+            (c) =>
+              `<td${c.span > 1 ? ` colspan="${c.span}"` : ''} class="${c.kind}">${c.text}</td>`,
+          )
+          .join(''),
+    );
+    const parsed = memoryTable.parseTable(
+      `<table class="mem-layout"><caption>${spec.label}</caption><tr>${header}</tr>${rows.map((r) => `<tr>${r}</tr>`).join('')}</table>`,
+    );
     assert.deepEqual(parsed, g);
   }
 });
@@ -54,24 +124,39 @@ test('the memory table examples render the reference svg, and a raw table gives 
 test('static svgs use presentation attributes only', () => {
   const scenes = (['blog', 'slide'] as const).flatMap((profile) => [
     memoryLayout.layout(layoutSpec, memoryLayout.PROFILES[profile]),
-    ...tableSpecs.map((spec) => memoryTable.layout(memoryTable.grid(spec), memoryTable.PROFILES[profile])),
+    ...tableSpecs.map((spec) =>
+      memoryTable.layout(memoryTable.grid(spec), memoryTable.PROFILES[profile]),
+    ),
     structChain.layout(chainSpec, structChain.PROFILES[profile]),
   ]);
   for (const scene of scenes) {
-    for (const theme of Object.keys(tokens.themes)) assert.deepEqual(lintStatic(toStatic(scene, tokens, theme)), []);
+    for (const theme of Object.keys(tokens.themes))
+      assert.deepEqual(lintStatic(toStatic(scene, tokens, theme)), []);
   }
 });
 
 test('a pointer into a sized region lands in proportion', () => {
   const scene = memoryLayout.layout({
     label: 'x',
-    regions: [{ id: 'buf', word: 'buffer', start: '0x1000', size: '0x100' }, { value: '0x1080', start: '0x800', to: 'buf' }],
+    regions: [
+      { id: 'buf', word: 'buffer', start: '0x1000', size: '0x100' },
+      { value: '0x1080', start: '0x800', to: 'buf' },
+    ],
   });
-  const paths = scene.shapes.filter((shape) => shape.kind === 'path').map((shape) => shape.d);
-  const target = scene.shapes.find((shape) => shape.kind === 'rect') as { y: number; h: number };
+  const paths = scene.shapes
+    .filter((shape) => shape.kind === 'path')
+    .map((shape) => shape.d);
+  const target = scene.shapes.find((shape) => shape.kind === 'rect') as {
+    y: number;
+    h: number;
+  };
   const head = round(target.y + target.h / 2);
   assert.ok(paths.some((d) => d.endsWith(`Q 512 ${head} 500 ${head} H 494`)));
-  assert.ok(paths.includes(`M 485 ${head} L 497 ${round(head - 6)} L 497 ${round(head + 6)} Z`));
+  assert.ok(
+    paths.includes(
+      `M 485 ${head} L 497 ${round(head - 6)} L 497 ${round(head + 6)} Z`,
+    ),
+  );
 });
 
 test('tones, spans, a title and code lines take theme roles', () => {
@@ -80,64 +165,210 @@ test('tones, spans, a title and code lines take theme roles', () => {
     title: [['type: struct s', 'orange'], ' (s[0])'],
     regions: [
       { id: 'b', value: '0x2', sub: '(b, +0x008)', start: '0x1008' },
-      { id: 'a', value: '0x1', sub: '(a, +0x000)', start: '0x1000', marker: 'ptr: p', tone: 'red' },
+      {
+        id: 'a',
+        value: '0x1',
+        sub: '(a, +0x000)',
+        start: '0x1000',
+        marker: 'ptr: p',
+        tone: 'red',
+      },
     ],
-    spans: [{ from: 'b', to: 'b', label: 'member: b', sub: '(+0x008)', tone: 'purple' }],
+    spans: [
+      {
+        from: 'b',
+        to: 'b',
+        label: 'member: b',
+        sub: '(+0x008)',
+        tone: 'purple',
+      },
+    ],
     code: [[['p', 'red'], ' - 0x8 = ', ['0x1000', 'blue']]],
   };
   const scene = memoryLayout.layout(spec);
   const svg = toWeb(scene);
-  assert.match(svg, /<tspan style="fill:var\(--diagram-orange\)">type: struct s<\/tspan><tspan style="fill:var\(--diagram-ink\)"> \(s\[0\]\)<\/tspan>/);
-  assert.match(svg, /<line x1="500" y1="[\d.]+" x2="500" y2="[\d.]+" style="stroke:var\(--diagram-purple\);stroke-width:var\(--diagram-stroke\)/);
-  assert.match(svg, /<path d="M 493 [\d.]+ L 500 [\d.]+ L 507 [\d.]+" fill="none" style="stroke:var\(--diagram-purple\)/);
-  assert.match(svg, /font-size="15" text-anchor="middle" style="fill:var\(--diagram-ink\)">\(b, \+0x008\)<\/text>/);
-  assert.match(svg, /<rect x="320" y="76" width="160" height="[\d.]+" fill="none" style="stroke:var\(--diagram-ink\);stroke-width:var\(--diagram-border\)"\/>/);
-  assert.match(svg, /<line x1="308" y1="[\d.]+" x2="320" y2="[\d.]+" style="stroke:var\(--diagram-ink\);stroke-width:var\(--diagram-border\)"\/>/);
+  assert.match(
+    svg,
+    /<tspan style="fill:var\(--diagram-orange\)">type: struct s<\/tspan><tspan style="fill:var\(--diagram-ink\)"> \(s\[0\]\)<\/tspan>/,
+  );
+  assert.match(
+    svg,
+    /<line x1="500" y1="[\d.]+" x2="500" y2="[\d.]+" style="stroke:var\(--diagram-purple\);stroke-width:var\(--diagram-stroke\)/,
+  );
+  assert.match(
+    svg,
+    /<path d="M 493 [\d.]+ L 500 [\d.]+ L 507 [\d.]+" fill="none" style="stroke:var\(--diagram-purple\)/,
+  );
+  assert.match(
+    svg,
+    /font-size="15" text-anchor="middle" style="fill:var\(--diagram-ink\)">\(b, \+0x008\)<\/text>/,
+  );
+  assert.match(
+    svg,
+    /<rect x="320" y="76" width="160" height="[\d.]+" fill="none" style="stroke:var\(--diagram-ink\);stroke-width:var\(--diagram-border\)"\/>/,
+  );
+  assert.match(
+    svg,
+    /<line x1="308" y1="[\d.]+" x2="320" y2="[\d.]+" style="stroke:var\(--diagram-ink\);stroke-width:var\(--diagram-border\)"\/>/,
+  );
   assert.match(svg, /style="fill:var\(--diagram-purple\)">member: b<\/text>/);
   assert.match(svg, /style="fill:var\(--diagram-red\)">ptr: p<\/text>/);
-  assert.match(svg, /<tspan style="fill:var\(--diagram-red\)">p<\/tspan><tspan style="fill:var\(--diagram-ink\)"> - 0x8 = <\/tspan><tspan style="fill:var\(--diagram-blue\)">0x1000<\/tspan>/);
-  assert.match(svg, /font-size="15" text-anchor="middle" xml:space="preserve"><tspan style="fill:var\(--diagram-orange\)">type: struct s/);
-  assert.match(svg, /font-size="13.4" font-weight="400" text-anchor="middle" xml:space="preserve"><tspan style="fill:var\(--diagram-red\)">p<\/tspan>/);
-  assert.ok(toStatic(scene, tokens, 'clean-light').includes(`font-size="13.4" font-weight="400" text-anchor="middle" xml:space="preserve"><tspan fill="${tokens.themes['clean-light']['diagram-red']}">p</tspan>`));
+  assert.match(
+    svg,
+    /<tspan style="fill:var\(--diagram-red\)">p<\/tspan><tspan style="fill:var\(--diagram-ink\)"> - 0x8 = <\/tspan><tspan style="fill:var\(--diagram-blue\)">0x1000<\/tspan>/,
+  );
+  assert.match(
+    svg,
+    /font-size="15" text-anchor="middle" xml:space="preserve"><tspan style="fill:var\(--diagram-orange\)">type: struct s/,
+  );
+  assert.match(
+    svg,
+    /font-size="13.4" font-weight="400" text-anchor="middle" xml:space="preserve"><tspan style="fill:var\(--diagram-red\)">p<\/tspan>/,
+  );
+  assert.ok(
+    toStatic(scene, tokens, 'clean-light').includes(
+      `font-size="13.4" font-weight="400" text-anchor="middle" xml:space="preserve"><tspan fill="${tokens.themes['clean-light']['diagram-red']}">p</tspan>`,
+    ),
+  );
   assert.deepEqual(lintStatic(toStatic(scene, tokens, 'clean-light')), []);
-  assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ from: 'a', to: 'b', label: 'x' }] }), /from must be at or above to/);
-  assert.throws(() => memoryLayout.layout({ ...spec, code: [[['p', 'teal' as memoryLayout.Tone]]] }), /unknown tone "teal"/);
-  assert.throws(() => memoryLayout.layout({ ...spec, regions: [{ ...spec.regions[0], tone: 'orange' }, spec.regions[1]] }), /colors the marker; add one/);
-  const bracket = toWeb(memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], shape: 'bracket' }] }));
-  assert.match(bracket, /<path d="M 480 76.2 H [^"]* H 480" fill="none" style="stroke:var\(--diagram-purple\)/);
-  assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], shape: 'arc' as 'bracket' }] }), /must be "dimension" or "bracket"/);
-  const lines = toWeb(memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: ['struct s', '(s[0])'] }] }));
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        ...spec,
+        spans: [{ from: 'a', to: 'b', label: 'x' }],
+      }),
+    /from must be at or above to/,
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        ...spec,
+        code: [[['p', 'teal' as memoryLayout.Tone]]],
+      }),
+    /unknown tone "teal"/,
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        ...spec,
+        regions: [{ ...spec.regions[0], tone: 'orange' }, spec.regions[1]],
+      }),
+    /colors the marker; add one/,
+  );
+  const bracket = toWeb(
+    memoryLayout.layout({
+      ...spec,
+      spans: [{ ...spec.spans![0], shape: 'bracket' }],
+    }),
+  );
+  assert.match(
+    bracket,
+    /<path d="M 480 76.2 H [^"]* H 480" fill="none" style="stroke:var\(--diagram-purple\)/,
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        ...spec,
+        spans: [{ ...spec.spans![0], shape: 'arc' as 'bracket' }],
+      }),
+    /must be "dimension" or "bracket"/,
+  );
+  const lines = toWeb(
+    memoryLayout.layout({
+      ...spec,
+      spans: [{ ...spec.spans![0], sub: ['struct s', '(s[0])'] }],
+    }),
+  );
   assert.match(lines, /style="fill:var\(--diagram-purple\)">struct s<\/text>/);
-  assert.match(lines, /style="fill:var\(--diagram-purple\)">\(s\[0\]\)<\/text>/);
-  assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: [] }] }), /must be a non-empty string or a list of them/);
-  assert.throws(() => memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: 'x'.repeat(40) }] }), /split it into lines/);
+  assert.match(
+    lines,
+    /style="fill:var\(--diagram-purple\)">\(s\[0\]\)<\/text>/,
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({ ...spec, spans: [{ ...spec.spans![0], sub: [] }] }),
+    /must be a non-empty string or a list of them/,
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        ...spec,
+        spans: [{ ...spec.spans![0], sub: 'x'.repeat(40) }],
+      }),
+    /split it into lines/,
+  );
 });
 
 test('a memory layout frames only what it draws', () => {
-  const bare = memoryLayout.layout({ label: 'x', regions: [{ word: 'a', start: '0x10' }, { word: 'b', start: '0x0' }] });
+  const bare = memoryLayout.layout({
+    label: 'x',
+    regions: [
+      { word: 'a', start: '0x10' },
+      { word: 'b', start: '0x0' },
+    ],
+  });
   assert.ok(bare.x !== undefined && bare.width < 700);
-  assert.match(toWeb(bare), new RegExp(`viewBox="${bare.x} 0 ${bare.width} [\\d.]+" style="--diagram-width:${bare.width}"`));
-  const spanned = memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'a', start: '0x10' }, { id: 'b', word: 'b', start: '0x0' }], spans: [{ from: 'a', to: 'b', label: 'both' }] });
+  assert.match(
+    toWeb(bare),
+    new RegExp(
+      `viewBox="${bare.x} 0 ${bare.width} [\\d.]+" style="--diagram-width:${bare.width}"`,
+    ),
+  );
+  const spanned = memoryLayout.layout({
+    label: 'x',
+    regions: [
+      { id: 'a', word: 'a', start: '0x10' },
+      { id: 'b', word: 'b', start: '0x0' },
+    ],
+    spans: [{ from: 'a', to: 'b', label: 'both' }],
+  });
   assert.equal(spanned.x, bare.x);
   assert.ok(spanned.width > bare.width);
-  const axisOf = (scene: ReturnType<typeof memoryLayout.layout>) => scene.shapes.find((s) => s.kind === 'text' && s.text === 'high')!;
-  const long = memoryLayout.layout({ label: 'x', regions: [{ word: 'a', start: '0xffff800083fcbc38' }, { word: 'b', start: '0xffff800083fcbc30' }] });
+  const axisOf = (scene: ReturnType<typeof memoryLayout.layout>) =>
+    scene.shapes.find((s) => s.kind === 'text' && s.text === 'high')!;
+  const long = memoryLayout.layout({
+    label: 'x',
+    regions: [
+      { word: 'a', start: '0xffff800083fcbc38' },
+      { word: 'b', start: '0xffff800083fcbc30' },
+    ],
+  });
   assert.equal((axisOf(long) as { x: number }).x, 108.8);
   assert.equal((axisOf(bare) as { x: number }).x, 226.4);
-  const column = (scene: ReturnType<typeof memoryLayout.layout>) => scene.shapes.find((s) => s.kind === 'outline') as { x: number; w: number };
+  const column = (scene: ReturnType<typeof memoryLayout.layout>) =>
+    scene.shapes.find((s) => s.kind === 'outline') as { x: number; w: number };
   assert.equal(column(bare).w, 160);
-  const padded = memoryLayout.layout({ label: 'x', regions: [{ word: '00 00 00 00 00 00 00', start: '0x8' }, { word: 'b', start: '0x0' }] });
+  const padded = memoryLayout.layout({
+    label: 'x',
+    regions: [
+      { word: '00 00 00 00 00 00 00', start: '0x8' },
+      { word: 'b', start: '0x0' },
+    ],
+  });
   assert.deepEqual([column(padded).x, column(padded).w], [222, 258]);
-  assert.equal((axisOf(padded) as { x: number }).x, round(208 - textWidth('0x8', 14) - 46));
+  assert.equal(
+    (axisOf(padded) as { x: number }).x,
+    round(208 - textWidth('0x8', 14) - 46),
+  );
 });
 
 test('the struct chain example renders the reference svg', () => {
-  assert.equal(toWeb(structChain.layout(chainSpec)) + '\n', read('golden/user-info-list.svg'));
+  assert.equal(
+    toWeb(structChain.layout(chainSpec)) + '\n',
+    read('golden/user-info-list.svg'),
+  );
 });
 
 test('a struct chain links only the embedded members, rings back to its head and measures offsetof on each node', () => {
-  const texts = (scene: ReturnType<typeof structChain.layout>) => scene.shapes.flatMap((shape) => (shape.kind === 'text' ? [shape.text] : []));
-  const rings = (scene: ReturnType<typeof structChain.layout>) => scene.shapes.filter((shape) => shape.kind === 'path' && shape.stroke && shape.d.includes(' V ')).length;
+  const texts = (scene: ReturnType<typeof structChain.layout>) =>
+    scene.shapes.flatMap((shape) =>
+      shape.kind === 'text' ? [shape.text] : [],
+    );
+  const rings = (scene: ReturnType<typeof structChain.layout>) =>
+    scene.shapes.filter(
+      (shape) =>
+        shape.kind === 'path' && shape.stroke && shape.d.includes(' V '),
+    ).length;
   const ring = structChain.layout(chainSpec);
   assert.equal(rings(ring), 1);
   assert.equal(texts(ring).filter((t) => t === 'offsetof').length, 1);
@@ -147,26 +378,62 @@ test('a struct chain links only the embedded members, rings back to its head and
   const line = structChain.layout({ ...chainSpec, head: undefined });
   assert.equal(rings(line), 0);
   assert.equal(texts(line).filter((t) => t === 'next').length, 3 + 2);
-  const first = structChain.layout({ ...chainSpec, fields: [['list', 16], ['username', 256], ['age', 1], { pad: 7 }] });
+  const first = structChain.layout({
+    ...chainSpec,
+    fields: [['list', 16], ['username', 256], ['age', 1], { pad: 7 }],
+  });
   assert.ok(!texts(first).includes('offsetof'));
-  assert.match(toWeb(ring), /<rect x="[\d.]+" y="164" width="112" height="44" style="fill:var\(--diagram-purple-wash\)"\/>/);
+  assert.match(
+    toWeb(ring),
+    /<rect x="[\d.]+" y="164" width="112" height="44" style="fill:var\(--diagram-purple-wash\)"\/>/,
+  );
 });
 
 test('a box can round any of its corners', () => {
-  const scene = { width: 100, height: 100, label: 'x', font: 'code-mono', shapes: [
-    { kind: 'rect', x: 10, y: 10, w: 80, h: 40, fill: 'diagram-area', corners: corners(true, false) },
-    { kind: 'outline', x: 10, y: 10, w: 80, h: 80, stroke: 'diagram-ink', rounded: true },
-  ] } satisfies Scene;
+  const scene = {
+    width: 100,
+    height: 100,
+    label: 'x',
+    font: 'code-mono',
+    shapes: [
+      {
+        kind: 'rect',
+        x: 10,
+        y: 10,
+        w: 80,
+        h: 40,
+        fill: 'diagram-area',
+        corners: corners(true, false),
+      },
+      {
+        kind: 'outline',
+        x: 10,
+        y: 10,
+        w: 80,
+        h: 80,
+        stroke: 'diagram-ink',
+        rounded: true,
+      },
+    ],
+  } satisfies Scene;
   const svg = toWeb(scene);
-  assert.match(svg, /<path d="M 18 10 H 82 A 8 8 0 0 1 90 18 V 50 H 10 V 18 A 8 8 0 0 1 18 10 Z" style="fill:var\(--diagram-area\)"\/>/);
-  assert.match(svg, /<rect x="10" y="10" width="80" height="80" rx="8" fill="none"/);
+  assert.match(
+    svg,
+    /<path d="M 18 10 H 82 A 8 8 0 0 1 90 18 V 50 H 10 V 18 A 8 8 0 0 1 18 10 Z" style="fill:var\(--diagram-area\)"\/>/,
+  );
+  assert.match(
+    svg,
+    /<rect x="10" y="10" width="80" height="80" rx="8" fill="none"/,
+  );
   assert.deepEqual(lintStatic(toStatic(scene, tokens, 'clean-light')), []);
 });
 
 test('a struct chain starts each pointer under the outline it leaves', () => {
   const { shapes } = structChain.layout(chainSpec);
   const firstOutline = shapes.findIndex((s) => s.kind === 'outline');
-  const shafts = shapes.flatMap((s, i) => (s.kind === 'path' && s.stroke === 'diagram-red' ? [i] : []));
+  const shafts = shapes.flatMap((s, i) =>
+    s.kind === 'path' && s.stroke === 'diagram-red' ? [i] : [],
+  );
   assert.equal(shafts.length, 4);
   assert.ok(shafts.every((i) => i < firstOutline));
 });
@@ -177,10 +444,22 @@ test('strokes join without seams, notches or hairline gaps', () => {
     regions: [
       { id: 'next', value: 'struct s', sub: '(s[1])' },
       { id: 'here', value: '0x1000', start: '0x1010' },
-      { id: 'data', value: 'data', start: '0x1000', marker: 'base', tone: 'blue' },
+      {
+        id: 'data',
+        value: 'data',
+        start: '0x1000',
+        marker: 'base',
+        tone: 'blue',
+      },
     ],
     spans: [
-      { from: 'next', to: 'next', label: 'next', tone: 'orange', shape: 'bracket' },
+      {
+        from: 'next',
+        to: 'next',
+        label: 'next',
+        tone: 'orange',
+        shape: 'bracket',
+      },
       { from: 'here', to: 'data', label: 'sizeof', tone: 'purple' },
     ],
   };
@@ -191,211 +470,839 @@ test('strokes join without seams, notches or hairline gaps', () => {
     structChain.layout(chainSpec),
     textTable.layout(textSpec),
   ];
-  for (const scene of scenes) assert.deepEqual(lintJoins(scene), [], scene.label);
+  for (const scene of scenes)
+    assert.deepEqual(lintJoins(scene), [], scene.label);
 });
 
 test('a toned memory-table field fills with its wash and folds only with its own tone', () => {
-  const g = memoryTable.grid({ label: 'tag', unit: 'bit', cols: 16, fields: [['EtherType', 16, 'purple'], ['VID', 12], ['DEI', 1, 'red'], ['PCP', 3]] });
-  const fills = memoryTable.layout(g).shapes.flatMap((s) => (s.kind === 'rect' ? [s.fill] : []));
-  assert.deepEqual(fills, ['diagram-purple-wash', 'diagram-area', 'diagram-red-wash', 'diagram-area']);
-  const tones = (fields: memoryTable.Field[]) => memoryTable.grid({ label: 'buf', unit: 'byte', fields }).rows.map((r) => r.cells[0].tone);
-  assert.deepEqual(tones([['buf', 48, 'blue'], ['buf', 48]]), ['blue', undefined, 'blue', undefined, undefined, undefined]);
-  assert.deepEqual(tones([['buf', 48, 'blue'], ['buf', 48, 'blue']]), ['blue', undefined, 'blue']);
+  const g = memoryTable.grid({
+    label: 'tag',
+    unit: 'bit',
+    cols: 16,
+    fields: [
+      ['EtherType', 16, 'purple'],
+      ['VID', 12],
+      ['DEI', 1, 'red'],
+      ['PCP', 3],
+    ],
+  });
+  const fills = memoryTable
+    .layout(g)
+    .shapes.flatMap((s) => (s.kind === 'rect' ? [s.fill] : []));
+  assert.deepEqual(fills, [
+    'diagram-purple-wash',
+    'diagram-area',
+    'diagram-red-wash',
+    'diagram-area',
+  ]);
+  const tones = (fields: memoryTable.Field[]) =>
+    memoryTable
+      .grid({ label: 'buf', unit: 'byte', fields })
+      .rows.map((r) => r.cells[0].tone);
+  assert.deepEqual(
+    tones([
+      ['buf', 48, 'blue'],
+      ['buf', 48],
+    ]),
+    ['blue', undefined, 'blue', undefined, undefined, undefined],
+  );
+  assert.deepEqual(
+    tones([
+      ['buf', 48, 'blue'],
+      ['buf', 48, 'blue'],
+    ]),
+    ['blue', undefined, 'blue'],
+  );
 });
 
 test('invalid specs name the problem', () => {
   const spec = (patch: object): memoryLayout.MemoryLayout => ({
     label: 'x',
-    regions: [{ id: 'a', value: '0x10', start: '0x10' }, { value: '0x10', start: '0x8', to: 'a', ...patch }],
+    regions: [
+      { id: 'a', value: '0x10', start: '0x10' },
+      { value: '0x10', start: '0x8', to: 'a', ...patch },
+    ],
   });
-  assert.throws(() => memoryLayout.layout(spec({ to: 'b' })), /is not a region id/);
-  assert.throws(() => memoryLayout.layout(spec({ start: '0x20' })), /start: must be lower/);
-  assert.throws(() => memoryLayout.layout(spec({ value: '0x18' })), /give the target a size/);
-  assert.throws(() => memoryLayout.layout(spec({ colour: 'red' })), /unknown field "colour"/);
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'w', start: '0x20', h: 0.45 }, { value: '0x20', start: '0x10', to: 'a', h: 0.45 }] }), /needs 24; raise h/);
-  assert.throws(() => memoryTable.grid({ label: 'x', unit: 'byte', fields: [['a', 3]] }), /add \{"pad": 5\}/);
-  assert.throws(() => memoryTable.grid({ label: 'x', unit: 'bit', cols: 4, fields: [['a', 4, 'teal' as 'red']] }), /unknown tone "teal"/);
+  assert.throws(
+    () => memoryLayout.layout(spec({ to: 'b' })),
+    /is not a region id/,
+  );
+  assert.throws(
+    () => memoryLayout.layout(spec({ start: '0x20' })),
+    /start: must be lower/,
+  );
+  assert.throws(
+    () => memoryLayout.layout(spec({ value: '0x18' })),
+    /give the target a size/,
+  );
+  assert.throws(
+    () => memoryLayout.layout(spec({ colour: 'red' })),
+    /unknown field "colour"/,
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        label: 'x',
+        regions: [
+          { id: 'a', word: 'w', start: '0x20', h: 0.45 },
+          { value: '0x20', start: '0x10', to: 'a', h: 0.45 },
+        ],
+      }),
+    /needs 24; raise h/,
+  );
+  assert.throws(
+    () => memoryTable.grid({ label: 'x', unit: 'byte', fields: [['a', 3]] }),
+    /add \{"pad": 5\}/,
+  );
+  assert.throws(
+    () =>
+      memoryTable.grid({
+        label: 'x',
+        unit: 'bit',
+        cols: 4,
+        fields: [['a', 4, 'teal' as 'red']],
+      }),
+    /unknown tone "teal"/,
+  );
 
-  const chain = (patch: object): structChain.StructChain => ({ ...chainSpec, ...patch });
-  assert.throws(() => structChain.layout(chain({ link: { field: 'node', cells: ['next'] } })), /"node" is not one of the fields/);
-  assert.throws(() => structChain.layout(chain({ link: { field: 'list', cells: [] } })), /one to three pointer names/);
-  assert.throws(() => structChain.layout(chain({ nodes: [{ name: 'a', values: { list: '0x0' } }] })), /"list" is not a field outside the link/);
-  assert.throws(() => structChain.layout(chain({ fields: [['a', 8], ['a', 8], ['list', 16]] })), /"a" is used twice/);
-  assert.throws(() => structChain.layout(chain({ fields: [{ pad: 8 }, ['list', 16]], nodes: [{ name: 'a' }] }), structChain.PROFILES.slide), /too short for the offsetof dimension/);
-  assert.throws(() => structChain.layout(chain({ tones: { edge: 'red' } })), /tones: unknown field "edge"/);
-  assert.throws(() => structChain.layout(chain({ tones: { walk: 'teal' } })), /unknown tone "teal"/);
-  assert.throws(() => structChain.layout(chain({ nodes: [...chainSpec.nodes, { name: 'users[3]' }] })), /4 structures need \d+ units, past 700/);
-  assert.throws(() => structChain.layout(chain({ head: { name: 'h', next: 'x' } })), /head: unknown field "next"/);
+  const chain = (patch: object): structChain.StructChain => ({
+    ...chainSpec,
+    ...patch,
+  });
+  assert.throws(
+    () =>
+      structChain.layout(chain({ link: { field: 'node', cells: ['next'] } })),
+    /"node" is not one of the fields/,
+  );
+  assert.throws(
+    () => structChain.layout(chain({ link: { field: 'list', cells: [] } })),
+    /one to three pointer names/,
+  );
+  assert.throws(
+    () =>
+      structChain.layout(
+        chain({ nodes: [{ name: 'a', values: { list: '0x0' } }] }),
+      ),
+    /"list" is not a field outside the link/,
+  );
+  assert.throws(
+    () =>
+      structChain.layout(
+        chain({
+          fields: [
+            ['a', 8],
+            ['a', 8],
+            ['list', 16],
+          ],
+        }),
+      ),
+    /"a" is used twice/,
+  );
+  assert.throws(
+    () =>
+      structChain.layout(
+        chain({ fields: [{ pad: 8 }, ['list', 16]], nodes: [{ name: 'a' }] }),
+        structChain.PROFILES.slide,
+      ),
+    /too short for the offsetof dimension/,
+  );
+  assert.throws(
+    () => structChain.layout(chain({ tones: { edge: 'red' } })),
+    /tones: unknown field "edge"/,
+  );
+  assert.throws(
+    () => structChain.layout(chain({ tones: { walk: 'teal' } })),
+    /unknown tone "teal"/,
+  );
+  assert.throws(
+    () =>
+      structChain.layout(
+        chain({ nodes: [...chainSpec.nodes, { name: 'users[3]' }] }),
+      ),
+    /4 structures need \d+ units, past 700/,
+  );
+  assert.throws(
+    () => structChain.layout(chain({ head: { name: 'h', next: 'x' } })),
+    /head: unknown field "next"/,
+  );
 });
 
 test('review regressions stay fixed', () => {
-  const desc = memoryTable.grid({ label: 'x', unit: 'bit', cols: 8, order: 'desc', fields: [['EN', 1], ['MODE', 3], { pad: 4 }] });
+  const desc = memoryTable.grid({
+    label: 'x',
+    unit: 'bit',
+    cols: 8,
+    order: 'desc',
+    fields: [['EN', 1], ['MODE', 3], { pad: 4 }],
+  });
   assert.deepEqual(desc.headers, ['7', '6', '5', '4', '3', '2', '1', '0']);
-  assert.deepEqual(desc.rows[0].cells.map((c) => c.text), ['pad', 'MODE', 'EN']);
-  assert.throws(() => memoryTable.grid({ label: 'x', unit: 'bit', order: 'DESC' as 'desc', fields: [['a', 32]] }), /order/);
-  const based = memoryTable.grid({ label: 'x', unit: 'byte', base: '0xffff800083fcbc30', fields: [['a', 8], ['b', 8]] });
-  assert.deepEqual([...based.rows.map((r) => r.offset), based.end], ['0xffff800083fcbc30', '0xffff800083fcbc38', '0xffff800083fcbc40']);
-  assert.throws(() => memoryTable.grid({ label: 'x', unit: 'byte', base: 4096 as unknown as string, fields: [['a', 8]] }), /base/);
-  assert.ok(toWeb(memoryTable.layout(memoryTable.grid({ label: 'x', unit: 'byte', fields: [['map (std::map<int,int>)', 8]] }))).includes('std::map&lt;int,int&gt;'));
-  assert.throws(() => memoryTable.grid({ label: 'x', unit: 'byte', cols: 200, fields: [['a', 200]] }), /cols/);
-  assert.throws(() => memoryTable.grid({ label: 'x', unit: 'byte', fields: [null as unknown as memoryTable.Field] }), /expected/);
-  assert.throws(() => memoryTable.parseTable('<table class="mem-layout" aria-label="x"><tr><th>0</th><th>1</th></tr><tr><td class="field">a</td></tr></table>'), /spans 1 columns/);
+  assert.deepEqual(
+    desc.rows[0].cells.map((c) => c.text),
+    ['pad', 'MODE', 'EN'],
+  );
+  assert.throws(
+    () =>
+      memoryTable.grid({
+        label: 'x',
+        unit: 'bit',
+        order: 'DESC' as 'desc',
+        fields: [['a', 32]],
+      }),
+    /order/,
+  );
+  const based = memoryTable.grid({
+    label: 'x',
+    unit: 'byte',
+    base: '0xffff800083fcbc30',
+    fields: [
+      ['a', 8],
+      ['b', 8],
+    ],
+  });
+  assert.deepEqual(
+    [...based.rows.map((r) => r.offset), based.end],
+    ['0xffff800083fcbc30', '0xffff800083fcbc38', '0xffff800083fcbc40'],
+  );
+  assert.throws(
+    () =>
+      memoryTable.grid({
+        label: 'x',
+        unit: 'byte',
+        base: 4096 as unknown as string,
+        fields: [['a', 8]],
+      }),
+    /base/,
+  );
+  assert.ok(
+    toWeb(
+      memoryTable.layout(
+        memoryTable.grid({
+          label: 'x',
+          unit: 'byte',
+          fields: [['map (std::map<int,int>)', 8]],
+        }),
+      ),
+    ).includes('std::map&lt;int,int&gt;'),
+  );
+  assert.throws(
+    () =>
+      memoryTable.grid({
+        label: 'x',
+        unit: 'byte',
+        cols: 200,
+        fields: [['a', 200]],
+      }),
+    /cols/,
+  );
+  assert.throws(
+    () =>
+      memoryTable.grid({
+        label: 'x',
+        unit: 'byte',
+        fields: [null as unknown as memoryTable.Field],
+      }),
+    /expected/,
+  );
+  assert.throws(
+    () =>
+      memoryTable.parseTable(
+        '<table class="mem-layout" aria-label="x"><tr><th>0</th><th>1</th></tr><tr><td class="field">a</td></tr></table>',
+      ),
+    /spans 1 columns/,
+  );
 
-  const sized = memoryLayout.layout({ label: 'x', regions: [
-    { id: 'hi', word: 'other', start: '0x8000' },
-    { id: 'buf', word: 'buffer', start: '0x1000', size: '0x100' },
-    { value: '0x1080', start: '0x800', to: 'buf' },
-  ] });
-  assert.ok(sized.shapes.some((shape) => shape.kind === 'path' && shape.d === 'M 485 180.36 L 497 174.36 L 497 186.36 Z'));
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ id: 'a', word: 'a', h: '50' as unknown as number, start: '0x20' }] }), /h: must be a positive number/);
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ value: 4096 as unknown as string }] }), /must be a non-empty string/);
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a\nb' }] }), /control character/);
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [
-    { id: 'r0', word: 'r0', start: '0x60' }, { id: 'r1', word: 'r1', start: '0x50' }, { value: '0x50', start: '0x40', to: 'r1' },
-    { gap: true }, { gap: true }, { value: '0x60', start: '0x10', to: 'r0' },
-  ] }), /runs into the arrow|cross/);
+  const sized = memoryLayout.layout({
+    label: 'x',
+    regions: [
+      { id: 'hi', word: 'other', start: '0x8000' },
+      { id: 'buf', word: 'buffer', start: '0x1000', size: '0x100' },
+      { value: '0x1080', start: '0x800', to: 'buf' },
+    ],
+  });
+  assert.ok(
+    sized.shapes.some(
+      (shape) =>
+        shape.kind === 'path' &&
+        shape.d === 'M 485 180.36 L 497 174.36 L 497 186.36 Z',
+    ),
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        label: 'x',
+        regions: [
+          { id: 'a', word: 'a', h: '50' as unknown as number, start: '0x20' },
+        ],
+      }),
+    /h: must be a positive number/,
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        label: 'x',
+        regions: [{ value: 4096 as unknown as string }],
+      }),
+    /must be a non-empty string/,
+  );
+  assert.throws(
+    () => memoryLayout.layout({ label: 'x', regions: [{ word: 'a\nb' }] }),
+    /control character/,
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        label: 'x',
+        regions: [
+          { id: 'r0', word: 'r0', start: '0x60' },
+          { id: 'r1', word: 'r1', start: '0x50' },
+          { value: '0x50', start: '0x40', to: 'r1' },
+          { gap: true },
+          { gap: true },
+          { value: '0x60', start: '0x10', to: 'r0' },
+        ],
+      }),
+    /runs into the arrow|cross/,
+  );
 
-  const table = memoryTable.layout(memoryTable.grid({ unit: 'byte', fields: [['code (u16)', 2], ['jt (u8)', 1], ['jf (u8)', 1], ['k (u32)', 4]], label: 'struct sock_filter' }));
+  const table = memoryTable.layout(
+    memoryTable.grid({
+      unit: 'byte',
+      fields: [
+        ['code (u16)', 2],
+        ['jt (u8)', 1],
+        ['jf (u8)', 1],
+        ['k (u32)', 4],
+      ],
+      label: 'struct sock_filter',
+    }),
+  );
   assert.deepEqual(lintStatic(toStatic(table, tokens, 'clean-light')), []);
-  assert.deepEqual(lintStatic('<svg><text fill="#000">filter opacity transform var(x)</text></svg>'), []);
+  assert.deepEqual(
+    lintStatic(
+      '<svg><text fill="#000">filter opacity transform var(x)</text></svg>',
+    ),
+    [],
+  );
   assert.equal(lintStatic('<svg><rect style="fill:red"/></svg>').length, 1);
 });
 
 test('limits are checked before anything is drawn', () => {
-  const huge = memoryTable.grid({ label: 'x', unit: 'byte', fields: [{ other: 'user space', size: 2 ** 47 }] });
-  assert.deepEqual([...huge.rows.map((r) => `${r.offset} ${r.cells[0].kind}`), huge.end], ['0x00 other', '0x08 gap', '0x7ffffffffff8 other', '0x800000000000']);
-  const same = memoryTable.grid({ label: 'x', unit: 'byte', fields: Array.from({ length: 5 }, (): memoryTable.Field => ['a', 8]) });
-  assert.deepEqual([...same.rows.map((r) => `${r.offset} ${r.cells[0].kind}`), same.end], ['0x00 field', '0x08 gap', '0x20 field', '0x28']);
-  assert.throws(() => memoryTable.grid({ label: 'x', unit: 'byte', fields: [['a', 2 ** 53]] }), /below 2\^53/);
-  assert.throws(() => memoryTable.grid({ label: 'x', unit: 'byte', fields: [['a', 2 ** 52], ['b', 2 ** 52]] }), /add up past 2\^53/);
-  assert.throws(() => memoryTable.grid({ label: 'x', unit: 'byte', base: '0x10000000000000000', fields: [['a', 8]] }), /64-bit hex address/);
-  assert.throws(() => memoryTable.grid({ label: 'x', unit: 'byte', base: '0xfffffffffffffff8', fields: [['a', 16]] }), /past the 64-bit address space/);
-  assert.equal(memoryTable.grid({ label: 'x', unit: 'byte', base: '0xfffffffffffffff8', fields: [['a', 8]] }).end, '0x10000000000000000');
-  assert.throws(() => memoryTable.layout(memoryTable.grid({ label: 'x', unit: 'bit', cols: 64, fields: [['a', 64]] })), /too narrow for the column number "63"/);
-  assert.throws(() => memoryTable.layout(memoryTable.parseTable(`<table class="mem-layout" aria-label="x"><tr><th>Offset</th><th>+0</th></tr><tr><td class="offset">${'f'.repeat(90)}</td><td class="field">a</td></tr></table>`)), /too narrow/);
+  const huge = memoryTable.grid({
+    label: 'x',
+    unit: 'byte',
+    fields: [{ other: 'user space', size: 2 ** 47 }],
+  });
+  assert.deepEqual(
+    [...huge.rows.map((r) => `${r.offset} ${r.cells[0].kind}`), huge.end],
+    ['0x00 other', '0x08 gap', '0x7ffffffffff8 other', '0x800000000000'],
+  );
+  const same = memoryTable.grid({
+    label: 'x',
+    unit: 'byte',
+    fields: Array.from({ length: 5 }, (): memoryTable.Field => ['a', 8]),
+  });
+  assert.deepEqual(
+    [...same.rows.map((r) => `${r.offset} ${r.cells[0].kind}`), same.end],
+    ['0x00 field', '0x08 gap', '0x20 field', '0x28'],
+  );
+  assert.throws(
+    () =>
+      memoryTable.grid({ label: 'x', unit: 'byte', fields: [['a', 2 ** 53]] }),
+    /below 2\^53/,
+  );
+  assert.throws(
+    () =>
+      memoryTable.grid({
+        label: 'x',
+        unit: 'byte',
+        fields: [
+          ['a', 2 ** 52],
+          ['b', 2 ** 52],
+        ],
+      }),
+    /add up past 2\^53/,
+  );
+  assert.throws(
+    () =>
+      memoryTable.grid({
+        label: 'x',
+        unit: 'byte',
+        base: '0x10000000000000000',
+        fields: [['a', 8]],
+      }),
+    /64-bit hex address/,
+  );
+  assert.throws(
+    () =>
+      memoryTable.grid({
+        label: 'x',
+        unit: 'byte',
+        base: '0xfffffffffffffff8',
+        fields: [['a', 16]],
+      }),
+    /past the 64-bit address space/,
+  );
+  assert.equal(
+    memoryTable.grid({
+      label: 'x',
+      unit: 'byte',
+      base: '0xfffffffffffffff8',
+      fields: [['a', 8]],
+    }).end,
+    '0x10000000000000000',
+  );
+  assert.throws(
+    () =>
+      memoryTable.layout(
+        memoryTable.grid({
+          label: 'x',
+          unit: 'bit',
+          cols: 64,
+          fields: [['a', 64]],
+        }),
+      ),
+    /too narrow for the column number "63"/,
+  );
+  assert.throws(
+    () =>
+      memoryTable.layout(
+        memoryTable.parseTable(
+          `<table class="mem-layout" aria-label="x"><tr><th>Offset</th><th>+0</th></tr><tr><td class="offset">${'f'.repeat(90)}</td><td class="field">a</td></tr></table>`,
+        ),
+      ),
+    /too narrow/,
+  );
 
-  assert.throws(() => memoryTable.grid({ unit: 'byte', fields: [['a', 8]] } as unknown as memoryTable.MemoryTable), /label: required/);
-  const body = '<tr><th>&#43;0</th><th>&#x2B;1</th></tr><tr><td class="field">a&nbsp;b</td><td class="other">&amp;lt; &foo;</td></tr>';
-  assert.throws(() => memoryTable.parseTable(`<table class="mem-layout">${body}</table>`), /needs an aria-label or a <caption>/);
-  const captioned = memoryTable.parseTable(`<table class="mem-layout"><caption>The <b>first</b> word</caption>${body}</table>`);
+  assert.throws(
+    () =>
+      memoryTable.grid({
+        unit: 'byte',
+        fields: [['a', 8]],
+      } as unknown as memoryTable.MemoryTable),
+    /label: required/,
+  );
+  const body =
+    '<tr><th>&#43;0</th><th>&#x2B;1</th></tr><tr><td class="field">a&nbsp;b</td><td class="other">&amp;lt; &foo;</td></tr>';
+  assert.throws(
+    () => memoryTable.parseTable(`<table class="mem-layout">${body}</table>`),
+    /needs an aria-label or a <caption>/,
+  );
+  const captioned = memoryTable.parseTable(
+    `<table class="mem-layout"><caption>The <b>first</b> word</caption>${body}</table>`,
+  );
   assert.equal(captioned.label, 'The first word');
   assert.deepEqual(captioned.headers, ['+0', '+1']);
-  assert.deepEqual(captioned.rows[0].cells.map((c) => c.text), ['a\u00a0b', '&lt; &foo;']);
-  assert.equal(memoryTable.parseTable(`<table class="mem-layout" aria-label="named &quot;here&quot;"><caption>not this</caption>${body}</table>`).label, 'named "here"');
-  assert.match(toWeb(memoryTable.layout(captioned)), /role="img" aria-label="The first word"/);
-  assert.throws(() => memoryTable.parseTable('<table class="mem-layout" aria-label="x"><tr><th>&#0;</th></tr><tr><td class="field">a</td></tr></table>'), /header 1: contains a control character/);
+  assert.deepEqual(
+    captioned.rows[0].cells.map((c) => c.text),
+    ['a\u00a0b', '&lt; &foo;'],
+  );
+  assert.equal(
+    memoryTable.parseTable(
+      `<table class="mem-layout" aria-label="named &quot;here&quot;"><caption>not this</caption>${body}</table>`,
+    ).label,
+    'named "here"',
+  );
+  assert.match(
+    toWeb(memoryTable.layout(captioned)),
+    /role="img" aria-label="The first word"/,
+  );
+  assert.throws(
+    () =>
+      memoryTable.parseTable(
+        '<table class="mem-layout" aria-label="x"><tr><th>&#0;</th></tr><tr><td class="field">a</td></tr></table>',
+      ),
+    /header 1: contains a control character/,
+  );
 
   for (const bad of ['x\uffff', 'x\ufffe', 'x\ud800', 'x\udc00y']) {
-    assert.throws(() => memoryLayout.layout({ label: bad, regions: [{ word: 'a' }] }), /U\+FFFE, U\+FFFF or an unpaired surrogate/);
+    assert.throws(
+      () => memoryLayout.layout({ label: bad, regions: [{ word: 'a' }] }),
+      /U\+FFFE, U\+FFFF or an unpaired surrogate/,
+    );
   }
-  assert.throws(() => memoryLayout.layout({ label: 'x\u0085', regions: [{ word: 'a' }] }), /control character/);
-  assert.doesNotThrow(() => memoryLayout.layout({ label: 'x \u{1F600}', regions: [{ word: 'a' }] }));
+  assert.throws(
+    () => memoryLayout.layout({ label: 'x\u0085', regions: [{ word: 'a' }] }),
+    /control character/,
+  );
+  assert.doesNotThrow(() =>
+    memoryLayout.layout({ label: 'x \u{1F600}', regions: [{ word: 'a' }] }),
+  );
 
   const pointer = (shape?: 'bracket'): memoryLayout.MemoryLayout => ({
     label: 'x',
-    regions: [{ id: 't', word: 't', start: '0x1000' }, { id: 'm', word: 'm', start: '0x800' }, { value: '0x1000', start: '0x400', to: 't' }],
+    regions: [
+      { id: 't', word: 't', start: '0x1000' },
+      { id: 'm', word: 'm', start: '0x800' },
+      { value: '0x1000', start: '0x400', to: 't' },
+    ],
     spans: [{ from: 't', to: 't', label: 'sizeof', shape }],
   });
-  assert.throws(() => memoryLayout.layout(pointer()), /shares rows with the arrow/);
-  assert.throws(() => memoryLayout.layout(pointer('bracket')), /shares rows with the arrow/);
-  assert.doesNotThrow(() => memoryLayout.layout({ ...pointer(), regions: [{ id: 'x', word: 'x', start: '0x2000' }, ...pointer().regions], spans: [{ from: 'x', to: 'x', label: 'clear' }] }));
+  assert.throws(
+    () => memoryLayout.layout(pointer()),
+    /shares rows with the arrow/,
+  );
+  assert.throws(
+    () => memoryLayout.layout(pointer('bracket')),
+    /shares rows with the arrow/,
+  );
+  assert.doesNotThrow(() =>
+    memoryLayout.layout({
+      ...pointer(),
+      regions: [{ id: 'x', word: 'x', start: '0x2000' }, ...pointer().regions],
+      spans: [{ from: 'x', to: 'x', label: 'clear' }],
+    }),
+  );
 
-  const titled = (title: string): memoryLayout.MemoryLayout => ({ label: 'x', title: [title], regions: [{ word: 'a' }] });
-  assert.throws(() => memoryLayout.layout(titled('type: struct task_struct (the current task)')), /runs into the "high" label/);
-  assert.doesNotThrow(() => memoryLayout.layout(titled('type: struct task_struct')));
+  const titled = (title: string): memoryLayout.MemoryLayout => ({
+    label: 'x',
+    title: [title],
+    regions: [{ word: 'a' }],
+  });
+  assert.throws(
+    () =>
+      memoryLayout.layout(
+        titled('type: struct task_struct (the current task)'),
+      ),
+    /runs into the "high" label/,
+  );
+  assert.doesNotThrow(() =>
+    memoryLayout.layout(titled('type: struct task_struct')),
+  );
 
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'tiny', h: 0.001, start: '0x10' }] }), /h: 0.001 makes the row [\d.]+ units tall, too short for its text; raise h to [\d.]+/);
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a', sub: 'b', h: 0.6 }] }), /raise h to 0.64/);
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ value: '0x1', h: 0.5 }] }, memoryLayout.PROFILES.slide), /raise h to 0.58/);
-  assert.doesNotThrow(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a', h: 30 }, { word: 'b', sub: 'c', h: 44 }] }));
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ gap: true, sub: 'b' }] }), /a gap draws no text/);
-  const filled = toWeb(memoryLayout.layout({ label: 'x', regions: [{ word: 'a', fill: 'purple' }, { word: 'b', fill: 'gap' }, { word: 'c' }] }));
-  assert.deepEqual([...filled.matchAll(/<rect [^>]*style="fill:var\(--([\w-]+)\)"/g)].map((m) => m[1]), ['diagram-purple-wash', 'diagram-gap', 'diagram-area']);
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ word: 'a', fill: 'teal' as 'gap' }] }), /fill: must be "area", "gap" or a tone/);
-  assert.throws(() => memoryLayout.layout({ label: 'x', regions: [{ gap: true, fill: 'area' }] }), /a gap takes the gap fill/);
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        label: 'x',
+        regions: [{ word: 'tiny', h: 0.001, start: '0x10' }],
+      }),
+    /h: 0.001 makes the row [\d.]+ units tall, too short for its text; raise h to [\d.]+/,
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        label: 'x',
+        regions: [{ word: 'a', sub: 'b', h: 0.6 }],
+      }),
+    /raise h to 0.64/,
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout(
+        { label: 'x', regions: [{ value: '0x1', h: 0.5 }] },
+        memoryLayout.PROFILES.slide,
+      ),
+    /raise h to 0.58/,
+  );
+  assert.doesNotThrow(() =>
+    memoryLayout.layout({
+      label: 'x',
+      regions: [
+        { word: 'a', h: 30 },
+        { word: 'b', sub: 'c', h: 44 },
+      ],
+    }),
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({ label: 'x', regions: [{ gap: true, sub: 'b' }] }),
+    /a gap draws no text/,
+  );
+  const filled = toWeb(
+    memoryLayout.layout({
+      label: 'x',
+      regions: [
+        { word: 'a', fill: 'purple' },
+        { word: 'b', fill: 'gap' },
+        { word: 'c' },
+      ],
+    }),
+  );
+  assert.deepEqual(
+    [...filled.matchAll(/<rect [^>]*style="fill:var\(--([\w-]+)\)"/g)].map(
+      (m) => m[1],
+    ),
+    ['diagram-purple-wash', 'diagram-gap', 'diagram-area'],
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        label: 'x',
+        regions: [{ word: 'a', fill: 'teal' as 'gap' }],
+      }),
+    /fill: must be "area", "gap" or a tone/,
+  );
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        label: 'x',
+        regions: [{ gap: true, fill: 'area' }],
+      }),
+    /a gap takes the gap fill/,
+  );
 
   const noted = (n: number): memoryLayout.MemoryLayout => ({
     label: 'x',
-    regions: [{ id: 'a', word: 'a' }, { id: 'b', word: 'b' }],
-    spans: [{ from: 'b', to: 'b', label: 'b', sub: Array.from({ length: n }, (_, i) => `line ${i}`) }],
+    regions: [
+      { id: 'a', word: 'a' },
+      { id: 'b', word: 'b' },
+    ],
+    spans: [
+      {
+        from: 'b',
+        to: 'b',
+        label: 'b',
+        sub: Array.from({ length: n }, (_, i) => `line ${i}`),
+      },
+    ],
     code: [['b']],
   });
   const tall = memoryLayout.layout(noted(7));
-  const lowest = Math.max(...tall.shapes.flatMap((s) => (s.kind === 'text' && s.text.startsWith('line') ? [s.y] : [])));
+  const lowest = Math.max(
+    ...tall.shapes.flatMap((s) =>
+      s.kind === 'text' && s.text.startsWith('line') ? [s.y] : [],
+    ),
+  );
   const code = tall.shapes.find((s) => s.kind === 'runs')!;
-  assert.ok(code.kind === 'runs' && code.y >= lowest + 40 && tall.height >= code.y + 20, `${lowest} ${code.kind === 'runs' && code.y} ${tall.height}`);
-  assert.equal(memoryLayout.layout(noted(1)).height, memoryLayout.layout({ ...noted(1), spans: undefined }).height);
-  const crowded: memoryLayout.MemoryLayout = { ...noted(7), regions: [{ id: 'b', word: 'b', start: '0x10' }, { id: 'a', word: 'a', start: '0x0' }], code: undefined };
+  assert.ok(
+    code.kind === 'runs' && code.y >= lowest + 40 && tall.height >= code.y + 20,
+    `${lowest} ${code.kind === 'runs' && code.y} ${tall.height}`,
+  );
+  assert.equal(
+    memoryLayout.layout(noted(1)).height,
+    memoryLayout.layout({ ...noted(1), spans: undefined }).height,
+  );
+  const crowded: memoryLayout.MemoryLayout = {
+    ...noted(7),
+    regions: [
+      { id: 'b', word: 'b', start: '0x10' },
+      { id: 'a', word: 'a', start: '0x0' },
+    ],
+    code: undefined,
+  };
   assert.doesNotThrow(() => memoryLayout.layout(crowded));
-  assert.throws(() => memoryLayout.layout({ ...crowded, title: ['type: struct b'.padEnd(28, '.')] }), /rise into the title or past the top/);
+  assert.throws(
+    () =>
+      memoryLayout.layout({
+        ...crowded,
+        title: ['type: struct b'.padEnd(28, '.')],
+      }),
+    /rise into the title or past the top/,
+  );
 
-  const chain = structChain.layout({ ...chainSpec, fields: [['toString', 8], ['list', 16], ['__proto__', 8]], nodes: [{ name: 'a', values: {} }, { name: 'b' }], head: undefined });
-  assert.ok(chain.shapes.some((s) => s.kind === 'text' && s.text === 'toString'));
+  const chain = structChain.layout({
+    ...chainSpec,
+    fields: [
+      ['toString', 8],
+      ['list', 16],
+      ['__proto__', 8],
+    ],
+    nodes: [{ name: 'a', values: {} }, { name: 'b' }],
+    head: undefined,
+  });
+  assert.ok(
+    chain.shapes.some((s) => s.kind === 'text' && s.text === 'toString'),
+  );
 });
 
 const blog = fileURLToPath(new URL('../../blog/', import.meta.url));
-test('tokens.json matches the blog themes', { skip: !existsSync(blog) && 'no blog checkout' }, () => {
-  assert.deepEqual(readBlogTokens(blog), tokens);
-});
+test(
+  'tokens.json matches the blog themes',
+  { skip: !existsSync(blog) && 'no blog checkout' },
+  () => {
+    assert.deepEqual(readBlogTokens(blog), tokens);
+  },
+);
 
 test('the canvas examples render, join cleanly and export as static svgs', () => {
   for (const spec of canvasSpecs) {
     const scene = canvas.layout(spec);
     assert.ok(scene.width > 0 && scene.height > 0, spec.id);
     assert.deepEqual(lintJoins(scene), [], spec.id);
-    assert.deepEqual(lintStatic(toStatic(scene, tokens, 'clean-light')), [], spec.id);
+    assert.deepEqual(
+      lintStatic(toStatic(scene, tokens, 'clean-light')),
+      [],
+      spec.id,
+    );
   }
 });
 
 test('invalid canvas specs name the problem', () => {
   const box = { box: 'a', x: 0, y: 0, w: 100, h: 40, label: 'a' };
-  assert.throws(() => canvas.layout({ label: 'x', items: [box, { arrow: ['a.right', 'b.left'] }] }), /"b" is not an id/);
-  assert.throws(() => canvas.layout({ label: 'x', items: [{ ...box, w: 60, label: 'struct task_struct' }] }), /needs \d+ units of width; it has 60/);
-  assert.throws(() => canvas.layout({ label: 'x', items: [{ ...box, colour: 'red' } as canvas.Item] }), /unknown field "colour"/);
-  assert.throws(() => canvas.layout({ label: 'x', items: [box, { dimension: [[0, 0], [100, 100]] }] }), /must share x or y/);
-  assert.throws(() => canvas.layout({ label: 'x', items: [box, { arrow: ['a.right', [110, 20]] }] }), /needs 21/);
-  assert.throws(() => canvas.layout({ label: 'x', items: [box, { box: 'a', x: 0, y: 60, w: 100, h: 40 }] }), /duplicate id "a"/);
+  assert.throws(
+    () =>
+      canvas.layout({
+        label: 'x',
+        items: [box, { arrow: ['a.right', 'b.left'] }],
+      }),
+    /"b" is not an id/,
+  );
+  assert.throws(
+    () =>
+      canvas.layout({
+        label: 'x',
+        items: [{ ...box, w: 60, label: 'struct task_struct' }],
+      }),
+    /needs \d+ units of width; it has 60/,
+  );
+  assert.throws(
+    () =>
+      canvas.layout({
+        label: 'x',
+        items: [{ ...box, colour: 'red' } as canvas.Item],
+      }),
+    /unknown field "colour"/,
+  );
+  assert.throws(
+    () =>
+      canvas.layout({
+        label: 'x',
+        items: [
+          box,
+          {
+            dimension: [
+              [0, 0],
+              [100, 100],
+            ],
+          },
+        ],
+      }),
+    /must share x or y/,
+  );
+  assert.throws(
+    () =>
+      canvas.layout({
+        label: 'x',
+        items: [box, { arrow: ['a.right', [110, 20]] }],
+      }),
+    /needs 21/,
+  );
+  assert.throws(
+    () =>
+      canvas.layout({
+        label: 'x',
+        items: [box, { box: 'a', x: 0, y: 60, w: 100, h: 40 }],
+      }),
+    /duplicate id "a"/,
+  );
 });
 
 test('the text table example renders the reference svg and keeps every line inside its column', () => {
-  assert.equal(toWeb(textTable.layout(textSpec)) + '\n', read('golden/web-image-terms.svg'));
+  assert.equal(
+    toWeb(textTable.layout(textSpec)) + '\n',
+    read('golden/web-image-terms.svg'),
+  );
   for (const profile of ['blog', 'slide'] as const) {
     const scene = textTable.layout(textSpec, textTable.PROFILES[profile]);
-    const xs = [16, ...scene.shapes.flatMap((s) => (s.kind === 'line' && s.x1 === s.x2 ? [s.x1] : [])), 684];
+    const xs = [
+      16,
+      ...scene.shapes.flatMap((s) =>
+        s.kind === 'line' && s.x1 === s.x2 ? [s.x1] : [],
+      ),
+      684,
+    ];
     const texts = scene.shapes.filter((s) => s.kind === 'text');
     assert.equal(texts.filter((t) => t.text === textSpec.columns[0]).length, 1);
     for (const t of texts) {
       const c = xs.findIndex((x) => x + 12 === t.x);
-      assert.ok(c >= 0 && c < xs.length - 1, `"${t.text}" starts at ${t.x}, off the column padding`);
-      assert.ok(textWidth(t.text, t.size) <= xs[c + 1] - xs[c] - 24, `"${t.text}" overflows column ${c + 1}`);
+      assert.ok(
+        c >= 0 && c < xs.length - 1,
+        `"${t.text}" starts at ${t.x}, off the column padding`,
+      );
+      assert.ok(
+        textWidth(t.text, t.size) <= xs[c + 1] - xs[c] - 24,
+        `"${t.text}" overflows column ${c + 1}`,
+      );
     }
     assert.deepEqual(lintJoins(scene), [], profile);
-    for (const theme of Object.keys(tokens.themes)) assert.deepEqual(lintStatic(toStatic(scene, tokens, theme)), [], `${profile} ${theme}`);
+    for (const theme of Object.keys(tokens.themes))
+      assert.deepEqual(
+        lintStatic(toStatic(scene, tokens, theme)),
+        [],
+        `${profile} ${theme}`,
+      );
   }
 });
 
 test('a text table sizes its columns from the text and breaks a long word at its separators', () => {
-  const lines = (scene: Scene) => scene.shapes.flatMap((s) => (s.kind === 'text' ? [s.text] : []));
-  const small = textTable.layout({ label: 'x', columns: ['key', 'value'], rows: [['a', 'b'], ['', ['one', 'two']]] });
+  const lines = (scene: Scene) =>
+    scene.shapes.flatMap((s) => (s.kind === 'text' ? [s.text] : []));
+  const small = textTable.layout({
+    label: 'x',
+    columns: ['key', 'value'],
+    rows: [
+      ['a', 'b'],
+      ['', ['one', 'two']],
+    ],
+  });
   assert.ok(small.width < 700);
   assert.deepEqual(lines(small), ['key', 'value', 'a', 'b', 'one', 'two']);
-  const split = textTable.layout({ label: 'x', columns: ['file', 'note'], widths: [3, 7], rows: [['apple-touch-icon.png', 'favicon']] });
-  assert.ok(split.shapes.some((s) => s.kind === 'line' && s.x1 === 216 && s.x2 === 216));
-  assert.deepEqual(lines(split), ['file', 'note', 'apple-touch-icon.', 'png', 'favicon']);
-  const call = textTable.layout({ label: 'x', columns: ['a', 'b'], widths: [1, 4], rows: [['favicon.svg(vector)', 'x']] });
+  const split = textTable.layout({
+    label: 'x',
+    columns: ['file', 'note'],
+    widths: [3, 7],
+    rows: [['apple-touch-icon.png', 'favicon']],
+  });
+  assert.ok(
+    split.shapes.some((s) => s.kind === 'line' && s.x1 === 216 && s.x2 === 216),
+  );
+  assert.deepEqual(lines(split), [
+    'file',
+    'note',
+    'apple-touch-icon.',
+    'png',
+    'favicon',
+  ]);
+  const call = textTable.layout({
+    label: 'x',
+    columns: ['a', 'b'],
+    widths: [1, 4],
+    rows: [['favicon.svg(vector)', 'x']],
+  });
   assert.deepEqual(lines(call).slice(2, 4), ['favicon.svg', '(vector)']);
 });
 
 test('invalid text tables name the problem', () => {
-  const spec = (patch: object): textTable.TextTable => ({ label: 'x', columns: ['a', 'b'], rows: [['1', '2']], ...patch });
-  assert.throws(() => textTable.layout(spec({ colour: 'red' })), /unknown field "colour"/);
-  assert.throws(() => textTable.layout(spec({ columns: [] })), /columns: must list 1 to 8 headers/);
-  assert.throws(() => textTable.layout(spec({ columns: ['a', ' '] })), /columns\[1\]: must be a non-empty string/);
-  assert.throws(() => textTable.layout(spec({ rows: [['1']] })), /rows\[0\]: has 1 cells, the columns are 2/);
-  assert.throws(() => textTable.layout(spec({ rows: [['1', 2]] })), /rows\[0\]\[1\]: must be a string or a list of strings/);
-  assert.throws(() => textTable.layout(spec({ rows: [['1', []]] })), /a list needs at least one line/);
-  assert.throws(() => textTable.layout(spec({ rows: [['1', 'a\nb']] })), /control character/);
-  assert.throws(() => textTable.layout(spec({ widths: [1] })), /widths: must list one positive number per column \(2\)/);
+  const spec = (patch: object): textTable.TextTable => ({
+    label: 'x',
+    columns: ['a', 'b'],
+    rows: [['1', '2']],
+    ...patch,
+  });
+  assert.throws(
+    () => textTable.layout(spec({ colour: 'red' })),
+    /unknown field "colour"/,
+  );
+  assert.throws(
+    () => textTable.layout(spec({ columns: [] })),
+    /columns: must list 1 to 8 headers/,
+  );
+  assert.throws(
+    () => textTable.layout(spec({ columns: ['a', ' '] })),
+    /columns\[1\]: must be a non-empty string/,
+  );
+  assert.throws(
+    () => textTable.layout(spec({ rows: [['1']] })),
+    /rows\[0\]: has 1 cells, the columns are 2/,
+  );
+  assert.throws(
+    () => textTable.layout(spec({ rows: [['1', 2]] })),
+    /rows\[0\]\[1\]: must be a string or a list of strings/,
+  );
+  assert.throws(
+    () => textTable.layout(spec({ rows: [['1', []]] })),
+    /a list needs at least one line/,
+  );
+  assert.throws(
+    () => textTable.layout(spec({ rows: [['1', 'a\nb']] })),
+    /control character/,
+  );
+  assert.throws(
+    () => textTable.layout(spec({ widths: [1] })),
+    /widths: must list one positive number per column \(2\)/,
+  );
   assert.throws(() => textTable.layout(spec({ widths: [1, 0] })), /widths/);
-  assert.throws(() => textTable.layout(spec({ widths: [1, 100] })), /cannot hold a character/);
+  assert.throws(
+    () => textTable.layout(spec({ widths: [1, 100] })),
+    /cannot hold a character/,
+  );
 });

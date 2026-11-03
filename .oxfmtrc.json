@@ -2,5 +2,11 @@
   "singleQuote": true,
   "printWidth": 80,
   "sortPackageJson": false,
-  "ignorePatterns": ["*.md", "package-lock.json", "tokens.json", "test/golden/", "out/"]
+  "ignorePatterns": [
+    "*.md",
+    "package-lock.json",
+    "tokens.json",
+    "test/golden/",
+    "out/"
+  ]
 }

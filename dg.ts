@@ -8,8 +8,19 @@ import * as memoryTable from './src/memory-table.ts';
 import * as structChain from './src/struct-chain.ts';
 import * as textTable from './src/text-table.ts';
 import { compose, staticPNGs } from './src/png.ts';
-import { lintStatic, toStatic, toWeb, type ProfileName, type Scene } from './src/scene.ts';
-import { loadTokens, readBlogTokens, TOKENS_FILE, type Tokens } from './src/tokens.ts';
+import {
+  lintStatic,
+  toStatic,
+  toWeb,
+  type ProfileName,
+  type Scene,
+} from './src/scene.ts';
+import {
+  loadTokens,
+  readBlogTokens,
+  TOKENS_FILE,
+  type Tokens,
+} from './src/tokens.ts';
 
 const USAGE = `usage:
   node dg.ts render <spec.json> [--flavor static [--profile blog|slide] [--theme T]]
@@ -21,8 +32,17 @@ const USAGE = `usage:
 const SLIDE = { width: 880, height: 460, main: 18, minor: 14, max: 24 };
 const ID = /^[a-z0-9][a-z0-9-]*$/;
 
-type Spec = memoryLayout.MemoryLayout | memoryTable.MemoryTable | structChain.StructChain | canvas.Canvas | textTable.TextTable;
-interface Item { id: string; spec: Spec }
+type Spec =
+  | memoryLayout.MemoryLayout
+  | memoryTable.MemoryTable
+  | structChain.StructChain
+  | canvas.Canvas
+  | textTable.TextTable;
+
+interface Item {
+  id: string;
+  spec: Spec;
+}
 
 class UsageError extends Error {}
 
@@ -31,58 +51,97 @@ const options = {
   profile: { type: 'string' },
   theme: { type: 'string' },
   out: { type: 'string', default: 'out' },
-  blog: { type: 'string', default: process.env.BLOG_DIR ?? fileURLToPath(new URL('../blog', import.meta.url)) },
+  blog: {
+    type: 'string',
+    default:
+      process.env.BLOG_DIR ??
+      fileURLToPath(new URL('../blog', import.meta.url)),
+  },
   check: { type: 'boolean', default: false },
 } as const;
 
-let values: ReturnType<typeof parseArgs<{ options: typeof options; allowPositionals: true }>>['values'];
+let values: ReturnType<
+  typeof parseArgs<{ options: typeof options; allowPositionals: true }>
+>['values'];
 
 function load(file: string): Item[] {
   const name = basename(file, extname(file));
   const text = readFileSync(file, 'utf8');
   let parsed: unknown;
-  try { parsed = JSON.parse(text); } catch (error: any) { throw new Error(`${file}: ${error.message}`); }
+  try {
+    parsed = JSON.parse(text);
+  } catch (error: any) {
+    throw new Error(`${file}: ${error.message}`);
+  }
   const specs = (Array.isArray(parsed) ? parsed : [parsed]) as Spec[];
-  const items: Item[] = specs.map((spec, i) => ({ id: spec?.id ?? (specs.length > 1 ? `${name}-${i + 1}` : name), spec }));
+  const items: Item[] = specs.map((spec, i) => ({
+    id: spec?.id ?? (specs.length > 1 ? `${name}-${i + 1}` : name),
+    spec,
+  }));
   const seen = new Set<string>();
   for (const item of items) {
-    if (typeof item.id !== 'string' || !ID.test(item.id)) throw new Error(`${file}: id "${item.id}" must be kebab-case, such as frame-chain`);
-    if (seen.has(item.id)) throw new Error(`${file}: id "${item.id}" is used twice`);
+    if (typeof item.id !== 'string' || !ID.test(item.id))
+      throw new Error(
+        `${file}: id "${item.id}" must be kebab-case, such as frame-chain`,
+      );
+    if (seen.has(item.id))
+      throw new Error(`${file}: id "${item.id}" is used twice`);
     seen.add(item.id);
   }
   return items;
 }
 
-const isLayout = (spec: Spec): spec is memoryLayout.MemoryLayout => !!spec && typeof spec === 'object' && 'regions' in spec;
-const isChain = (spec: Spec): spec is structChain.StructChain => !!spec && typeof spec === 'object' && 'nodes' in spec;
+const isLayout = (spec: Spec): spec is memoryLayout.MemoryLayout =>
+  !!spec && typeof spec === 'object' && 'regions' in spec;
+const isChain = (spec: Spec): spec is structChain.StructChain =>
+  !!spec && typeof spec === 'object' && 'nodes' in spec;
 
-const isProfile = (value: string): value is ProfileName => Object.hasOwn(memoryLayout.PROFILES, value);
+const isProfile = (value: string): value is ProfileName =>
+  Object.hasOwn(memoryLayout.PROFILES, value);
 
 function scene(spec: Spec, profile: ProfileName): Scene {
-  if (canvas.isCanvas(spec)) return canvas.layout(spec, canvas.PROFILES[profile]);
-  if (textTable.isTextTable(spec)) return textTable.layout(spec, textTable.PROFILES[profile]);
-  if (isLayout(spec)) return memoryLayout.layout(spec, memoryLayout.PROFILES[profile]);
-  if (isChain(spec)) return structChain.layout(spec, structChain.PROFILES[profile]);
-  return memoryTable.layout(memoryTable.grid(spec as memoryTable.MemoryTable), memoryTable.PROFILES[profile]);
+  if (canvas.isCanvas(spec))
+    return canvas.layout(spec, canvas.PROFILES[profile]);
+  if (textTable.isTextTable(spec))
+    return textTable.layout(spec, textTable.PROFILES[profile]);
+  if (isLayout(spec))
+    return memoryLayout.layout(spec, memoryLayout.PROFILES[profile]);
+  if (isChain(spec))
+    return structChain.layout(spec, structChain.PROFILES[profile]);
+  return memoryTable.layout(
+    memoryTable.grid(spec as memoryTable.MemoryTable),
+    memoryTable.PROFILES[profile],
+  );
 }
 
 function themes(tokens: Tokens, list: string): string[] {
   const names = list.split(',');
-  for (const name of names) if (!Object.hasOwn(tokens.themes, name)) throw new UsageError(`unknown theme ${name}; use ${Object.keys(tokens.themes).join(', ')}`);
+  for (const name of names)
+    if (!Object.hasOwn(tokens.themes, name))
+      throw new UsageError(
+        `unknown theme ${name}; use ${Object.keys(tokens.themes).join(', ')}`,
+      );
   return names;
 }
 
 function fit(s: Scene): { scale: number; problems: string[] } {
   const pad = s.frame ?? 0;
-  const width = s.width + 2 * pad, height = s.height + 2 * pad;
-  const scale = Math.min(SLIDE.width / width, SLIDE.height / height, SLIDE.max / 15);
+  const width = s.width + 2 * pad,
+    height = s.height + 2 * pad;
+  const scale = Math.min(
+    SLIDE.width / width,
+    SLIDE.height / height,
+    SLIDE.max / 15,
+  );
   const problems: string[] = [];
   for (const t of s.shapes) {
     if (t.kind !== 'text' && t.kind !== 'runs') continue;
-    const text = t.kind === 'text' ? t.text : t.runs.map((r) => r.text).join('');
+    const text =
+      t.kind === 'text' ? t.text : t.runs.map((r) => r.text).join('');
     const pt = t.size * scale;
     const floor = t.size >= 15 ? SLIDE.main : SLIDE.minor;
-    if (pt < floor - 0.05) problems.push(`"${text}" would be ${pt.toFixed(1)}pt, under ${floor}pt`);
+    if (pt < floor - 0.05)
+      problems.push(`"${text}" would be ${pt.toFixed(1)}pt, under ${floor}pt`);
   }
   return { scale, problems };
 }
@@ -96,11 +155,15 @@ async function slide(file: string): Promise<void> {
     const s = scene(item.spec, 'slide');
     const { scale, problems } = fit(s);
     if (problems.length) {
-      console.error(`${item.id}: does not fit a 16:9 slide at ${scale.toFixed(2)}x\n  ${problems.slice(0, 5).join('\n  ')}`);
+      console.error(
+        `${item.id}: does not fit a 16:9 slide at ${scale.toFixed(2)}x\n  ${problems.slice(0, 5).join('\n  ')}`,
+      );
       failed = true;
       continue;
     }
-    const svgs = names.map((theme) => toStatic(s, tokens, theme, { scale, unit: 'pt' }));
+    const svgs = names.map((theme) =>
+      toStatic(s, tokens, theme, { scale, unit: 'pt' }),
+    );
     for (const svg of svgs) {
       const lint = lintStatic(svg);
       if (lint.length) throw new Error(`${item.id}: ${lint.join(', ')}`);
@@ -110,7 +173,9 @@ async function slide(file: string): Promise<void> {
     names.forEach((theme, i) => {
       writeFileSync(join(out, `${item.id}.${theme}.svg`), svgs[i]);
       writeFileSync(join(out, `${item.id}.${theme}.png`), pngs[i]);
-      console.log(`${item.id}.${theme}.svg/.png  ${Math.round((s.width + 2 * (s.frame ?? 0)) * scale)}x${Math.round((s.height + 2 * (s.frame ?? 0)) * scale)}pt`);
+      console.log(
+        `${item.id}.${theme}.svg/.png  ${Math.round((s.width + 2 * (s.frame ?? 0)) * scale)}x${Math.round((s.height + 2 * (s.frame ?? 0)) * scale)}pt`,
+      );
     });
   }
   if (failed) process.exitCode = 1;
@@ -123,8 +188,21 @@ async function mockup(dir: string): Promise<void> {
   if (!existsSync(example)) throw new Error(`${dir}: no example.json`);
   const items = load(example);
   const columns: Buffer[][] = [];
-  for (const theme of names) columns.push(await staticPNGs(items.map((item) => toStatic(scene(item.spec, 'blog'), tokens, theme)), values.blog!, tokens));
-  writeFileSync(join(dir, 'mockup.png'), await compose(columns, names.map((theme) => tokens.themes[theme]['bg-base'])));
+  for (const theme of names)
+    columns.push(
+      await staticPNGs(
+        items.map((item) => toStatic(scene(item.spec, 'blog'), tokens, theme)),
+        values.blog!,
+        tokens,
+      ),
+    );
+  writeFileSync(
+    join(dir, 'mockup.png'),
+    await compose(
+      columns,
+      names.map((theme) => tokens.themes[theme]['bg-base']),
+    ),
+  );
   console.log(join(dir, 'mockup.png'));
 }
 
@@ -137,13 +215,17 @@ function check(files: string[]): void {
         scene(item.spec, 'blog');
         try {
           const { scale, problems } = fit(scene(item.spec, 'slide'));
-          if (problems.length) warnings.push(`${item.id}: too dense for a slide at ${scale.toFixed(2)}x; ${problems[0]}`);
+          if (problems.length)
+            warnings.push(
+              `${item.id}: too dense for a slide at ${scale.toFixed(2)}x; ${problems[0]}`,
+            );
         } catch (error: any) {
           warnings.push(`${item.id}: ${error.message}`);
         }
       }
       console.log(`${file}: ok`);
-      for (const warning of warnings) console.warn(`  slide warning: ${warning}`);
+      for (const warning of warnings)
+        console.warn(`  slide warning: ${warning}`);
     } catch (error: any) {
       console.error(`${file}: ${error.message}`);
       failed = true;
@@ -156,9 +238,13 @@ function tokensCommand(): void {
   const fresh = readBlogTokens(values.blog!);
   const text = JSON.stringify(fresh, null, 2) + '\n';
   if (values.check) {
-    const current = existsSync(TOKENS_FILE) ? readFileSync(TOKENS_FILE, 'utf8') : '';
+    const current = existsSync(TOKENS_FILE)
+      ? readFileSync(TOKENS_FILE, 'utf8')
+      : '';
     if (current !== text) {
-      console.error('tokens.json differs from the blog themes; run node dg.ts tokens');
+      console.error(
+        'tokens.json differs from the blog themes; run node dg.ts tokens',
+      );
       process.exitCode = 1;
     } else {
       console.log('tokens.json matches the blog themes');
@@ -171,18 +257,29 @@ function tokensCommand(): void {
 
 function render(file: string): void {
   const flavor = values.flavor ?? 'web';
-  if (flavor !== 'web' && flavor !== 'static') throw new UsageError(`unknown flavor ${flavor}; use web or static`);
-  if (flavor === 'web' && (values.profile || values.theme)) throw new UsageError('--profile and --theme apply to --flavor static');
+  if (flavor !== 'web' && flavor !== 'static')
+    throw new UsageError(`unknown flavor ${flavor}; use web or static`);
+  if (flavor === 'web' && (values.profile || values.theme))
+    throw new UsageError('--profile and --theme apply to --flavor static');
   const profile = values.profile ?? 'blog';
-  if (!isProfile(profile)) throw new UsageError(`unknown profile ${profile}; use blog or slide`);
+  if (!isProfile(profile))
+    throw new UsageError(`unknown profile ${profile}; use blog or slide`);
   const tokens = loadTokens();
-  const theme = flavor === 'static' ? themes(tokens, values.theme ?? 'clean-light')[0] : '';
+  const theme =
+    flavor === 'static' ? themes(tokens, values.theme ?? 'clean-light')[0] : '';
   for (const item of load(file)) {
-    process.stdout.write((flavor === 'static' ? toStatic(scene(item.spec, profile), tokens, theme) : toWeb(scene(item.spec, 'blog'))) + '\n');
+    process.stdout.write(
+      (flavor === 'static'
+        ? toStatic(scene(item.spec, profile), tokens, theme)
+        : toWeb(scene(item.spec, 'blog'))) + '\n',
+    );
   }
 }
 
-process.stdout.on('error', (error: NodeJS.ErrnoException) => { if (error.code === 'EPIPE') process.exit(0); throw error; });
+process.stdout.on('error', (error: NodeJS.ErrnoException) => {
+  if (error.code === 'EPIPE') process.exit(0);
+  throw error;
+});
 try {
   const parsed = parseArgs({ options, allowPositionals: true });
   values = parsed.values;
@@ -194,7 +291,9 @@ try {
   else if (command === 'check' && args.length) check(args);
   else throw new UsageError('');
 } catch (error: any) {
-  const usage = error instanceof UsageError || String(error?.code ?? '').startsWith('ERR_PARSE_ARGS');
+  const usage =
+    error instanceof UsageError ||
+    String(error?.code ?? '').startsWith('ERR_PARSE_ARGS');
   if (error?.message) console.error(`dg: ${error.message}`);
   if (usage) console.error(USAGE);
   process.exitCode = usage ? 2 : 1;

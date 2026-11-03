@@ -4,7 +4,13 @@ import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-const declarations = ['function', 'class', 'interface', 'multiline-export', 'multiline-type'];
+const declarations = [
+  'function',
+  'class',
+  'interface',
+  'multiline-export',
+  'multiline-type',
+];
 
 export default defineConfig(
   { ignores: ['out/'] },
@@ -21,13 +27,23 @@ export default defineConfig(
     plugins: { '@stylistic': stylistic },
     rules: {
       'no-empty': ['error', { allowEmptyCatch: true }],
-      '@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }],
-      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
+      '@typescript-eslint/no-confusing-void-expression': [
+        'error',
+        { ignoreArrowShorthand: true },
+      ],
+      '@typescript-eslint/restrict-template-expressions': [
+        'error',
+        { allowNumber: true },
+      ],
       '@typescript-eslint/no-floating-promises': [
         'error',
         {
           allowForKnownSafeCalls: [
-            { from: 'package', package: 'node:test', name: ['test', 'describe', 'it', 'suite'] },
+            {
+              from: 'package',
+              package: 'node:test',
+              name: ['test', 'describe', 'it', 'suite'],
+            },
           ],
         },
       ],
@@ -38,7 +54,11 @@ export default defineConfig(
         { blankLine: 'always', prev: '*', next: declarations },
         { blankLine: 'always', prev: declarations, next: '*' },
       ],
-      '@stylistic/lines-between-class-members': ['error', 'always', { exceptAfterSingleLine: true }],
+      '@stylistic/lines-between-class-members': [
+        'error',
+        'always',
+        { exceptAfterSingleLine: true },
+      ],
     },
   },
   { files: ['*.js'], extends: [tseslint.configs.disableTypeChecked] },
