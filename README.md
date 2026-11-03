@@ -42,6 +42,8 @@ Colors are not part of the form. Each comes from a role variable of the active t
 
 `tokens.json` holds the other themes' values, except the note colors, which only the blog's styles define.
 
+The dark theme, `spaceduck`, takes its colors from [spaceduck](https://github.com/pineapplegiant/spaceduck) by pineapplegiant, under the MIT License in `THIRD-PARTY-NOTICES`.
+
 ## Posts
 
 The blog mounts this repository as its `diagrams` submodule. A post writes the source in a fenced block (` ```memory-layout `, ` ```memory-table `, ` ```struct-chain `, ` ```canvas `, ` ```text-table ` or ` ```mermaid `). The build draws the five JSON forms as SVG and fails on an invalid spec; the page draws Mermaid.
