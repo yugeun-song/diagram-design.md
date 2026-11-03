@@ -1239,6 +1239,3 @@ export function layout(spec: Canvas, profile: Profile = PROFILES.blog): Scene {
     MARGIN,
   );
 }
-
-export const isCanvas = (spec: unknown): spec is Canvas =>
-  !!spec && typeof spec === 'object' && Object.hasOwn(spec, 'items');

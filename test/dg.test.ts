@@ -3,11 +3,13 @@ import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import * as canvas from '../src/canvas.ts';
+import { FORMS, formOf, isForm, layoutOf } from '../src/forms.ts';
 import * as memoryLayout from '../src/memory-layout.ts';
 import * as memoryTable from '../src/memory-table.ts';
 import { lintJoins } from '../src/joins.ts';
 import {
   corners,
+  isList,
   lintStatic,
   required,
   round,
@@ -1120,6 +1122,21 @@ test(
     assert.deepEqual(readBlogTokens(blog), tokens);
   },
 );
+
+test('each example is told apart by the field only its form has and lays out as that form', () => {
+  for (const form of FORMS) {
+    const parsed: unknown = JSON.parse(read(`../forms/${form}/example.json`));
+    for (const spec of isList(parsed) ? parsed : [parsed]) {
+      assert.equal(formOf(spec), form);
+      assert.ok(layoutOf(form, spec).shapes.length);
+    }
+  }
+  assert.ok(isForm('canvas'));
+  assert.ok(!isForm('mermaid'));
+  assert.ok(!isForm('toString'));
+  assert.equal(formOf(null), 'memory-table');
+  assert.throws(() => layoutOf('canvas', []), /the spec must be a JSON object/);
+});
 
 test('the canvas examples render, join cleanly and export as static svgs', () => {
   for (const spec of canvasSpecs) {

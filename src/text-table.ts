@@ -44,9 +44,6 @@ const WIDTH = 700,
 const KEYS = new Set(['id', 'label', 'columns', 'widths', 'rows']);
 const TABLE = WIDTH - 2 * MARGIN;
 
-export const isTextTable = (spec: unknown): spec is TextTable =>
-  !!spec && typeof spec === 'object' && Object.hasOwn(spec, 'columns');
-
 function cell(value: unknown, where: string): string[] {
   const lines = Array.isArray(value) ? value : [value];
   if (lines.some((line) => typeof line !== 'string'))
