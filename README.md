@@ -57,7 +57,7 @@ Node 26 runs `dg.ts` as is; there is nothing to install.
 | `node dg.ts mockup forms/<form>` | the folder's `mockup.png` |
 | `node dg.ts tokens [--check]` | `tokens.json` from the blog themes, or a drift check |
 
-`slide`, `mockup` and `tokens` read the blog checkout at `--blog` (default `../blog`): theme CSS and fonts. `slide` and `mockup` draw their PNGs in a headless browser that `src/png.ts` drives through `src/chrome.ts`; `render`, `check`, `tokens` and the tests need no browser.
+`slide`, `mockup` and `tokens` read the blog checkout at `--blog` (default `../blog`): theme CSS and fonts. `slide` and `mockup` draw their PNGs in a headless browser that `src/png.ts` drives through `src/chrome.ts` (Chrome, Chromium or Edge from its usual install path on Linux, macOS or Windows; `CHROME_BIN` picks another); `render`, `check`, `tokens` and the tests need no browser.
 
 ## Slides
 

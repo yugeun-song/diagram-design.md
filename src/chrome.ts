@@ -1,15 +1,15 @@
-import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdtempSync } from 'node:fs';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import { existsSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import type { Readable, Writable } from 'node:stream';
 import { onCleanup, removeDir } from './cleanup.ts';
 
 type Message = {
   id?: number;
   method?: string;
-  params?: any;
-  result?: any;
+  params?: unknown;
+  result?: unknown;
   error?: { message: string };
   sessionId?: string;
 };
@@ -25,7 +25,10 @@ const wait = (ms: number) =>
 
 function exited(proc: ChildProcess, ms: number): Promise<void> {
   return new Promise((resolve) => {
-    if (proc.exitCode !== null || proc.signalCode !== null) return resolve();
+    if (proc.exitCode !== null || proc.signalCode !== null) {
+      resolve();
+      return;
+    }
     const timer = setTimeout(resolve, ms);
     proc.once('exit', () => {
       clearTimeout(timer);
@@ -37,8 +40,47 @@ function exited(proc: ChildProcess, ms: number): Promise<void> {
 export function killGroup(proc: ChildProcess | null): void {
   if (!proc?.pid || proc.exitCode !== null || proc.signalCode !== null) return;
   try {
-    process.kill(-proc.pid, 'SIGKILL');
+    if (process.platform === 'win32')
+      spawnSync('taskkill', ['/pid', String(proc.pid), '/T', '/F']);
+    else process.kill(-proc.pid, 'SIGKILL');
   } catch {}
+}
+
+const CHROME_NAMES = [
+  'google-chrome-stable',
+  'google-chrome',
+  'chromium',
+  'chromium-browser',
+];
+
+/** CHROME_BIN (or CHROME), else the usual Chrome, Chromium or Edge install of this system. */
+function chromePath(): string {
+  const named = process.env.CHROME_BIN ?? process.env.CHROME;
+  if (named) return named;
+  let candidates: string[];
+  if (process.platform === 'win32') {
+    const roots = [
+      process.env.PROGRAMFILES,
+      process.env['PROGRAMFILES(X86)'],
+      process.env.LOCALAPPDATA,
+    ];
+    candidates = roots
+      .filter((root): root is string => Boolean(root))
+      .flatMap((root) => [
+        join(root, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+        join(root, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+      ]);
+  } else if (process.platform === 'darwin') {
+    candidates = ['Google Chrome', 'Chromium', 'Microsoft Edge'].map(
+      (app) => `/Applications/${app}.app/Contents/MacOS/${app}`,
+    );
+  } else {
+    const dirs = (process.env.PATH ?? '').split(delimiter).filter(Boolean);
+    candidates = CHROME_NAMES.flatMap((name) =>
+      dirs.map((dir) => join(dir, name)),
+    );
+  }
+  return candidates.find((path) => existsSync(path)) ?? CHROME_NAMES[0];
 }
 
 export class Chrome {
@@ -58,7 +100,7 @@ export class Chrome {
   constructor() {
     this.profile = mkdtempSync(join(tmpdir(), 'dg-chrome-'));
     this.proc = spawn(
-      process.env.CHROME ?? 'google-chrome-stable',
+      chromePath(),
       [
         '--headless=new',
         '--remote-debugging-pipe',
@@ -98,12 +140,12 @@ export class Chrome {
       buffer += chunk.toString('utf8');
       let end: number;
       while ((end = buffer.indexOf('\0')) >= 0) {
-        const message: Message = JSON.parse(buffer.slice(0, end));
+        const message = JSON.parse(buffer.slice(0, end)) as Message;
         buffer = buffer.slice(end + 1);
-        const waiter =
-          message.id !== undefined ? this.pending.get(message.id) : undefined;
-        if (waiter) {
-          this.pending.delete(message.id!);
+        const id = message.id;
+        const waiter = id === undefined ? undefined : this.pending.get(id);
+        if (waiter && id !== undefined) {
+          this.pending.delete(id);
           if (message.error) waiter.reject(new Error(message.error.message));
           else waiter.resolve(message);
         } else {
@@ -113,12 +155,12 @@ export class Chrome {
     });
   }
 
-  send(
+  send<T = unknown>(
     method: string,
     params: object = {},
     sessionId?: string,
     timeout = 60000,
-  ): Promise<any> {
+  ): Promise<T> {
     if (this.failure) return Promise.reject(this.failure);
     const id = ++this.next;
     return new Promise((resolve, reject) => {
@@ -133,7 +175,7 @@ export class Chrome {
       this.pending.set(id, {
         resolve: (m) => {
           clearTimeout(timer);
-          resolve(m.result);
+          resolve(m.result as T);
         },
         reject: (e) => {
           clearTimeout(timer);
@@ -172,13 +214,19 @@ export class Chrome {
   }
 
   async open(url: string, width: number, init = ''): Promise<Page> {
-    const { targetId } = await this.send('Target.createTarget', {
-      url: 'about:blank',
-    });
-    const { sessionId } = await this.send('Target.attachToTarget', {
-      targetId,
-      flatten: true,
-    });
+    const { targetId } = await this.send<{ targetId: string }>(
+      'Target.createTarget',
+      {
+        url: 'about:blank',
+      },
+    );
+    const { sessionId } = await this.send<{ sessionId: string }>(
+      'Target.attachToTarget',
+      {
+        targetId,
+        flatten: true,
+      },
+    );
     await this.send('Page.enable', {}, sessionId);
     await this.send(
       'Emulation.setDeviceMetricsOverride',
@@ -200,7 +248,13 @@ export class Chrome {
     await this.send('Page.navigate', { url }, sessionId);
     await loaded;
     const evaluate = async <T>(expression: string): Promise<T> => {
-      const { result, exceptionDetails } = await this.send(
+      const { result, exceptionDetails } = await this.send<{
+        result: { value: unknown };
+        exceptionDetails?: {
+          text: string;
+          exception?: { description?: string };
+        };
+      }>(
         'Runtime.evaluate',
         {
           expression: `(async () => { ${expression} })()`,
@@ -226,7 +280,7 @@ export class Chrome {
         }>(
           `const r = document.querySelectorAll(${JSON.stringify(selector)})[${index}].getBoundingClientRect(); const x = Math.floor(r.left + scrollX), y = Math.floor(r.top + scrollY); return { x, y, width: Math.ceil(r.right + scrollX) - x, height: Math.ceil(r.bottom + scrollY) - y };`,
         );
-        const { data } = await this.send(
+        const { data } = await this.send<{ data: string }>(
           'Page.captureScreenshot',
           {
             format: 'png',
