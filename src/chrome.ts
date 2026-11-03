@@ -22,7 +22,7 @@ export interface Page {
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms).unref());
 
-export function exited(proc: ChildProcess, ms: number): Promise<void> {
+function exited(proc: ChildProcess, ms: number): Promise<void> {
   return new Promise((resolve) => {
     if (proc.exitCode !== null || proc.signalCode !== null) return resolve();
     const timer = setTimeout(resolve, ms);

@@ -11,7 +11,7 @@ export interface Tokens {
   themes: Record<string, Theme>;
 }
 
-export const VARS = ['bg-base', 'code-bg', 'code-border', 'diagram-ink', 'diagram-area', 'diagram-gap', 'diagram-red', 'diagram-orange', 'diagram-yellow', 'diagram-green', 'diagram-blue', 'diagram-indigo', 'diagram-purple', 'diagram-red-wash', 'diagram-orange-wash', 'diagram-yellow-wash', 'diagram-green-wash', 'diagram-blue-wash', 'diagram-indigo-wash', 'diagram-purple-wash', 'text-secondary'] as const;
+const VARS = ['bg-base', 'code-bg', 'code-border', 'diagram-ink', 'diagram-area', 'diagram-gap', 'diagram-red', 'diagram-orange', 'diagram-yellow', 'diagram-green', 'diagram-blue', 'diagram-indigo', 'diagram-purple', 'diagram-red-wash', 'diagram-orange-wash', 'diagram-yellow-wash', 'diagram-green-wash', 'diagram-blue-wash', 'diagram-indigo-wash', 'diagram-purple-wash', 'text-secondary'] as const;
 export type Paint = (typeof VARS)[number];
 
 export const TOKENS_FILE = new URL('../tokens.json', import.meta.url);

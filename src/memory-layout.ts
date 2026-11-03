@@ -80,7 +80,7 @@ function upper(spec: MemoryLayout, t: number): bigint | null {
   return above?.start !== undefined ? BigInt(above.start) : null;
 }
 
-export function validate(spec: MemoryLayout): void {
+function validate(spec: MemoryLayout): void {
   if (!spec || typeof spec !== 'object' || Array.isArray(spec)) throw new Error('the spec must be a JSON object');
   for (const key of Object.keys(spec)) if (!SPEC_KEYS.has(key)) throw new Error(`unknown field "${key}"`);
   if (typeof spec.label !== 'string' || !spec.label.trim()) throw new Error('label: required');

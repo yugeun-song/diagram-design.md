@@ -103,7 +103,7 @@ function point(value: unknown, where: string): void {
   if (p.dy !== undefined) number(p.dy, `${where}.dy`);
 }
 
-export function validate(spec: Canvas): void {
+function validate(spec: Canvas): void {
   if (!spec || typeof spec !== 'object' || Array.isArray(spec)) throw new Error('the spec must be a JSON object');
   for (const key of Object.keys(spec)) if (!SPEC_KEYS.has(key)) throw new Error(`unknown field "${key}"`);
   if (typeof spec.label !== 'string' || !spec.label.trim()) throw new Error('label: required');

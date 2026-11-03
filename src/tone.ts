@@ -6,7 +6,7 @@ export type Run = string | [string, Tone];
 export interface Piece { text: string; tone?: Tone }
 
 // A tone is a hue that each theme shades for its background, so one diagram can tell several things apart by color.
-export const TONES: Record<Tone, Paint> = {
+const TONES: Record<Tone, Paint> = {
   red: 'diagram-red',
   orange: 'diagram-orange',
   yellow: 'diagram-yellow',
@@ -26,7 +26,7 @@ export const WASHES: Record<Tone, Paint> = {
   purple: 'diagram-purple-wash',
 };
 
-export const isTone = (value: unknown): value is Tone => typeof value === 'string' && Object.hasOwn(TONES, value);
+const isTone = (value: unknown): value is Tone => typeof value === 'string' && Object.hasOwn(TONES, value);
 export const paint = (tone: Tone | undefined, fallback: Paint): Paint => (tone === undefined ? fallback : TONES[tone]);
 
 export function checkTone(value: unknown, where: string): void {

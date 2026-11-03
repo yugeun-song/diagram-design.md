@@ -34,10 +34,11 @@ export interface StaticOptions {
 
 export const FONT = 'code-mono';
 export const CODE_SIZE = 13.4, CODE_STEP = 22.1;
-export const LABEL = 15, NOTE = 12, TITLE = 15, LINE_STEP = 20;
-export const BORDER = 1.6, STROKE = 2, MARKER = 2.4;
-export const DASH = '6 4';
-export const CORNER = 8;
+export const LABEL = 15, LINE_STEP = 20;
+export const BORDER = 1.6, STROKE = 2;
+const MARKER = 2.4;
+const DASH = '6 4';
+const CORNER = 8;
 const ADVANCE = 0.6, HANGUL_ADVANCE = 0.864;
 const HANGUL = /([ᄀ-ᇿ㄰-㆏가-힣]+)/;
 const HANGUL_CHAR = /[ᄀ-ᇿ㄰-㆏가-힣]/;
