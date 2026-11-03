@@ -42,11 +42,11 @@ The dark theme, `spaceduck`, takes its colors from [spaceduck](https://github.co
 
 ## Posts
 
-The blog mounts this repository as its `diagrams` submodule. A post writes the source in a fenced block (` ```memory-layout `, ` ```memory-table `, ` ```struct-chain `, ` ```canvas `, or ` ```text-table `). The build draws them as SVG and fails on an invalid spec.
+The blog mounts this repository as its `diagrams` submodule. A post writes the source in a fenced block (` ```memory-layout `, ` ```memory-table `, ` ```struct-chain `, ` ```canvas `, or ` ```text-table `). The build lays each one out through `layoutOf` in `src/forms.ts`, draws it as SVG and fails on an invalid spec.
 
 ## Commands
 
-Node 26 runs `dg.ts` as is; there is nothing to install.
+Node 26 runs `dg.ts` as is; only the checks under Test need `npm install`. A JSON file holds one spec or a list of them, each named by its kebab-case `id` or the file name, and `formOf` tells a spec's form by the field only that form has: `items` (canvas), `columns` (text-table), `regions` (memory-layout), `nodes` (struct-chain), otherwise memory-table.
 
 | Command | Output |
 |---|---|
@@ -67,4 +67,4 @@ Node 26 runs `dg.ts` as is; there is nothing to install.
 
 ## Test
 
-`npm test` runs the tests. With the blog checked out next to this repo, `../blog/node_modules/.bin/tsc -p . --typeRoots ../blog/node_modules/@types` type-checks it in strict mode; the blog's `npm run typecheck` covers `src/` too.
+`npm test` runs the tests (the `tokens.json` drift test only with the blog checked out next to this repo), `npm run typecheck` checks `dg.ts`, `src/` and `test/` in strict mode, and `npm run lint` runs ESLint and Prettier; `npm run format` applies them. The blog's `npm run typecheck` covers `src/` too.
