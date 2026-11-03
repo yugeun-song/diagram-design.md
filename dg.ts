@@ -84,6 +84,16 @@ function load(file: string): Item[] {
 const scene = (spec: unknown, profile: ProfileName): Scene =>
   layoutOf(formOf(spec), spec, profile);
 
+function draw(file: string, item: Item, profile: ProfileName): Scene {
+  try {
+    return scene(item.spec, profile);
+  } catch (error) {
+    throw new Error(`${file}: ${item.id}: ${messageOf(error)}`, {
+      cause: error,
+    });
+  }
+}
+
 function themes(tokens: Tokens, list: string): string[] {
   const names = list.split(',');
   for (const name of names)
@@ -122,7 +132,7 @@ async function slide(file: string): Promise<void> {
   const out = resolve(values.out);
   let failed = false;
   for (const item of load(file)) {
-    const s = scene(item.spec, 'slide');
+    const s = draw(file, item, 'slide');
     const { scale, problems } = fit(s);
     if (problems.length) {
       console.error(
@@ -161,7 +171,9 @@ async function mockup(dir: string): Promise<void> {
   for (const theme of names)
     columns.push(
       await staticPNGs(
-        items.map((item) => toStatic(scene(item.spec, 'blog'), tokens, theme)),
+        items.map((item) =>
+          toStatic(draw(example, item, 'blog'), tokens, theme),
+        ),
         values.blog,
         tokens,
       ),
@@ -182,7 +194,7 @@ function check(files: string[]): void {
     try {
       const warnings: string[] = [];
       for (const item of load(file)) {
-        scene(item.spec, 'blog');
+        draw(file, item, 'blog');
         try {
           const { scale, problems } = fit(scene(item.spec, 'slide'));
           if (problems.length)
@@ -197,7 +209,7 @@ function check(files: string[]): void {
       for (const warning of warnings)
         console.warn(`  slide warning: ${warning}`);
     } catch (error) {
-      console.error(`${file}: ${messageOf(error)}`);
+      console.error(messageOf(error));
       failed = true;
     }
   }
@@ -240,8 +252,8 @@ function render(file: string): void {
   for (const item of load(file)) {
     process.stdout.write(
       (flavor === 'static'
-        ? toStatic(scene(item.spec, profile), tokens, theme)
-        : toWeb(scene(item.spec, 'blog'))) + '\n',
+        ? toStatic(draw(file, item, profile), tokens, theme)
+        : toWeb(draw(file, item, 'blog'))) + '\n',
     );
   }
 }
