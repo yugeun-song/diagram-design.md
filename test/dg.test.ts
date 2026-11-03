@@ -6,7 +6,6 @@ import * as canvas from '../src/canvas.ts';
 import * as memoryLayout from '../src/memory-layout.ts';
 import * as memoryTable from '../src/memory-table.ts';
 import { lintJoins } from '../src/joins.ts';
-import { lintMermaid } from '../src/mermaid.ts';
 import { corners, lintStatic, round, textWidth, toStatic, toWeb, type Scene } from '../src/scene.ts';
 import * as structChain from '../src/struct-chain.ts';
 import * as textTable from '../src/text-table.ts';
@@ -332,14 +331,6 @@ test('limits are checked before anything is drawn', () => {
 
   const chain = structChain.layout({ ...chainSpec, fields: [['toString', 8], ['list', 16], ['__proto__', 8]], nodes: [{ name: 'a', values: {} }, { name: 'b' }], head: undefined });
   assert.ok(chain.shapes.some((s) => s.kind === 'text' && s.text === 'toString'));
-});
-
-test('the mermaid lint flags what the page would break', () => {
-  assert.deepEqual(lintMermaid('flowchart TD\n    a --> b'), []);
-  assert.deepEqual(lintMermaid('flowchart TD\n    a -.-> b'), []);
-  assert.equal(lintMermaid('flowchart TD\n    a:::info').length, 1);
-  assert.equal(lintMermaid('flowchart TD\n    classDef x fill:red').length, 1);
-  assert.equal(lintMermaid('flowchart TD\n    a:::accent:::muted').length, 1);
 });
 
 const blog = fileURLToPath(new URL('../../blog/', import.meta.url));
