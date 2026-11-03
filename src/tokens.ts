@@ -39,7 +39,7 @@ export type Paint = (typeof VARS)[number];
 export const TOKENS_FILE = new URL('../tokens.json', import.meta.url);
 
 export function loadTokens(): Tokens {
-  return JSON.parse(readFileSync(TOKENS_FILE, 'utf8'));
+  return JSON.parse(readFileSync(TOKENS_FILE, 'utf8')) as Tokens;
 }
 
 export function readBlogTokens(blogDir: string): Tokens {

@@ -46,6 +46,9 @@ interface Item {
 
 class UsageError extends Error {}
 
+const messageOf = (error: unknown) =>
+  error instanceof Error ? error.message : String(error);
+
 const options = {
   flavor: { type: 'string' },
   profile: { type: 'string' },
@@ -70,8 +73,8 @@ function load(file: string): Item[] {
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
-  } catch (error: any) {
-    throw new Error(`${file}: ${error.message}`);
+  } catch (error) {
+    throw new Error(`${file}: ${messageOf(error)}`, { cause: error });
   }
   const specs = (Array.isArray(parsed) ? parsed : [parsed]) as Spec[];
   const items: Item[] = specs.map((spec, i) => ({
@@ -219,15 +222,15 @@ function check(files: string[]): void {
             warnings.push(
               `${item.id}: too dense for a slide at ${scale.toFixed(2)}x; ${problems[0]}`,
             );
-        } catch (error: any) {
-          warnings.push(`${item.id}: ${error.message}`);
+        } catch (error) {
+          warnings.push(`${item.id}: ${messageOf(error)}`);
         }
       }
       console.log(`${file}: ok`);
       for (const warning of warnings)
         console.warn(`  slide warning: ${warning}`);
-    } catch (error: any) {
-      console.error(`${file}: ${error.message}`);
+    } catch (error) {
+      console.error(`${file}: ${messageOf(error)}`);
       failed = true;
     }
   }
@@ -290,11 +293,12 @@ try {
   else if (command === 'tokens' && !args.length) tokensCommand();
   else if (command === 'check' && args.length) check(args);
   else throw new UsageError('');
-} catch (error: any) {
+} catch (error) {
+  const code = (error as NodeJS.ErrnoException | undefined)?.code ?? '';
   const usage =
-    error instanceof UsageError ||
-    String(error?.code ?? '').startsWith('ERR_PARSE_ARGS');
-  if (error?.message) console.error(`dg: ${error.message}`);
+    error instanceof UsageError || code.startsWith('ERR_PARSE_ARGS');
+  const message = messageOf(error);
+  if (message) console.error(`dg: ${message}`);
   if (usage) console.error(USAGE);
   process.exitCode = usage ? 2 : 1;
 }
