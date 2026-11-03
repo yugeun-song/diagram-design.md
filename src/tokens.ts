@@ -28,7 +28,7 @@ export function readBlogTokens(blogDir: string): Tokens {
     const css = readFileSync(join(dir, file), 'utf8');
     for (const [, selector, body] of css.matchAll(/(:root|\[data-theme="[^"]+"\])\s*\{([^}]*)\}/g)) {
       const vars = selector === ':root' ? shared : (declared[/"([^"]+)"/.exec(selector)![1]] ??= new Map());
-      for (const m of body.matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) vars.set(m[1], m[2].trim());
+      for (const m of body.matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) vars.set(m[1], m[2].replace(/\s+/g, ' ').replace(/\(\s+/g, '(').replace(/\s+\)/g, ')').trim());
     }
   }
   const themes: Record<string, Theme> = {};
