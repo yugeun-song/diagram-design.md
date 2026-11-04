@@ -29,7 +29,7 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: node dg.ts check forms/*/example.json
-      - run: node dg.ts render forms/canvas/example.json --flavor static --theme spaceduck > canvas.svg
+      - run: node dg.ts render forms/canvas/example.json --flavor static --theme spaceduck > "$RUNNER_TEMP/canvas.svg"
       # The headless browser that slide and mockup draw with, found where each system installs it.
       - run: >-
           node --input-type=module -e "const { Chrome } = await import('./src/chrome.ts');
@@ -38,3 +38,7 @@ jobs:
           const text = await page.eval('return document.body.textContent');
           if (text !== 'ok') throw new Error('page read ' + text); console.log('chrome ok'); }
           finally { await chrome.close(); }"
+      - name: The checks leave the checkout as git wrote it
+        run: |
+          git status --porcelain
+          test -z "$(git status --porcelain)"
