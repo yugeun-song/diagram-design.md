@@ -2,7 +2,14 @@ import { checkText, isList, textWidth } from './scene.ts';
 import type { Paint } from './tokens.ts';
 
 export type Tone =
-  'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'indigo' | 'purple';
+  | 'accent'
+  | 'red'
+  | 'orange'
+  | 'yellow'
+  | 'green'
+  | 'blue'
+  | 'indigo'
+  | 'purple';
 
 export type Run = string | [string, Tone];
 
@@ -13,6 +20,7 @@ export interface Piece {
 
 // A tone is a hue that each theme shades for its background, so one diagram can tell several things apart by color.
 const TONES: Record<Tone, Paint> = {
+  accent: 'diagram-accent',
   red: 'diagram-red',
   orange: 'diagram-orange',
   yellow: 'diagram-yellow',
@@ -23,6 +31,7 @@ const TONES: Record<Tone, Paint> = {
 };
 
 export const WASHES: Record<Tone, Paint> = {
+  accent: 'diagram-area',
   red: 'diagram-red-wash',
   orange: 'diagram-orange-wash',
   yellow: 'diagram-yellow-wash',

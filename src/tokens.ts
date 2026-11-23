@@ -16,6 +16,7 @@ const VARS = [
   'code-bg',
   'code-border',
   'diagram-ink',
+  'diagram-accent',
   'diagram-area',
   'diagram-gap',
   'diagram-red',
